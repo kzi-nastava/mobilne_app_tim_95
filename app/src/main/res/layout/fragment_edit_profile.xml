@@ -1,0 +1,89 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- NASLOV -->
+        <TextView
+            android:text="Izmena profila"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <!-- IME -->
+        <EditText
+            android:id="@+id/etFirstName"
+            android:hint="Ime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <!-- PREZIME -->
+        <EditText
+            android:id="@+id/etLastName"
+            android:hint="Prezime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <!-- TELEFON -->
+        <EditText
+            android:id="@+id/etPhone"
+            android:hint="Telefon"
+            android:inputType="phone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <!-- DRIVER ONLY SECTION -->
+        <LinearLayout
+            android:id="@+id/driverEditSection"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_marginTop="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:text="Podaci o vozilu"
+                android:textStyle="bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <EditText
+                android:id="@+id/etVehicleModel"
+                android:hint="Model vozila"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <EditText
+                android:id="@+id/etVehiclePlate"
+                android:hint="Registracija"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- PENDING INFO (DRIVER) -->
+        <TextView
+            android:id="@+id/txtPendingInfo"
+            android:text="Izmene će biti vidljive nakon odobrenja administratora."
+            android:textColor="@android:color/holo_orange_dark"
+            android:visibility="gone"
+            android:layout_marginTop="12dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <!-- SACUVAJ -->
+        <Button
+            android:id="@+id/btnSave"
+            android:text="Sačuvaj izmene"
+            android:layout_marginTop="24dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+</ScrollView>
