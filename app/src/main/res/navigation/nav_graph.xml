@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:startDestination="@id/profileFragment">
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.gruber.fragment.ProfileFragment"
+        android:label="Profil">
+
+        <action
+            android:id="@+id/action_profile_to_editProfile"
+            app:destination="@id/editProfileFragment" />
+
+        <action
+            android:id="@+id/action_profile_to_changePassword"
+            app:destination="@id/changePasswordFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.example.gruber.fragment.EditProfileFragment"
+        android:label="Izmena profila" />
+
+    <fragment
+        android:id="@+id/changePasswordFragment"
+        android:name="com.example.gruber.fragment.ChangePasswordFragment"
+        android:label="Promena lozinke" />
+</navigation>
