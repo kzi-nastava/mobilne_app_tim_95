@@ -17,7 +17,7 @@
             android:exported="false" />
         <activity
             android:name=".activity.MainActivity"
-            android:exported="true">
+            android:exported="false">
 
         </activity>
         <activity
