@@ -13,6 +13,9 @@
         android:theme="@style/Theme.GrUber"
         tools:targetApi="31">
         <activity
+            android:name=".SplashScreenActivity"
+            android:exported="false" />
+        <activity
             android:name=".activity.MainActivity"
             android:exported="true">
 
