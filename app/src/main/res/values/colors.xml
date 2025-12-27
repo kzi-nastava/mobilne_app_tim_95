@@ -1,10 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+
+    <!-- ===================== -->
+    <!-- LIGHT MODE COLORS -->
+    <!-- ===================== -->
+
+    <color name="color_text">#191A0F</color>
+    <color name="color_background">#FBFCF8</color>
+
+    <color name="color_primary">#96A35C</color>
+    <color name="color_primary_variant">#768244</color> <!-- darker olive -->
+
+    <color name="color_secondary">#ADD2C0</color>
+    <color name="color_secondary_variant">#86B5A0</color> <!-- muted teal -->
+
+    <color name="color_accent">#89BCBD</color>
+    <color name="color_accent_variant">#5F9FA1</color>
+
+    <!-- ===================== -->
+    <!-- DARK MODE COLORS -->
+    <!-- ===================== -->
+
+    <color name="color_text_night">#EFF0E5</color>
+    <color name="color_background_night">#060703</color>
+
+    <color name="color_primary_night">#96A35C</color>
+    <color name="color_primary_variant_night">#6E7941</color> <!-- deeper olive -->
+
+    <color name="color_secondary_night">#2D5240</color>
+    <color name="color_secondary_variant_night">#1F3A2E</color>
+
+    <color name="color_accent_night">#427576</color>
+    <color name="color_accent_variant_night">#2E5859</color>
+
+    <!-- ===================== -->
+    <!-- UTILITY -->
+    <!-- ===================== -->
+
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
 </resources>
