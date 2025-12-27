@@ -1,6 +1,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
     <LinearLayout
         android:orientation="vertical"
@@ -10,7 +11,7 @@
 
         <!-- NASLOV -->
         <TextView
-            android:text="Izmena profila"
+            android:text="@string/edit_profile"
             android:textSize="20sp"
             android:textStyle="bold"
             android:layout_marginBottom="16dp"
@@ -20,21 +21,21 @@
         <!-- IME -->
         <EditText
             android:id="@+id/etFirstName"
-            android:hint="Ime"
+            android:hint="@string/name_first"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
         <!-- PREZIME -->
         <EditText
             android:id="@+id/etLastName"
-            android:hint="Prezime"
+            android:hint="@string/name_last"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
         <!-- TELEFON -->
         <EditText
             android:id="@+id/etPhone"
-            android:hint="Telefon"
+            android:hint="@string/phone_number"
             android:inputType="phone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
@@ -49,20 +50,20 @@
             android:layout_height="wrap_content">
 
             <TextView
-                android:text="Podaci o vozilu"
+                android:text="@string/vehicle_info"
                 android:textStyle="bold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
             <EditText
                 android:id="@+id/etVehicleModel"
-                android:hint="Model vozila"
+                android:hint="@string/vehicle_model"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
             <EditText
                 android:id="@+id/etVehiclePlate"
-                android:hint="Registracija"
+                android:hint="@string/vehicle_registration"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
         </LinearLayout>
@@ -70,17 +71,23 @@
         <!-- PENDING INFO (DRIVER) -->
         <TextView
             android:id="@+id/txtPendingInfo"
-            android:text="Izmene će biti vidljive nakon odobrenja administratora."
+            android:text="@string/edit_message"
             android:textColor="@android:color/holo_orange_dark"
             android:visibility="gone"
             android:layout_marginTop="12dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
+        <!-- SPACER -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
         <!-- SACUVAJ -->
         <Button
             android:id="@+id/btnSave"
-            android:text="Sačuvaj izmene"
+            android:text="@string/save_change_btn"
             android:layout_marginTop="24dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />

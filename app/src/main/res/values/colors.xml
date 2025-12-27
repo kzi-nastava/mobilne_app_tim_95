@@ -5,33 +5,43 @@
     <!-- LIGHT MODE COLORS -->
     <!-- ===================== -->
 
-    <color name="color_text">#191A0F</color>
-    <color name="color_background">#FBFCF8</color>
+    <!-- Text & background -->
+    <color name="color_text">#1C1D14</color>
+    <color name="color_background">#FAFBF7</color>
 
-    <color name="color_primary">#96A35C</color>
-    <color name="color_primary_variant">#768244</color> <!-- darker olive -->
+    <!-- Primary (olive) -->
+    <color name="color_primary">#8F9C55</color>
+    <color name="color_primary_variant">#6E7A3F</color>
 
-    <color name="color_secondary">#ADD2C0</color>
-    <color name="color_secondary_variant">#86B5A0</color> <!-- muted teal -->
+    <!-- Secondary (sage) -->
+    <color name="color_secondary">#B7D4C3</color>
+    <color name="color_secondary_variant">#8FB8A4</color>
 
-    <color name="color_accent">#89BCBD</color>
-    <color name="color_accent_variant">#5F9FA1</color>
+    <!-- Accent (teal) -->
+    <color name="color_accent">#6FAFB0</color>
+    <color name="color_accent_variant">#4E8E8F</color>
+
 
     <!-- ===================== -->
     <!-- DARK MODE COLORS -->
     <!-- ===================== -->
 
-    <color name="color_text_night">#EFF0E5</color>
-    <color name="color_background_night">#060703</color>
+    <!-- Text & background -->
+    <color name="color_text_night">#ECEEE2</color>
+    <color name="color_background_night">#0B0D08</color>
 
-    <color name="color_primary_night">#96A35C</color>
-    <color name="color_primary_variant_night">#6E7941</color> <!-- deeper olive -->
+    <!-- Primary (olive, muted & darker) -->
+    <color name="color_primary_night">#6F7C46</color>
+    <color name="color_primary_variant_night">#505A32</color>
 
-    <color name="color_secondary_night">#2D5240</color>
-    <color name="color_secondary_variant_night">#1F3A2E</color>
+    <!-- Secondary (sage, desaturated) -->
+    <color name="color_secondary_night">#7FA693</color>
+    <color name="color_secondary_variant_night">#5E8675</color>
 
-    <color name="color_accent_night">#427576</color>
-    <color name="color_accent_variant_night">#2E5859</color>
+    <!-- Accent (teal, darker) -->
+    <color name="color_accent_night">#4C8F90</color>
+    <color name="color_accent_variant_night">#356D6E</color>
+
 
     <!-- ===================== -->
     <!-- UTILITY -->

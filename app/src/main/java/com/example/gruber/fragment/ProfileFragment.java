@@ -46,8 +46,8 @@ public class ProfileFragment extends Fragment {
 
         if (user.getRole() == UserRole.DRIVER) {
             driverSection.setVisibility(View.VISIBLE);
-            txtActiveHours.setText("Aktivni sati (24h): " + user.getActiveHoursLast24h());
-            txtVehicle.setText("Vozilo: " + user.getVehicleModel() + " (" + user.getVehiclePlate() + ")");
+            txtActiveHours.setText("Active hours (24h): " + user.getActiveHoursLast24h());
+            txtVehicle.setText("Vehicle: " + user.getVehicleModel() + " (" + user.getVehiclePlate() + ")");
         }
 
         Button btnEdit = view.findViewById(R.id.btnEditProfile);

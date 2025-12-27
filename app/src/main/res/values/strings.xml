@@ -1,5 +1,25 @@
 <resources>
     <string name="app_name">GrUber</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- PROFILE   -->
+    <string name="edit_profile">EDIT PROFILE</string>
+    <string name="change_password">CHANGE PASSWORD</string>
+
+    <!--  EDIT PROFILE  -->
+    <string name="name_first">First name</string>
+    <string name="name_last">Last name</string>
+    <string name="phone_number">Phone number</string>
+    <string name="vehicle_info">Vehicle Info</string>
+    <string name="vehicle_model">Model</string>
+    <string name="vehicle_registration">Registration</string>
+    <string name="edit_message">Changes will be visible after admin approval.</string>
+
+    <string name="save_change_btn">SAVE CHANGES</string>
+    
+    <!-- CHANGE PASSWORD  -->
+    <string name="password_old">Old Password</string>
+    <string name="password_new">New Password</string>
+    <string name="password_confirm">Confirm Password</string>
+
+
 </resources>
