@@ -1,10 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+
+    <!-- ===================== -->
+    <!-- LIGHT MODE COLORS -->
+    <!-- ===================== -->
+
+    <!-- Text & background -->
+    <color name="color_text">#1C1D14</color>
+    <color name="color_background">#FAFBF7</color>
+
+    <!-- Primary (olive) -->
+    <color name="color_primary">#8F9C55</color>
+    <color name="color_primary_variant">#6E7A3F</color>
+
+    <!-- Secondary (sage) -->
+    <color name="color_secondary">#B7D4C3</color>
+    <color name="color_secondary_variant">#8FB8A4</color>
+
+    <!-- Accent (teal) -->
+    <color name="color_accent">#6FAFB0</color>
+    <color name="color_accent_variant">#4E8E8F</color>
+
+
+    <!-- ===================== -->
+    <!-- DARK MODE COLORS -->
+    <!-- ===================== -->
+
+    <!-- Text & background -->
+    <color name="color_text_night">#ECEEE2</color>
+    <color name="color_background_night">#0B0D08</color>
+
+    <!-- Primary (olive, muted & darker) -->
+    <color name="color_primary_night">#6F7C46</color>
+    <color name="color_primary_variant_night">#505A32</color>
+
+    <!-- Secondary (sage, desaturated) -->
+    <color name="color_secondary_night">#7FA693</color>
+    <color name="color_secondary_variant_night">#5E8675</color>
+
+    <!-- Accent (teal, darker) -->
+    <color name="color_accent_night">#4C8F90</color>
+    <color name="color_accent_variant_night">#356D6E</color>
+
+
+    <!-- ===================== -->
+    <!-- UTILITY -->
+    <!-- ===================== -->
+
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
 </resources>
