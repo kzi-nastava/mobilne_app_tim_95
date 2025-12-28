@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".fragment.RideDetailsFragment">
+
+    <LinearLayout
+        android:id="@+id/detailsRoot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Row 1: Ride ID + Status -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvRideId"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Ride #00001"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="COMPLETED"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Passenger / emails -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Main passenger"
+            android:layout_marginTop="14dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvMainPassengerEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="pera@mail.com"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Other passengers"
+            android:layout_marginTop="10dp"
+            android:textStyle="bold" />
+
+        <!-- Container where you will add passenger email TextViews dynamically -->
+        <LinearLayout
+            android:id="@+id/otherPassengersContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="4dp" />
+
+        <!-- Times -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Time"
+            android:layout_marginTop="14dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvTimes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="26.12.2025 19:40 - 20:05 (25 min)"
+            android:layout_marginTop="4dp" />
+
+        <!-- Route -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Route"
+            android:layout_marginTop="14dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvStartAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="From: Bulevar Patrijarha Pavla 15, Novi Sad"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:id="@+id/tvEndAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="To: Bulevar Cara Lazara 15, Novi Sad"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Stops"
+            android:layout_marginTop="10dp"
+            android:textStyle="bold" />
+
+        <!-- Container where you will add stop TextViews dynamically -->
+        <LinearLayout
+            android:id="@+id/stopsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="4dp" />
+
+        <!-- Price -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Price"
+            android:layout_marginTop="14dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvPrice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="RSD 1,250"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="4dp" />
+
+        <!-- Additional info -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Additional info"
+            android:layout_marginTop="14dp"
+            android:textStyle="bold" />
+
+        <!-- Shown/hidden depending on ride status -->
+        <TextView
+            android:id="@+id/tvCancelledBy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Cancelled by: -"
+            android:layout_marginTop="4dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvPanic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Panic triggered: NO"
+            android:layout_marginTop="4dp" />
+
+    </LinearLayout>
+</ScrollView>

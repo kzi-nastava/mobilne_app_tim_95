@@ -5,6 +5,8 @@ import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.models.enums.UserRole;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /*
 * PLACEHOLDER DATA CLASS BEFORE BACKEND IMPLEMENTATION
@@ -26,9 +28,12 @@ public class FakeSession {
         currentUser.setVehicleModel("Toyota Corolla");
         currentUser.setVehiclePlate("BG-123-AB");
     }
-
+    public static final List<Ride> rides = new ArrayList<>();
+    public static List<String> otherPass = new ArrayList<>();
     public static Ride ride1;
     static {
+        otherPass.add("nole@mail.com");
+        otherPass.add("aca@mail.com");
         ride1 = new Ride(
                 "00001",
                 "marko@mail.com",
@@ -40,11 +45,19 @@ public class FakeSession {
         ride1.setFinishedAtMillis(LocalDateTime.now().minusHours(4));
         ride1.setPanicTriggered(false);
         ride1.setStatus(RideStatus.COMPLETED);
+        ride1.setPriceDin(450);
+        ride1.setPassengerEmails(otherPass);
+        rides.add(ride1);
     }
+    public static List<Stop> stopList3 = new ArrayList<>();
+    public static List<String> otherPass2 = new ArrayList<>();
     public static Ride ride2;
     static {
+        otherPass2.add("zika@mail.com");
+        stopList3.add(new Stop("00001", "Sutjeska 2, Novi Sad", 1));
+        stopList3.add(new Stop("00001", "Fruskogorska 16, Novi Sad", 2));
         ride2 = new Ride(
-                "00001",
+                "00002",
                 "marko@mail.com",
                 "mika@mail.com",
                 "Bulevar Cara Lazara 1, Novi Sad",
@@ -53,12 +66,17 @@ public class FakeSession {
         ride2.setStartedAtMillis(LocalDateTime.now().minusHours(3).minusMinutes(12));
         ride2.setFinishedAtMillis(LocalDateTime.now().minusHours(3));
         ride2.setPanicTriggered(false);
+        ride2.setStopList(stopList3);
         ride2.setStatus(RideStatus.COMPLETED);
+        ride2.setPriceDin(890);
+        ride2.setPassengerEmails(otherPass2);
+        rides.add(ride2);
     }
+
     public static Ride ride3;
     static {
         ride3 = new Ride(
-                "00001",
+                "00003",
                 "marko@mail.com",
                 "mika@mail.com",
                 "Bulevar Cara Lazara 1, Novi Sad",
@@ -66,5 +84,16 @@ public class FakeSession {
         ride3.setDistanceMeters(0);
         ride3.setPanicTriggered(false);
         ride3.setStatus(RideStatus.CANCELLED);
+        ride3.setCancelledBy("mika@mail.com");
+        ride3.setPriceDin(0);
+        rides.add(ride3);
+    }
+
+    public static Ride getRideById(String id) {
+        if (id == null) return null;
+        for (Ride r : rides) {
+            if (id.equals(r.id)) return r;
+        }
+        return null;
     }
 }
