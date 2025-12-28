@@ -27,4 +27,22 @@
         android:id="@+id/changePasswordFragment"
         android:name="com.example.gruber.fragment.ChangePasswordFragment"
         android:label="Promena lozinke" />
+
+    <fragment
+        android:id="@+id/ridesHistory"
+        android:name="com.example.gruber.fragment.DriversRidesFragment"
+        android:label="Istorija voznji">
+        <action
+            android:id="@+id/action_ridesHistory_to_rideDetailsFragment"
+            app:destination="@id/rideDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/rideDetailsFragment"
+        android:name="com.example.gruber.fragment.RideDetailsFragment"
+        android:label="Detalji voznje">
+        <argument
+            android:name="rideId"
+            app:argType="string" />
+    </fragment>
 </navigation>

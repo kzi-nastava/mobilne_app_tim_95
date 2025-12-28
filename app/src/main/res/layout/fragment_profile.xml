@@ -5,10 +5,13 @@
     android:fillViewport="true">
 
     <LinearLayout
-        android:orientation="vertical"
-        android:padding="16dp"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingLeft="16dp"
+        android:paddingTop="16dp"
+        android:paddingRight="16dp"
+        android:paddingBottom="106dp">
 
         <!-- PROFILNA SLIKA -->
         <ImageView
@@ -16,16 +19,16 @@
             android:layout_width="120dp"
             android:layout_height="120dp"
             android:layout_gravity="center"
-            android:src="@drawable/profile_photo"/>
+            android:src="@drawable/profile_photo" />
 
         <!-- IME -->
         <TextView
             android:id="@+id/txtName"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <!-- EMAIL -->
         <TextView
@@ -42,11 +45,11 @@
         <!-- DRIVER INFO -->
         <LinearLayout
             android:id="@+id/driverSection"
-            android:orientation="vertical"
-            android:visibility="gone"
-            android:layout_marginTop="16dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical"
+            android:visibility="gone">
 
             <TextView
                 android:id="@+id/txtActiveHours"
@@ -68,15 +71,15 @@
         <!-- BUTTONS -->
         <Button
             android:id="@+id/btnEditProfile"
-            android:text="@string/edit_profile"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:text="@string/edit_profile" />
 
         <Button
             android:id="@+id/btnChangePassword"
-            android:text="@string/change_password"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:text="@string/change_password" />
 
     </LinearLayout>
 </ScrollView>
