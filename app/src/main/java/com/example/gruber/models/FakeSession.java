@@ -82,11 +82,45 @@ public class FakeSession {
                 "Bulevar Cara Lazara 1, Novi Sad",
                 "Balzakova 15, Novi Sad");
         ride3.setDistanceMeters(0);
+        ride3.setStartedAtMillis(LocalDateTime.now().minusDays(3).minusHours(7).minusMinutes(12));
         ride3.setPanicTriggered(false);
         ride3.setStatus(RideStatus.CANCELLED);
         ride3.setCancelledBy("mika@mail.com");
         ride3.setPriceDin(0);
         rides.add(ride3);
+    }
+    public static Ride ride4;
+    static {
+        ride4 = new Ride(
+                "00004",
+                "marko@mail.com",
+                "mika@mail.com",
+                "Bulevar Cara Lazara 1, Novi Sad",
+                "Balzakova 15, Novi Sad");
+        ride4.setDistanceMeters(0);
+        ride4.setStartedAtMillis(LocalDateTime.now().minusHours(5).minusMinutes(2));
+        ride4.setPanicTriggered(false);
+        ride4.setStatus(RideStatus.ACTIVE);
+        ride4.setPriceDin(0);
+        rides.add(ride4);
+    }
+    public static Ride ride5;
+    static {
+        ride5 = new Ride(
+                "00002",
+                "marko@mail.com",
+                "mika@mail.com",
+                "Bulevar Cara Lazara 1, Novi Sad",
+                "Balzakova 15, Novi Sad");
+        ride5.setDistanceMeters(2500);
+        ride5.setStartedAtMillis(LocalDateTime.now().minusDays(4).minusHours(3).minusMinutes(12));
+        ride5.setFinishedAtMillis(LocalDateTime.now().minusDays(4).minusHours(3));
+        ride5.setPanicTriggered(false);
+        ride5.setStopList(stopList3);
+        ride5.setStatus(RideStatus.COMPLETED);
+        ride5.setPriceDin(890);
+        ride5.setPassengerEmails(otherPass2);
+        rides.add(ride5);
     }
 
     public static Ride getRideById(String id) {

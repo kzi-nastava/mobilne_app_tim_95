@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -40,7 +41,11 @@ public class DriversRidesFragment extends Fragment {
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
 
         adapter = new RideAdapter(ride -> {
-//            RideDetailsActivity.start(requireContext(), ride.id);
+            Bundle args = new Bundle();
+            args.putString("rideId", ride.id);
+
+            NavHostFragment.findNavController(DriversRidesFragment.this)
+                    .navigate(R.id.action_ridesHistory_to_rideDetailsFragment, args);
         });
 
         rv.setAdapter(adapter);
@@ -84,6 +89,7 @@ public class DriversRidesFragment extends Fragment {
                 "Bulevar Cara Lazara 1, Novi Sad",
                 "Balzakova 15, Novi Sad"
         );
+        ride3.setStartedAtMillis(LocalDateTime.now().minusDays(3).minusHours(7).minusMinutes(12));
         ride3.setDistanceMeters(0);
         ride3.setPanicTriggered(false);
         ride3.setStatus(RideStatus.CANCELLED);
@@ -99,10 +105,24 @@ public class DriversRidesFragment extends Fragment {
         ride4.setPanicTriggered(false);
         ride4.setStatus(RideStatus.ACTIVE);
 
+        Ride ride5 = new Ride(
+                "00005",
+                "marko@mail.com",
+                "mika@mail.com",
+                "Bulevar Cara Lazara 1, Novi Sad",
+                "Balzakova 15, Novi Sad"
+        );
+        ride5.setDistanceMeters(2500);
+        ride5.setStartedAtMillis(LocalDateTime.now().minusDays(4).minusHours(3).minusMinutes(12));
+        ride5.setFinishedAtMillis(LocalDateTime.now().minusDays(4).minusHours(3));
+        ride5.setPanicTriggered(false);
+        ride5.setStatus(RideStatus.COMPLETED);
+
         list.add(ride1);
         list.add(ride2);
         list.add(ride3);
         list.add(ride4);
+        list.add(ride5);
 
         return list;
     }

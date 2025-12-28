@@ -39,11 +39,6 @@
 <!--                <category android:name="android.intent.category.LAUNCHER" />-->
 <!--            </intent-filter>-->
         </activity>
-        <activity
-            android:name=".activity.DriverRidesActivity"
-            android:exported="true"
-            android:label="Rides">
-        </activity>
     </application>
 
 </manifest>

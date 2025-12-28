@@ -4,79 +4,81 @@
     android:fillViewport="true">
 
     <LinearLayout
-        android:orientation="vertical"
-        android:padding="16dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="106dp">
 
         <!-- NASLOV -->
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
             android:text="@string/edit_profile"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:textStyle="bold" />
 
         <!-- IME -->
         <EditText
             android:id="@+id/etFirstName"
-            android:hint="@string/name_first"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:hint="@string/name_first" />
 
         <!-- PREZIME -->
         <EditText
             android:id="@+id/etLastName"
-            android:hint="@string/name_last"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:hint="@string/name_last" />
 
         <!-- TELEFON -->
         <EditText
             android:id="@+id/etPhone"
-            android:hint="@string/phone_number"
-            android:inputType="phone"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:hint="@string/phone_number"
+            android:inputType="phone" />
 
         <!-- DRIVER ONLY SECTION -->
         <LinearLayout
             android:id="@+id/driverEditSection"
-            android:orientation="vertical"
-            android:visibility="gone"
-            android:layout_marginTop="16dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical"
+            android:visibility="gone">
 
             <TextView
-                android:text="@string/vehicle_info"
-                android:textStyle="bold"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:text="@string/vehicle_info"
+                android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/etVehicleModel"
-                android:hint="@string/vehicle_model"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:hint="@string/vehicle_model" />
 
             <EditText
                 android:id="@+id/etVehiclePlate"
-                android:hint="@string/vehicle_registration"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:hint="@string/vehicle_registration" />
         </LinearLayout>
 
         <!-- PENDING INFO (DRIVER) -->
         <TextView
             android:id="@+id/txtPendingInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:text="@string/edit_message"
             android:textColor="@android:color/holo_orange_dark"
-            android:visibility="gone"
-            android:layout_marginTop="12dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:visibility="gone" />
 
         <!-- SPACER -->
         <View
@@ -87,10 +89,10 @@
         <!-- SACUVAJ -->
         <Button
             android:id="@+id/btnSave"
-            android:text="@string/save_change_btn"
-            android:layout_marginTop="24dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/save_change_btn" />
 
     </LinearLayout>
 </ScrollView>

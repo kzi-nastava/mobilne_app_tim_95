@@ -50,7 +50,6 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.VH> {
             super(itemView);
             rideCard = itemView.findViewById(R.id.rideCard);
             dateOfRide = itemView.findViewById(R.id.dateOfRide);
-            timeOfRide = itemView.findViewById(R.id.timeOfRide);
             textPassengerEmail = itemView.findViewById(R.id.textPassengerEmail);
             textStatus = itemView.findViewById(R.id.textStatus);
         }
@@ -67,50 +66,78 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.VH> {
     public void onBindViewHolder(@NonNull VH holder, int position) {
         Ride ride = rides.get(position);
 
-        // Date label: Today / Yesterday / dd.MM.yyyy
-        LocalDate rideDate = ride.startedAt.toLocalDate();
-        if (rideDate.equals(LocalDate.now())) {
-            holder.dateOfRide.setText(R.string.today);
-        } else if (rideDate.equals(LocalDate.now().minusDays(1))) {
-            holder.dateOfRide.setText(R.string.yesterday);
-        } else {
-            holder.dateOfRide.setText(ride.startedAt.format(DATE_FMT));
-        }
-
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
 
-        // Null-safe time range (CANCELLED might not have finishedAt)
-        String start = ride.startedAt.toLocalTime().format(timeFmt);
+        String datePart;
+        String timePart;
+
+        // ---- DATE ----
+        if (ride.startedAt != null) {
+            LocalDate rideDate = ride.startedAt.toLocalDate();
+            if (rideDate.equals(LocalDate.now())) {
+                datePart = holder.itemView.getContext().getString(R.string.today);
+            } else if (rideDate.equals(LocalDate.now().minusDays(1))) {
+                datePart = holder.itemView.getContext().getString(R.string.yesterday);
+            } else {
+                datePart = ride.startedAt.format(dateFmt);
+            }
+        } else {
+            datePart = "-";
+        }
+
+// ---- TIME ----
+        String start = (ride.startedAt != null)
+                ? ride.startedAt.toLocalTime().format(timeFmt)
+                : "";
+
         String end = (ride.finishedAt != null)
                 ? ride.finishedAt.toLocalTime().format(timeFmt)
-                : "-";
+                : "";
 
-        holder.timeOfRide.setText(start + " - " + end);
+        timePart = start + " – " + end;
 
-        holder.textPassengerEmail.setText(ride.creatorUserEmail);
-        holder.textStatus.setText(ride.status.toString());
+        holder.dateOfRide.setText(datePart + " • " + timePart);
 
-        // Card color by status
+
+        // ---- PASSENGER + STATUS ----
+        holder.textPassengerEmail.setText(
+                (ride.creatorUserEmail != null && !ride.creatorUserEmail.isEmpty())
+                        ? ride.creatorUserEmail
+                        : "-"
+        );
+
+        String statusText = (ride.status != null) ? ride.status.name() : "-";
+        holder.textStatus.setText(statusText);
+
+        // ---- CARD COLOR ----
         Context ctx = holder.itemView.getContext();
         int bgColorRes;
-        switch (ride.status) {
-            case COMPLETED:
-                bgColorRes = R.color.ride_completed;
-                break;
-            case CANCELLED:
-                bgColorRes = R.color.ride_cancelled;
-                break;
-            default:
-                bgColorRes = R.color.ride_active;
-                break;
+
+        if (ride.status == null) {
+            bgColorRes = R.color.ride_active; // fallback
+        } else {
+            switch (ride.status) {
+                case COMPLETED:
+                    bgColorRes = R.color.ride_completed;
+                    break;
+                case CANCELLED:
+                    bgColorRes = R.color.ride_cancelled;
+                    break;
+                default:
+                    bgColorRes = R.color.ride_active;
+                    break;
+            }
         }
+
         holder.rideCard.setCardBackgroundColor(ContextCompat.getColor(ctx, bgColorRes));
 
-        // ✅ CLICK: open details
+        // ---- CLICK ----
         holder.rideCard.setOnClickListener(v -> {
             if (listener != null) listener.onRideClick(ride);
         });
     }
+
 
 
     @Override
