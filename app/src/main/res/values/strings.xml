@@ -38,4 +38,8 @@
     <!--  DRIVER'S RIDES OVERVIEW  -->
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
+    <!--   NAVIGATION  -->
+    <string name="home">Home</string>
+    <string name="ride_history">Ride history</string>
+    <string name="profile">Profile</string>
 </resources>
