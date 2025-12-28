@@ -21,6 +21,16 @@ public class Ride {
     public int priceDin;
     public int distanceMeters;
     public boolean panicTriggered;
+
+    public String getCancelledBy() {
+        return cancelledBy;
+    }
+
+    public void setCancelledBy(String cancelledBy) {
+        this.cancelledBy = cancelledBy;
+    }
+
+    public String cancelledBy;
     public RideStatus status;  // "COMPLETED", "CANCELLED"...
 
     public Ride(@NonNull String id, @NonNull String driverId, @NonNull String creatorUserId, String pickupAddress, String dropoffAddress) {

@@ -31,6 +31,17 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.VH> {
         notifyDataSetChanged();
     }
 
+    public interface OnRideClickListener {
+        void onRideClick(Ride ride);
+    }
+
+    private final OnRideClickListener listener;
+
+    public RideAdapter(OnRideClickListener listener) {
+        this.listener = listener;
+    }
+
+
     static class VH extends RecyclerView.ViewHolder {
         CardView rideCard;
         TextView dateOfRide, timeOfRide, textPassengerEmail, textStatus;
@@ -55,23 +66,33 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.VH> {
     @Override
     public void onBindViewHolder(@NonNull VH holder, int position) {
         Ride ride = rides.get(position);
-        if (ride.startedAt.toLocalDate().equals(LocalDate.now())){
+
+        // Date label: Today / Yesterday / dd.MM.yyyy
+        LocalDate rideDate = ride.startedAt.toLocalDate();
+        if (rideDate.equals(LocalDate.now())) {
             holder.dateOfRide.setText(R.string.today);
-        }
-        else if (ride.startedAt.toLocalDate().minusDays(1).equals(LocalDate.now())){
+        } else if (rideDate.equals(LocalDate.now().minusDays(1))) {
             holder.dateOfRide.setText(R.string.yesterday);
-        }
-        else{
+        } else {
             holder.dateOfRide.setText(ride.startedAt.format(DATE_FMT));
         }
-        String timeText = ride.startedAt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")) + " - " + ride.finishedAt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"));
-        holder.timeOfRide.setText(timeText);
+
+        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
+
+        // Null-safe time range (CANCELLED might not have finishedAt)
+        String start = ride.startedAt.toLocalTime().format(timeFmt);
+        String end = (ride.finishedAt != null)
+                ? ride.finishedAt.toLocalTime().format(timeFmt)
+                : "-";
+
+        holder.timeOfRide.setText(start + " - " + end);
+
         holder.textPassengerEmail.setText(ride.creatorUserEmail);
         holder.textStatus.setText(ride.status.toString());
 
+        // Card color by status
         Context ctx = holder.itemView.getContext();
         int bgColorRes;
-
         switch (ride.status) {
             case COMPLETED:
                 bgColorRes = R.color.ride_completed;
@@ -81,10 +102,16 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.VH> {
                 break;
             default:
                 bgColorRes = R.color.ride_active;
+                break;
         }
-
         holder.rideCard.setCardBackgroundColor(ContextCompat.getColor(ctx, bgColorRes));
+
+        // ✅ CLICK: open details
+        holder.rideCard.setOnClickListener(v -> {
+            if (listener != null) listener.onRideClick(ride);
+        });
     }
+
 
     @Override
     public int getItemCount() {

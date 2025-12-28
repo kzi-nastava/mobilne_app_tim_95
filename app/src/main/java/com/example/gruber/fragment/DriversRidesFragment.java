@@ -39,12 +39,14 @@ public class DriversRidesFragment extends Fragment {
         RecyclerView rv = view.findViewById(R.id.rides);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        adapter = new RideAdapter();
-        rv.setAdapter(adapter);
+        adapter = new RideAdapter(ride -> {
+//            RideDetailsActivity.start(requireContext(), ride.id);
+        });
 
-        // Demo data (replace with DB later)
+        rv.setAdapter(adapter);
         adapter.submitList(fakeRides());
     }
+
 
     private List<Ride> fakeRides() {
         List<Ride> list = new ArrayList<>();
@@ -94,7 +96,7 @@ public class DriversRidesFragment extends Fragment {
                 "Branka Copica 70, Novi Sad"
         );
         ride4.setStartedAtMillis(LocalDateTime.now().minusMinutes(7));
-        ride3.setPanicTriggered(false);
+        ride4.setPanicTriggered(false);
         ride4.setStatus(RideStatus.ACTIVE);
 
         list.add(ride1);
