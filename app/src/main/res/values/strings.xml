@@ -21,5 +21,7 @@
     <string name="password_new">New Password</string>
     <string name="password_confirm">Confirm Password</string>
 
-
+    <!--  DRIVER'S RIDES OVERVIEW  -->
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
 </resources>

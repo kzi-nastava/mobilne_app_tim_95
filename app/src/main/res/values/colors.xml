@@ -49,5 +49,7 @@
 
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-
+    <color name="ride_completed">#A5FFA5</color>   <!-- greenish -->
+    <color name="ride_cancelled">#FF7F7F</color>   <!-- reddish -->
+    <color name="ride_active">#ADD8E6</color>      <!-- bluish -->
 </resources>
