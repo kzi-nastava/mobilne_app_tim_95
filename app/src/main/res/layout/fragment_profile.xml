@@ -1,20 +1,22 @@
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
     <LinearLayout
         android:orientation="vertical"
         android:padding="16dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent">
 
         <!-- PROFILNA SLIKA -->
         <ImageView
             android:id="@+id/imgProfile"
             android:layout_width="120dp"
             android:layout_height="120dp"
-            android:layout_gravity="center"/>
-<!--            android:src="@drawable/ic_default_avatar" />-->
+            android:layout_gravity="center"
+            android:src="@drawable/profile_photo"/>
 
         <!-- IME -->
         <TextView
@@ -57,17 +59,22 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
-        <!-- DUGMAD -->
+        <!-- SPACER -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- BUTTONS -->
         <Button
             android:id="@+id/btnEditProfile"
-            android:text="Izmeni profil"
-            android:layout_marginTop="24dp"
+            android:text="@string/edit_profile"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
         <Button
             android:id="@+id/btnChangePassword"
-            android:text="Promeni lozinku"
+            android:text="@string/change_password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 

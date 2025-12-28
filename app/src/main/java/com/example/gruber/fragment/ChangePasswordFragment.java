@@ -38,22 +38,22 @@ public class ChangePasswordFragment extends Fragment {
             txtError.setVisibility(View.GONE);
 
             if (oldPass.isEmpty() || newPass.isEmpty() || confirm.isEmpty()) {
-                showError(txtError, "Sva polja su obavezna.");
+                showError(txtError, "All fields are required.");
                 return;
             }
 
             if (newPass.length() < 8) {
-                showError(txtError, "Nova lozinka mora imati najmanje 8 karaktera.");
+                showError(txtError, "New password must be at least 8 characters long.");
                 return;
             }
 
             if (!newPass.equals(confirm)) {
-                showError(txtError, "Nova lozinka i potvrda se ne poklapaju.");
+                showError(txtError, "New and Confirm password fields don't match.");
                 return;
             }
 
             // Fake success
-            Toast.makeText(getContext(), "Lozinka je uspešno promenjena", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Password changed successfully.", Toast.LENGTH_SHORT).show();
 
             NavHostFragment.findNavController(ChangePasswordFragment.this)
                     .popBackStack();
