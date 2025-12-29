@@ -133,29 +133,6 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.VH> {
 
         holder.textStatus.setTextColor(ContextCompat.getColor(ctx, statusColorRes));
 
-//        // ---- CARD COLOR ----
-//        Context ctx = holder.itemView.getContext();
-//        int bgColorRes;
-//
-//        if (ride.status == null) {
-//            bgColorRes = R.color.ride_active; // fallback
-//        } else {
-//            switch (ride.status) {
-//                case COMPLETED:
-//                    bgColorRes = R.color.ride_completed;
-//                    break;
-//                case CANCELLED:
-//                    bgColorRes = R.color.ride_cancelled;
-//                    break;
-//                default:
-//                    bgColorRes = R.color.ride_active;
-//                    break;
-//            }
-//        }
-//
-//        holder.rideCard.setCardBackgroundColor(ContextCompat.getColor(ctx, bgColorRes));
-
-
         // ---- CLICK ----
         holder.rideCard.setOnClickListener(v -> {
             if (listener != null) listener.onRideClick(ride);
