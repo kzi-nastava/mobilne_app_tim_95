@@ -95,11 +95,11 @@ public class RegisterAccountFragment extends Fragment {
             valid = false;
         }
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            tilEmail.setError("Invalid password format!");
+            tilEmail.setError("Invalid email format!");
             valid = false;
         }
-        if (password.length() < 6) {
-            tilPassword.setError("Password must be at least 6 characters long.");
+        if (password.length() < 8) {
+            tilPassword.setError("Password must be at least 8 characters long.");
             valid = false;
         }
         if (!password.equals(password_conf)) {
