@@ -21,6 +21,10 @@
     <color name="color_accent">#6FAFB0</color>
     <color name="color_accent_variant">#4E8E8F</color>
 
+    <!-- STATUS COLORS -->
+    <color name="status_completed">#2E7D32</color>
+    <color name="status_cancelled">#C62828</color>
+    <color name="status_active">#1565C0</color>
 
     <!-- ===================== -->
     <!-- DARK MODE COLORS -->
@@ -42,6 +46,10 @@
     <color name="color_accent_night">#4C8F90</color>
     <color name="color_accent_variant_night">#356D6E</color>
 
+    <!-- STATUS COLORS -->
+    <color name="status_completed_night">#81C784</color>
+    <color name="status_cancelled_night">#EF9A9A</color>
+    <color name="status_active_night">#90CAF9</color>
 
     <!-- ===================== -->
     <!-- UTILITY -->
