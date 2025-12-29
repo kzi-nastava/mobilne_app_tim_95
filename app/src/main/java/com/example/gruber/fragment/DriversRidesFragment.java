@@ -123,6 +123,11 @@ public class DriversRidesFragment extends Fragment {
         list.add(ride3);
         list.add(ride4);
         list.add(ride5);
+        list.add(ride1);
+        list.add(ride2);
+        list.add(ride3);
+        list.add(ride4);
+        list.add(ride5);
 
         return list;
     }

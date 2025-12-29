@@ -107,30 +107,54 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.VH> {
                         : "-"
         );
 
+        // ---- STATUS TEXT ----
         String statusText = (ride.status != null) ? ride.status.name() : "-";
         holder.textStatus.setText(statusText);
 
-        // ---- CARD COLOR ----
         Context ctx = holder.itemView.getContext();
-        int bgColorRes;
+        int statusColorRes;
 
         if (ride.status == null) {
-            bgColorRes = R.color.ride_active; // fallback
+            statusColorRes = R.color.color_text; // fallback
         } else {
             switch (ride.status) {
                 case COMPLETED:
-                    bgColorRes = R.color.ride_completed;
+                    statusColorRes = R.color.status_completed;
                     break;
                 case CANCELLED:
-                    bgColorRes = R.color.ride_cancelled;
+                    statusColorRes = R.color.status_cancelled;
                     break;
+                case ACTIVE:
                 default:
-                    bgColorRes = R.color.ride_active;
+                    statusColorRes = R.color.status_active;
                     break;
             }
         }
 
-        holder.rideCard.setCardBackgroundColor(ContextCompat.getColor(ctx, bgColorRes));
+        holder.textStatus.setTextColor(ContextCompat.getColor(ctx, statusColorRes));
+
+//        // ---- CARD COLOR ----
+//        Context ctx = holder.itemView.getContext();
+//        int bgColorRes;
+//
+//        if (ride.status == null) {
+//            bgColorRes = R.color.ride_active; // fallback
+//        } else {
+//            switch (ride.status) {
+//                case COMPLETED:
+//                    bgColorRes = R.color.ride_completed;
+//                    break;
+//                case CANCELLED:
+//                    bgColorRes = R.color.ride_cancelled;
+//                    break;
+//                default:
+//                    bgColorRes = R.color.ride_active;
+//                    break;
+//            }
+//        }
+//
+//        holder.rideCard.setCardBackgroundColor(ContextCompat.getColor(ctx, bgColorRes));
+
 
         // ---- CLICK ----
         holder.rideCard.setOnClickListener(v -> {

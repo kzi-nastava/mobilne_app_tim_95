@@ -9,9 +9,8 @@
         android:orientation="vertical"
         android:paddingHorizontal="16dp"
         android:paddingTop="16dp"
-        android:paddingBottom="106dp">
+        android:paddingBottom="26dp">
 
-        <!-- NASLOV -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -20,34 +19,33 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
-        <!-- IME -->
         <EditText
             android:id="@+id/etFirstName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="48dp"
             android:hint="@string/name_first" />
 
-        <!-- PREZIME -->
         <EditText
             android:id="@+id/etLastName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="48dp"
             android:hint="@string/name_last" />
 
-        <!-- TELEFON -->
         <EditText
             android:id="@+id/etPhone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="48dp"
             android:hint="@string/phone_number"
             android:inputType="phone" />
 
-        <!-- DRIVER ONLY SECTION -->
         <LinearLayout
             android:id="@+id/driverEditSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="26dp"
             android:orientation="vertical"
             android:visibility="gone">
 
@@ -70,7 +68,6 @@
                 android:hint="@string/vehicle_registration" />
         </LinearLayout>
 
-        <!-- PENDING INFO (DRIVER) -->
         <TextView
             android:id="@+id/txtPendingInfo"
             android:layout_width="wrap_content"
@@ -80,19 +77,25 @@
             android:textColor="@android:color/holo_orange_dark"
             android:visibility="gone" />
 
-        <!-- SPACER -->
         <View
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <!-- SACUVAJ -->
         <Button
             android:id="@+id/btnSave"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="@string/save_change_btn" />
+
+        <Button
+            android:id="@+id/btnCancel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/cancel_btn"
+            android:backgroundTint="@color/color_secondary"
+            android:textColor="@color/black"/>
 
     </LinearLayout>
 </ScrollView>

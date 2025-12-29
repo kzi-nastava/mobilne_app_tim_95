@@ -46,7 +46,7 @@ public class ProfileFragment extends Fragment {
 
         if (user.getRole() == UserRole.DRIVER) {
             driverSection.setVisibility(View.VISIBLE);
-            txtActiveHours.setText("Active hours (24h): " + user.getActiveHoursLast24h());
+            txtActiveHours.setText("Active hours: " + user.getActiveHoursLast24h() + "h");
             txtVehicle.setText("Vehicle: " + user.getVehicleModel() + " (" + user.getVehiclePlate() + ")");
         }
 
