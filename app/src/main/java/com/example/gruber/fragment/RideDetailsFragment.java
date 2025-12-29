@@ -9,6 +9,7 @@ import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.gruber.R;
@@ -69,6 +70,23 @@ public class RideDetailsFragment extends Fragment {
         // --- Header (Ride ID + Status)
         tvRideId.setText("Ride #" + ride.id);
         tvStatus.setText(ride.status != null ? ride.status.name() : "-");
+        int statusColorRes;
+        if (ride.status == null) {
+            statusColorRes = R.color.color_text; // fallback
+        } else {
+            switch (ride.status) {
+                case COMPLETED:
+                    statusColorRes = R.color.status_completed;
+                    break;
+                case CANCELLED:
+                    statusColorRes = R.color.status_cancelled;
+                    break;
+                default:
+                    statusColorRes = R.color.status_active;
+                    break;
+            }
+        }
+        tvStatus.setTextColor(ContextCompat.getColor(requireContext(), statusColorRes));
 
         // --- Passenger emails
         tvMainPassengerEmail.setText(ride.creatorUserEmail != null ? ride.creatorUserEmail : "-");

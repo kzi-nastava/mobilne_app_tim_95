@@ -25,7 +25,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Ride #00001"
-                android:textSize="20sp"
+                android:textSize="24sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -33,7 +33,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="COMPLETED"
-                android:textSize="16sp"
+                android:textSize="22sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -42,6 +42,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Main passenger"
+            android:textSize="16sp"
             android:layout_marginTop="14dp"
             android:textStyle="bold" />
 
@@ -49,12 +50,14 @@
             android:id="@+id/tvMainPassengerEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textSize="16sp"
             android:text="pera@mail.com"
             android:layout_marginTop="4dp" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textSize="16sp"
             android:text="Other passengers"
             android:layout_marginTop="10dp"
             android:textStyle="bold" />
@@ -64,6 +67,7 @@
             android:id="@+id/otherPassengersContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textSize="16sp"
             android:orientation="vertical"
             android:layout_marginTop="4dp" />
 
@@ -73,12 +77,14 @@
             android:layout_height="wrap_content"
             android:text="Time"
             android:layout_marginTop="14dp"
+            android:textSize="16sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvTimes"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textSize="16sp"
             android:text="26.12.2025 19:40 - 20:05 (25 min)"
             android:layout_marginTop="4dp" />
 
@@ -87,6 +93,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Route"
+            android:textSize="16sp"
             android:layout_marginTop="14dp"
             android:textStyle="bold" />
 
@@ -94,6 +101,7 @@
             android:id="@+id/tvStartAddress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textSize="16sp"
             android:text="From: Bulevar Patrijarha Pavla 15, Novi Sad"
             android:layout_marginTop="4dp" />
 
@@ -101,6 +109,7 @@
             android:id="@+id/tvEndAddress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textSize="16sp"
             android:text="To: Bulevar Cara Lazara 15, Novi Sad"
             android:layout_marginTop="4dp" />
 
@@ -108,6 +117,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Stops"
+            android:textSize="16sp"
             android:layout_marginTop="10dp"
             android:textStyle="bold" />
 
@@ -117,6 +127,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:textSize="16sp"
             android:layout_marginTop="4dp" />
 
         <!-- Price -->
@@ -125,6 +136,7 @@
             android:layout_height="wrap_content"
             android:text="Price"
             android:layout_marginTop="14dp"
+            android:textSize="16sp"
             android:textStyle="bold" />
 
         <TextView
@@ -132,7 +144,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="RSD 1,250"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:textStyle="bold"
             android:layout_marginTop="4dp" />
 
@@ -142,6 +154,7 @@
             android:layout_height="wrap_content"
             android:text="Additional info"
             android:layout_marginTop="14dp"
+            android:textSize="16sp"
             android:textStyle="bold" />
 
         <!-- Shown/hidden depending on ride status -->
@@ -150,6 +163,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Cancelled by: -"
+            android:textSize="16sp"
             android:layout_marginTop="4dp"
             android:visibility="gone" />
 
@@ -158,6 +172,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Panic triggered: NO"
+            android:textSize="16sp"
             android:layout_marginTop="4dp" />
 
     </LinearLayout>

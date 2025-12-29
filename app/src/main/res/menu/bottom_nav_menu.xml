@@ -9,7 +9,5 @@
   <item android:id="@+id/profileFragment"
         android:title="@string/profile"
         android:icon="@drawable/user"/>
-
-
 </menu>
 <!--Nova Voznja(Home), Voznje, Profil, Empty-->

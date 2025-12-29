@@ -98,7 +98,7 @@ public class FakeSession {
                 "Bulevar Cara Lazara 1, Novi Sad",
                 "Balzakova 15, Novi Sad");
         ride4.setDistanceMeters(0);
-        ride4.setStartedAtMillis(LocalDateTime.now().minusHours(5).minusMinutes(2));
+        ride4.setStartedAtMillis(LocalDateTime.now().minusMinutes(7));
         ride4.setPanicTriggered(false);
         ride4.setStatus(RideStatus.ACTIVE);
         ride4.setPriceDin(0);
