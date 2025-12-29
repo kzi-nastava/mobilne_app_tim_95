@@ -42,8 +42,8 @@ public class EditProfileFragment extends Fragment {
         etVehiclePlate = view.findViewById(R.id.etVehiclePlate);
         txtPendingInfo = view.findViewById(R.id.txtPendingInfo);
         Button btnSave = view.findViewById(R.id.btnSave);
+        Button btnCancel = view.findViewById(R.id.btnCancel);
 
-        // Popuni postojece podatke
         etFirstName.setText(user.getFirstName());
         etLastName.setText(user.getLastName());
         etPhone.setText(user.getPhone());
@@ -68,5 +68,10 @@ public class EditProfileFragment extends Fragment {
                         .popBackStack();
             }
         });
+
+        btnCancel.setOnClickListener(v ->
+                NavHostFragment.findNavController(EditProfileFragment.this)
+                        .navigate(R.id.action_editProfileFragment_to_profileFragment)
+        );
     }
 }

@@ -29,6 +29,7 @@ public class ChangePasswordFragment extends Fragment {
         EditText etConfirm = view.findViewById(R.id.etConfirmPassword);
         TextView txtError = view.findViewById(R.id.txtError);
         Button btnChange = view.findViewById(R.id.btnChangePassword);
+        Button btnCancel = view.findViewById(R.id.btnCancel);
 
         btnChange.setOnClickListener(v -> {
             String oldPass = etOld.getText().toString();
@@ -52,12 +53,16 @@ public class ChangePasswordFragment extends Fragment {
                 return;
             }
 
-            // Fake success
             Toast.makeText(getContext(), "Password changed successfully.", Toast.LENGTH_SHORT).show();
 
             NavHostFragment.findNavController(ChangePasswordFragment.this)
                     .popBackStack();
         });
+
+        btnCancel.setOnClickListener(v ->
+                NavHostFragment.findNavController(ChangePasswordFragment.this)
+                        .navigate(R.id.action_changePasswordFragment_to_profileFragment)
+        );
     }
 
     private void showError(TextView txt, String msg) {
