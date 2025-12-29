@@ -1,5 +1,6 @@
 package com.example.gruber.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -45,6 +46,9 @@ public class RegistrationActivity extends AppCompatActivity implements RegisterA
     @Override
     public void onAddressSubmitted(Address address) {
         accountViewModel.setAddress(address);
+        Intent intent = new Intent(RegistrationActivity.this, MainActivity.class);
+        finish();
+        startActivity(intent);
         //Intent intent = new Intent(...)
     }
 }
