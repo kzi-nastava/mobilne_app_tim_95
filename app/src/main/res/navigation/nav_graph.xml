@@ -2,7 +2,7 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    app:startDestination="@id/profileFragment">
+    app:startDestination="@id/homeMapFragment">
 
     <fragment
         android:id="@+id/profileFragment"
@@ -57,4 +57,18 @@
             android:name="rideId"
             app:argType="string" />
     </fragment>
+
+    <fragment
+        android:id="@+id/homeMapFragment"
+        android:name="com.example.gruber.fragment.HomeMapFragment"
+        android:label="Home">
+<!--        <action-->
+<!--            android:id="@+id/action_homeMapFragment_to_bookRideFragment"-->
+<!--            app:destination="@id/bookRideFragment"/>-->
+    </fragment>
+
+<!--    <fragment-->
+<!--        android:id="@+id/bookRideFragment"-->
+<!--        android:name="com.example.gruber.fragment.BookRideFragment"-->
+<!--        android:label="Book ride"/>-->
 </navigation>
