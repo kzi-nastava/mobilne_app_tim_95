@@ -46,4 +46,7 @@
     <string name="home">Home</string>
     <string name="ride_history">Ride history</string>
     <string name="profile">Profile</string>
+
+    <!--  MAIN MAP VIEW  -->
+    <string name="book_a_ride">Book a ride</string>
 </resources>

@@ -45,6 +45,7 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.VH> {
     static class VH extends RecyclerView.ViewHolder {
         CardView rideCard;
         TextView dateOfRide, timeOfRide, textPassengerEmail, textStatus;
+        View statusDot;
 
         VH(@NonNull View itemView) {
             super(itemView);
@@ -52,6 +53,7 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.VH> {
             dateOfRide = itemView.findViewById(R.id.dateOfRide);
             textPassengerEmail = itemView.findViewById(R.id.textPassengerEmail);
             textStatus = itemView.findViewById(R.id.textStatus);
+            statusDot = itemView.findViewById(R.id.statusDot);
         }
     }
 
@@ -112,26 +114,26 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.VH> {
         holder.textStatus.setText(statusText);
 
         Context ctx = holder.itemView.getContext();
-        int statusColorRes;
+        int dotColorRes;
 
         if (ride.status == null) {
-            statusColorRes = R.color.color_text; // fallback
+            dotColorRes = R.color.color_text; // fallback
         } else {
             switch (ride.status) {
                 case COMPLETED:
-                    statusColorRes = R.color.status_completed;
+                    dotColorRes = R.color.status_completed;
                     break;
                 case CANCELLED:
-                    statusColorRes = R.color.status_cancelled;
+                    dotColorRes = R.color.status_cancelled;
                     break;
                 case ACTIVE:
                 default:
-                    statusColorRes = R.color.status_active;
+                    dotColorRes = R.color.status_active;
                     break;
             }
         }
 
-        holder.textStatus.setTextColor(ContextCompat.getColor(ctx, statusColorRes));
+        holder.statusDot.setBackgroundTintList(ContextCompat.getColorStateList(ctx, dotColorRes));
 
         // ---- CLICK ----
         holder.rideCard.setOnClickListener(v -> {
