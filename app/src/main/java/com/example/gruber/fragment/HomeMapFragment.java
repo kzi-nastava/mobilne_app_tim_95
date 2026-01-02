@@ -48,11 +48,11 @@ public class HomeMapFragment extends Fragment {
         GeoPoint noviSad = new GeoPoint(45.2671, 19.8335);
         controller.setCenter(noviSad);
 
-        view.findViewById(R.id.btnBookRide).setOnClickListener(v -> {
-            // For now just navigate to a placeholder "BookRideFragment"
-            NavHostFragment.findNavController(HomeMapFragment.this)
-                    .navigate(R.id.action_homeMapFragment_to_bookRideFragment);
-        });
+//        view.findViewById(R.id.btnBookRide).setOnClickListener(v -> {
+//            // For now just navigate to a placeholder "BookRideFragment"
+//            NavHostFragment.findNavController(HomeMapFragment.this)
+//                    .navigate(R.id.action_homeMapFragment_to_bookRideFragment);
+//        });
     }
 
     @Override

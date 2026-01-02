@@ -62,9 +62,9 @@
         android:id="@+id/homeMapFragment"
         android:name="com.example.gruber.fragment.HomeMapFragment"
         android:label="Home">
-        <action
-            android:id="@+id/action_homeMapFragment_to_bookRideFragment"
-            app:destination="@id/bookRideFragment"/>
+<!--        <action-->
+<!--            android:id="@+id/action_homeMapFragment_to_bookRideFragment"-->
+<!--            app:destination="@id/bookRideFragment"/>-->
     </fragment>
 
 <!--    <fragment-->
