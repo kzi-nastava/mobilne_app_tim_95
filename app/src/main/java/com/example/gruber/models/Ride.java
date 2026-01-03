@@ -16,8 +16,10 @@ public class Ride {
     public List<String> passengerEmails;
     public String pickupAddress;
     public String dropoffAddress;
-    public LocalDateTime startedAt;     // sort by this DESC
-    public LocalDateTime finishedAt;    // nullable
+    public LatLng pickupLocation;
+    public LatLng dropoffLocation;
+    public LocalDateTime startedAt;
+    public LocalDateTime finishedAt;
     public int priceDin;
     public int distanceMeters;
     public boolean panicTriggered;
@@ -39,6 +41,40 @@ public class Ride {
         this.creatorUserEmail = creatorUserId;
         this.pickupAddress = pickupAddress;
         this.dropoffAddress = dropoffAddress;
+    }
+
+    public Stop getPickupStop() {
+        if (stopList == null || stopList.isEmpty()) return null;
+        return stopList.get(0);
+    }
+
+    public Stop getDropoffStop() {
+        if (stopList == null || stopList.isEmpty()) return null;
+        return stopList.get(stopList.size() - 1);
+    }
+
+    public LatLng getBestPickupLocation() {
+        Stop s = getPickupStop();
+        if (s != null && s.location != null) return s.location;
+        return pickupLocation;
+    }
+
+    public LatLng getBestDropoffLocation() {
+        Stop s = getDropoffStop();
+        if (s != null && s.location != null) return s.location;
+        return dropoffLocation;
+    }
+
+    public String getBestPickupAddress() {
+        Stop s = getPickupStop();
+        if (s != null && s.address != null && !s.address.trim().isEmpty()) return s.address;
+        return pickupAddress;
+    }
+
+    public String getBestDropoffAddress() {
+        Stop s = getDropoffStop();
+        if (s != null && s.address != null && !s.address.trim().isEmpty()) return s.address;
+        return dropoffAddress;
     }
 
     @NonNull

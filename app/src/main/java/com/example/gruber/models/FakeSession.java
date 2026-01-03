@@ -54,8 +54,8 @@ public class FakeSession {
     public static Ride ride2;
     static {
         otherPass2.add("zika@mail.com");
-        stopList3.add(new Stop("00001", "Sutjeska 2, Novi Sad", 1));
-        stopList3.add(new Stop("00001", "Fruskogorska 16, Novi Sad", 2));
+        stopList3.add(new Stop("00001", "Sutjeska 2, Novi Sad", 1, new LatLng(20,20)));
+        stopList3.add(new Stop("00001", "Fruskogorska 16, Novi Sad", 2, new LatLng(20,20)));
         ride2 = new Ride(
                 "00002",
                 "marko@mail.com",
