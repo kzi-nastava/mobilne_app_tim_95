@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@id/homeMapFragment">
+
+    <fragment
+        android:id="@+id/homeMapFragment"
+        android:name="com.example.gruber.fragment.HomeMapFragment"
+        android:label="Home" />
+
+<!--    <fragment-->
+<!--        android:id="@+id/adminActiveRidesFragment"-->
+<!--        android:name="com.example.gruber.fragment.admin.AdminActiveRidesFragment"-->
+<!--        android:label="Active rides" />-->
+
+<!--    <fragment-->
+<!--        android:id="@+id/adminSupportFragment"-->
+<!--        android:name="com.example.gruber.fragment.admin.AdminSupportFragment"-->
+<!--        android:label="Support" />-->
+
+<!--    <fragment-->
+<!--        android:id="@+id/adminUsersFragment"-->
+<!--        android:name="com.example.gruber.fragment.admin.AdminUsersFragment"-->
+<!--        android:label="Users and drivers" />-->
+
+</navigation>

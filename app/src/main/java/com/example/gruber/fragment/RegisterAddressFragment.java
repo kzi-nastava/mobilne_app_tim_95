@@ -1,70 +1,48 @@
 package com.example.gruber.fragment;
 
-import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import static androidx.navigation.fragment.NavHostFragment.findNavController;
+
 import com.example.gruber.R;
 import com.example.gruber.models.Address;
+import com.example.gruber.viewModels.AccountViewModel;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 public class RegisterAddressFragment extends Fragment {
 
-    public interface OnAddressSubmitted {
-        void onAddressSubmitted(Address address);
-    }
-
-    private OnAddressSubmitted callback;
+    private AccountViewModel accountViewModel;
 
     private TextInputEditText etStreet;
     private TextInputLayout tilStreet;
+
     private TextInputEditText etStreetNumber;
     private TextInputLayout tilStreetNumber;
+
     private TextInputEditText etCity;
     private TextInputLayout tilCity;
 
     public RegisterAddressFragment() {
         // Required empty public constructor
     }
-    public static RegisterAddressFragment newInstance(String param1, String param2) {
-        RegisterAddressFragment fragment = new RegisterAddressFragment();
-        Bundle args = new Bundle();
-        fragment.setArguments(args);
-        return fragment;
-    }
 
     @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-
-        if (context instanceof OnAddressSubmitted) {
-            callback = (OnAddressSubmitted) context;
-        } else {
-            throw new RuntimeException(
-                    "Host activity/fragment must implement OnAddressSubmitted."
-            );
-        }
-
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+
         View view = inflater.inflate(R.layout.fragment_register_address, container, false);
 
+        accountViewModel = new ViewModelProvider(requireActivity()).get(AccountViewModel.class);
 
         tilStreet = view.findViewById(R.id.til_set_street);
         tilStreetNumber = view.findViewById(R.id.til_set_street_number);
@@ -74,30 +52,73 @@ public class RegisterAddressFragment extends Fragment {
         etStreetNumber = view.findViewById(R.id.et_set_street_number);
         etCity = view.findViewById(R.id.et_set_city);
 
-        view.findViewById(R.id.btn_address_next).setOnClickListener(v -> onNextClicked(view));
+        view.findViewById(R.id.btn_address_next).setOnClickListener(v -> onNextClicked());
         view.findViewById(R.id.btn_address_previous).setOnClickListener(v -> onPreviousClicked());
 
         return view;
     }
 
-    private void onNextClicked(View view) {
-        Address address = collectAddress(view);
-        callback.onAddressSubmitted(address);
+    private void onNextClicked() {
+        clearErrors();
+
+        Address address = collectAddress();
+
+        if (!isValid(address)) return;
+
+        accountViewModel.setAddress(address);
+
+        // TODO: Here is typically where you'd call your register API and on success navigate.
+        // For now, go back to Home (or wherever you want) after address step:
+        // Option A: navigate using an action (recommended)
+        // findNavController(this).navigate(R.id.action_registerAddressFragment_to_homeMapFragment);
+
+        // Option B: direct destination id
+        findNavController(this).navigate(R.id.homeMapFragment);
     }
+
     private void onPreviousClicked() {
-        requireActivity().getSupportFragmentManager().popBackStack();
+        // Back within the nav graph
+        findNavController(this).navigateUp();
     }
-    private Address collectAddress(View view) {
+
+    private Address collectAddress() {
         Address address = new Address();
-        String street = etStreet.getText() != null ?
-                etStreet.getText().toString() : "";
+
+        String street = etStreet.getText() != null ? etStreet.getText().toString().trim() : "";
+        String number = etStreetNumber.getText() != null ? etStreetNumber.getText().toString().trim() : "";
+        String city = etCity.getText() != null ? etCity.getText().toString().trim() : "";
+
         address.setStreet(street);
-        String number = etStreetNumber.getText() != null ?
-                etStreetNumber.getText().toString() : "";
         address.setNumber(number);
-        String city = etCity.getText() != null ?
-                etCity.getText().toString() : "";
         address.setCity(city);
+
         return address;
+    }
+
+    private boolean isValid(Address address) {
+        boolean valid = true;
+
+        if (address.getStreet() == null || address.getStreet().isEmpty()) {
+            tilStreet.setError("Street is required");
+            valid = false;
+        }
+
+        if (address.getNumber() == null || address.getNumber().isEmpty()) {
+            tilStreetNumber.setError("Street number is required");
+            valid = false;
+        }
+
+        if (address.getCity() == null || address.getCity().isEmpty()) {
+            tilCity.setError("City is required");
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    private void clearErrors() {
+        tilStreet.setError(null);
+        tilStreetNumber.setError(null);
+        tilCity.setError(null);
     }
 }

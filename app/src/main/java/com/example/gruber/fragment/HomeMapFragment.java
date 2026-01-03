@@ -57,7 +57,7 @@ public class HomeMapFragment extends Fragment {
     private static final double NS_MIN_LON = 19.780;
     private static final double NS_MAX_LON = 19.870;
 
-    private final ExecutorService bg = Executors.newFixedThreadPool(2);
+    private ExecutorService bg;
     private final Handler ui = new Handler(Looper.getMainLooper());
 
     private RoadManager roadManager;
@@ -66,7 +66,8 @@ public class HomeMapFragment extends Fragment {
     private final List<Integer> vehiclePathIndex = new ArrayList<>();
     private Runnable movementRunnable;
 
-    // ✅ Modern permission API (no deprecated override)
+
+    // Modern permission API (no deprecated override)
     private final ActivityResultLauncher<String[]> locationPermissionLauncher =
             registerForActivityResult(
                     new ActivityResultContracts.RequestMultiplePermissions(),
@@ -86,6 +87,7 @@ public class HomeMapFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        bg = Executors.newFixedThreadPool(2);
         // osmdroid config
         Configuration.getInstance().load(
                 requireContext(),
@@ -123,7 +125,7 @@ public class HomeMapFragment extends Fragment {
     }
 
     private void enableMyLocation() {
-        if (map == null) return;
+        if (map == null || !isAdded()) return;
 
         if (myLocationOverlay == null) {
             GpsMyLocationProvider provider = new GpsMyLocationProvider(requireContext());
@@ -131,18 +133,19 @@ public class HomeMapFragment extends Fragment {
             myLocationOverlay.enableFollowLocation(); // optional
             map.getOverlays().add(myLocationOverlay);
 
-            // Center once we get first fix (optional)
-            myLocationOverlay.runOnFirstFix(() ->
-                    requireActivity().runOnUiThread(() -> {
-                        GeoPoint me = myLocationOverlay.getMyLocation();
-                        if (me != null) {
-                            map.getController().setZoom(16.0);
-                            map.getController().setCenter(me);
-                        }
-                    })
-            );
-        }
+            myLocationOverlay.runOnFirstFix(() -> {
+                ui.post(() -> {
+                    if (!isAdded() || map == null || myLocationOverlay == null) return;
 
+                    GeoPoint me = myLocationOverlay.getMyLocation();
+                    if (me != null) {
+                        map.getController().setZoom(16.0);
+                        map.getController().setCenter(me);
+                        map.invalidate();
+                    }
+                });
+            });
+        }
         myLocationOverlay.enableMyLocation();
         map.invalidate();
     }
@@ -187,6 +190,7 @@ public class HomeMapFragment extends Fragment {
     }
 
     private void requestNewRouteForVehicle(int idx) {
+        if (bg == null || bg.isShutdown()) return;
         Vehicle v = vehicles.get(idx);
 
         GeoPoint start = v.position;
@@ -220,7 +224,11 @@ public class HomeMapFragment extends Fragment {
         movementRunnable = new Runnable() {
             @Override
             public void run() {
-                if (map == null) return;
+                if (!isAdded() || map == null) return;
+
+                if (vehicleMarkers.size() != vehicles.size()) {
+                    renderVehicles();
+                }
 
                 for (int i = 0; i < vehicles.size(); i++) {
                     List<GeoPoint> path = vehiclePaths.get(i);
@@ -229,29 +237,29 @@ public class HomeMapFragment extends Fragment {
                     int pIndex = vehiclePathIndex.get(i);
 
                     if (pIndex >= path.size()) {
-                        // reached end -> new destination
                         requestNewRouteForVehicle(i);
                         continue;
                     }
 
                     GeoPoint next = path.get(pIndex);
 
-                    // update vehicle + marker position
                     vehicles.get(i).position = next;
-                    vehicleMarkers.get(i).setPosition(next);
+
+                    if (i < vehicleMarkers.size()) {
+                        vehicleMarkers.get(i).setPosition(next);
+                    }
 
                     vehiclePathIndex.set(i, pIndex + 1);
                 }
 
                 map.invalidate();
-
-                // speed control (lower = faster)
-                ui.postDelayed(this, 600); // ~0.6s step; adjust later
+                ui.postDelayed(this, 600);
             }
         };
 
         ui.postDelayed(movementRunnable, 600);
     }
+
 
     private void stopMovementLoop() {
         if (movementRunnable != null) {
@@ -332,8 +340,27 @@ public class HomeMapFragment extends Fragment {
     @Override
     public void onDestroyView() {
         stopMovementLoop();
-        bg.shutdownNow();
+
+        if (myLocationOverlay != null) {
+            myLocationOverlay.disableFollowLocation();
+            myLocationOverlay.disableMyLocation();
+            myLocationOverlay = null;
+        }
+        vehicleMarkers.clear();
+        vehiclePaths.clear();
+        vehiclePathIndex.clear();
+        if (map != null) {
+            map.getOverlays().clear();
+            map.onDetach();
+            map = null;
+        }
         super.onDestroyView();
+    }
+
+    @Override
+    public void onDestroy() {
+        bg.shutdownNow();
+        super.onDestroy();
     }
 
 }

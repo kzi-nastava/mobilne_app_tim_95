@@ -21,7 +21,7 @@ public class FakeSession {
                 "Marković",
                 "marko@mail.com",
                 "+38164123456",
-                UserRole.DRIVER
+                UserRole.GUEST
         );
 
         currentUser.setActiveHoursLast24h(5);

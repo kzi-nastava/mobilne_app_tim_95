@@ -5,14 +5,17 @@
     app:startDestination="@id/homeMapFragment">
 
     <fragment
+        android:id="@+id/homeMapFragment"
+        android:name="com.example.gruber.fragment.HomeMapFragment"
+        android:label="Home" />
+
+    <fragment
         android:id="@+id/profileFragment"
         android:name="com.example.gruber.fragment.ProfileFragment"
         android:label="Profile">
-
         <action
             android:id="@+id/action_profile_to_editProfile"
             app:destination="@id/editProfileFragment" />
-
         <action
             android:id="@+id/action_profile_to_changePassword"
             app:destination="@id/changePasswordFragment" />
@@ -21,29 +24,25 @@
     <fragment
         android:id="@+id/editProfileFragment"
         android:name="com.example.gruber.fragment.EditProfileFragment"
-        android:label="Profile Edit" >
-
+        android:label="Profile Edit">
         <action
             android:id="@+id/action_editProfileFragment_to_profileFragment"
             app:destination="@id/profileFragment" />
-
     </fragment>
 
     <fragment
         android:id="@+id/changePasswordFragment"
         android:name="com.example.gruber.fragment.ChangePasswordFragment"
-        android:label="Password Change" >
-
+        android:label="Password Change">
         <action
             android:id="@+id/action_changePasswordFragment_to_profileFragment"
             app:destination="@id/profileFragment" />
-
     </fragment>
 
     <fragment
         android:id="@+id/ridesHistory"
         android:name="com.example.gruber.fragment.DriversRidesFragment"
-        android:label="Istorija voznji">
+        android:label="Ride history">
         <action
             android:id="@+id/action_ridesHistory_to_rideDetailsFragment"
             app:destination="@id/rideDetailsFragment" />
@@ -52,23 +51,10 @@
     <fragment
         android:id="@+id/rideDetailsFragment"
         android:name="com.example.gruber.fragment.RideDetailsFragment"
-        android:label="Detalji voznje">
+        android:label="Ride details">
         <argument
             android:name="rideId"
             app:argType="string" />
     </fragment>
 
-    <fragment
-        android:id="@+id/homeMapFragment"
-        android:name="com.example.gruber.fragment.HomeMapFragment"
-        android:label="Home">
-<!--        <action-->
-<!--            android:id="@+id/action_homeMapFragment_to_bookRideFragment"-->
-<!--            app:destination="@id/bookRideFragment"/>-->
-    </fragment>
-
-<!--    <fragment-->
-<!--        android:id="@+id/bookRideFragment"-->
-<!--        android:name="com.example.gruber.fragment.BookRideFragment"-->
-<!--        android:label="Book ride"/>-->
 </navigation>
