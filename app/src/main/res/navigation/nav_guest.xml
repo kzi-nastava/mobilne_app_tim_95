@@ -12,11 +12,41 @@
     <fragment
         android:id="@+id/loginFragment"
         android:name="com.example.gruber.fragment.LoginFragment"
-        android:label="Login" />
+        android:label="Login">
+        <action
+            android:id="@+id/action_loginFragment_to_registerFragment"
+            app:destination="@id/registerAccountFragment" />
+    </fragment>
+
+    <!-- Register flow steps -->
+    <fragment
+        android:id="@+id/registerAccountFragment"
+        android:name="com.example.gruber.fragment.RegisterAccountFragment"
+        android:label="Register - Account">
+        <action
+            android:id="@+id/action_registerAccountFragment_to_registerNameFragment"
+            app:destination="@id/registerNameFragment" />
+    </fragment>
 
     <fragment
-        android:id="@+id/registerFragment"
-        android:name="com.example.gruber.fragment.RegisterFragment"
-        android:label="Register" />
+        android:id="@+id/registerNameFragment"
+        android:name="com.example.gruber.fragment.RegisterNameFragment"
+        android:label="Register - Name">
+        <action
+            android:id="@+id/action_registerNameFragment_to_registerAddressFragment"
+            app:destination="@id/registerAddressFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerAddressFragment"
+        android:name="com.example.gruber.fragment.RegisterAddressFragment"
+        android:label="Register - Address">
+        <!-- optional: if after register you want to go to home explicitly -->
+        <action
+            android:id="@+id/action_registerAddressFragment_to_homeMapFragment"
+            app:destination="@id/homeMapFragment"
+            app:popUpTo="@id/homeMapFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
 
 </navigation>

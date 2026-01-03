@@ -3,10 +3,7 @@
     <item android:id="@+id/homeMapFragment"
         android:title="@string/home"
         android:icon="@drawable/home"/>
-    <item android:id="@+id/ridesHistory"
-        android:title="@string/ride_history"
-        android:icon="@drawable/car" />
-    <item android:id="@+id/profileFragment"
-        android:title="@string/profile"
+    <item android:id="@+id/loginFragment"
+        android:title="@string/login"
         android:icon="@drawable/user"/>
 </menu>
