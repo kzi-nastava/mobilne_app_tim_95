@@ -19,7 +19,9 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import org.osmdroid.config.Configuration;
+import org.osmdroid.tileprovider.tilesource.ITileSource;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.tileprovider.tilesource.XYTileSource;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
@@ -53,6 +55,17 @@ public class RideTrackingFragment extends Fragment {
     private final Handler ui = new Handler(Looper.getMainLooper());
 
     private String rideId;
+
+    private static final ITileSource CARTO_POSITRON = new XYTileSource(
+            "CartoPositron",
+            0, 20, 256, ".png",
+            new String[]{
+                    "https://a.basemaps.cartocdn.com/light_all/",
+                    "https://b.basemaps.cartocdn.com/light_all/",
+                    "https://c.basemaps.cartocdn.com/light_all/",
+                    "https://d.basemaps.cartocdn.com/light_all/"
+            }
+    );
 
     public RideTrackingFragment() {
         super(R.layout.fragment_ride_tracking);
@@ -110,7 +123,7 @@ public class RideTrackingFragment extends Fragment {
     }
 
     private void setupMap() {
-        map.setTileSource(TileSourceFactory.MAPNIK);
+        map.setTileSource(CARTO_POSITRON);
         map.setMultiTouchControls(true);
         map.getController().setZoom(14.0);
     }
