@@ -7,7 +7,11 @@
     <fragment
         android:id="@+id/homeMapFragment"
         android:name="com.example.gruber.fragment.HomeMapFragment"
-        android:label="Home" />
+        android:label="Home">
+        <action
+            android:id="@+id/action_temp"
+            app:destination="@id/rideTrackingFragment"/>
+    </fragment>
 
     <fragment
         android:id="@+id/profileFragment"
@@ -52,6 +56,15 @@
         android:id="@+id/rideDetailsFragment"
         android:name="com.example.gruber.fragment.RideDetailsFragment"
         android:label="Ride details">
+        <argument
+            android:name="rideId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/rideTrackingFragment"
+        android:name="com.example.gruber.fragment.RideTrackingFragment"
+        android:label="Ride tracking">
         <argument
             android:name="rideId"
             app:argType="string" />

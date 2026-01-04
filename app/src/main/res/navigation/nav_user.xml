@@ -57,4 +57,13 @@
             app:argType="string" />
     </fragment>
 
+    <fragment
+        android:id="@+id/rideTrackingFragment"
+        android:name="com.example.gruber.fragment.RideTrackingFragment"
+        android:label="Track ride">
+        <argument
+            android:name="rideId"
+            app:argType="string" />
+    </fragment>
+
 </navigation>

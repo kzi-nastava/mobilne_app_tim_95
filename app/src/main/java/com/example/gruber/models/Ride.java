@@ -16,8 +16,10 @@ public class Ride {
     public List<String> passengerEmails;
     public String pickupAddress;
     public String dropoffAddress;
-    public LocalDateTime startedAt;     // sort by this DESC
-    public LocalDateTime finishedAt;    // nullable
+    public LatLng pickupLocation;
+    public LatLng dropoffLocation;
+    public LocalDateTime startedAt;
+    public LocalDateTime finishedAt;
     public int priceDin;
     public int distanceMeters;
     public boolean panicTriggered;
@@ -40,6 +42,12 @@ public class Ride {
         this.pickupAddress = pickupAddress;
         this.dropoffAddress = dropoffAddress;
     }
+
+    public LatLng getPickupLocation() { return pickupLocation; }
+    public void setPickupLocation(LatLng pickupLocation) { this.pickupLocation = pickupLocation; }
+
+    public LatLng getDropoffLocation() { return dropoffLocation; }
+    public void setDropoffLocation(LatLng dropoffLocation) { this.dropoffLocation = dropoffLocation; }
 
     @NonNull
     public String getCreatorUserEmail() {
