@@ -4,7 +4,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/color_background"
     android:padding="16dp"
     tools:context=".fragment.RideDetailsFragment">
 
@@ -27,7 +26,6 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Ride #00001"
-                android:textColor="@color/color_text"
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
@@ -46,7 +44,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Main passenger"
-            android:textColor="@color/color_text"
             android:textSize="16sp"
             android:layout_marginTop="14dp"
             android:textStyle="bold" />
@@ -55,7 +52,6 @@
             android:id="@+id/tvMainPassengerEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/color_text"
             android:textSize="16sp"
             android:text="pera@mail.com"
             android:layout_marginTop="4dp" />
@@ -65,7 +61,6 @@
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:text="Other passengers"
-            android:textColor="@color/color_text"
             android:layout_marginTop="10dp"
             android:textStyle="bold" />
 
@@ -81,7 +76,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Time"
-            android:textColor="@color/color_text"
             android:layout_marginTop="14dp"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -90,7 +84,6 @@
             android:id="@+id/tvTimes"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/color_text"
             android:textSize="16sp"
             android:text="26.12.2025 19:40 - 20:05 (25 min)"
             android:layout_marginTop="4dp" />
@@ -100,7 +93,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Route"
-            android:textColor="@color/color_text"
             android:textSize="16sp"
             android:layout_marginTop="14dp"
             android:textStyle="bold" />
@@ -109,7 +101,6 @@
             android:id="@+id/tvStartAddress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/color_text"
             android:textSize="16sp"
             android:text="From: ..."
             android:layout_marginTop="4dp" />
@@ -118,7 +109,6 @@
             android:id="@+id/tvEndAddress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/color_text"
             android:textSize="16sp"
             android:text="To: ..."
             android:layout_marginTop="4dp" />
@@ -127,7 +117,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Stops"
-            android:textColor="@color/color_text"
             android:textSize="16sp"
             android:layout_marginTop="10dp"
             android:textStyle="bold" />
@@ -144,7 +133,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Price"
-            android:textColor="@color/color_text"
             android:layout_marginTop="14dp"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -154,7 +142,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="RSD 1,250"
-            android:textColor="@color/color_text"
             android:textSize="20sp"
             android:textStyle="bold"
             android:layout_marginTop="4dp" />
@@ -164,7 +151,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Additional info"
-            android:textColor="@color/color_text"
             android:layout_marginTop="14dp"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -174,7 +160,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Cancelled by: -"
-            android:textColor="@color/color_text"
             android:textSize="16sp"
             android:layout_marginTop="4dp"
             android:visibility="gone" />
@@ -184,7 +169,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Panic triggered: NO"
-            android:textColor="@color/color_text"
             android:textSize="16sp"
             android:layout_marginTop="4dp" />
 
@@ -194,7 +178,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:padding="3dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="6dp"
             app:strokeColor="@color/color_secondary_variant"
@@ -203,7 +186,7 @@
             <org.osmdroid.views.MapView
                 android:id="@+id/rideDetailsMap"
                 android:layout_width="match_parent"
-                android:layout_height="240dp" />
+                android:layout_height="240dp"/>
 
         </com.google.android.material.card.MaterialCardView>
 

@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -52,4 +53,8 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation("org.osmdroid:osmdroid-android:6.1.18")
     implementation("com.github.MKergall:osmbonuspack:6.9.0")
+    implementation(platform("com.google.firebase:firebase-bom:34.7.0"))
+    implementation ("com.google.firebase:firebase-auth")
+    implementation ("com.google.firebase:firebase-firestore")
+    implementation ("com.google.firebase:firebase-storage")
 }

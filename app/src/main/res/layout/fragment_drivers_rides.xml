@@ -4,7 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:paddingHorizontal="16dp"
+    android:paddingTop="16dp"
+    android:layout_alignParentBottom="true"
     tools:context=".fragment.DriversRidesFragment">
 
     <!-- FILTER / SORT BAR -->
@@ -87,7 +89,6 @@
         android:layout_weight="1"
         android:clipChildren="false"
         android:clipToPadding="false"
-        android:paddingBottom="106dp"
         tools:listitem="@layout/ride_card" />
 
 </LinearLayout>
