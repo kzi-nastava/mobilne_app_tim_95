@@ -43,39 +43,11 @@ public class Ride {
         this.dropoffAddress = dropoffAddress;
     }
 
-    public Stop getPickupStop() {
-        if (stopList == null || stopList.isEmpty()) return null;
-        return stopList.get(0);
-    }
+    public LatLng getPickupLocation() { return pickupLocation; }
+    public void setPickupLocation(LatLng pickupLocation) { this.pickupLocation = pickupLocation; }
 
-    public Stop getDropoffStop() {
-        if (stopList == null || stopList.isEmpty()) return null;
-        return stopList.get(stopList.size() - 1);
-    }
-
-    public LatLng getBestPickupLocation() {
-        Stop s = getPickupStop();
-        if (s != null && s.location != null) return s.location;
-        return pickupLocation;
-    }
-
-    public LatLng getBestDropoffLocation() {
-        Stop s = getDropoffStop();
-        if (s != null && s.location != null) return s.location;
-        return dropoffLocation;
-    }
-
-    public String getBestPickupAddress() {
-        Stop s = getPickupStop();
-        if (s != null && s.address != null && !s.address.trim().isEmpty()) return s.address;
-        return pickupAddress;
-    }
-
-    public String getBestDropoffAddress() {
-        Stop s = getDropoffStop();
-        if (s != null && s.address != null && !s.address.trim().isEmpty()) return s.address;
-        return dropoffAddress;
-    }
+    public LatLng getDropoffLocation() { return dropoffLocation; }
+    public void setDropoffLocation(LatLng dropoffLocation) { this.dropoffLocation = dropoffLocation; }
 
     @NonNull
     public String getCreatorUserEmail() {

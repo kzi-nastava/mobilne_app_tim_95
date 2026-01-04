@@ -1,5 +1,9 @@
 package com.example.gruber.fragment;
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -20,7 +25,9 @@ import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.RideStatus;
 
 import org.osmdroid.config.Configuration;
+import org.osmdroid.tileprovider.tilesource.ITileSource;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.tileprovider.tilesource.XYTileSource;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
@@ -46,6 +53,16 @@ public class RideDetailsFragment extends Fragment {
     private Polyline routeLine;
 
     private ExecutorService bg;
+    private static final ITileSource CARTO_POSITRON = new XYTileSource(
+            "CartoPositron",
+            0, 20, 256, ".png",
+            new String[]{
+                    "https://a.basemaps.cartocdn.com/light_all/",
+                    "https://b.basemaps.cartocdn.com/light_all/",
+                    "https://c.basemaps.cartocdn.com/light_all/",
+                    "https://d.basemaps.cartocdn.com/light_all/"
+            }
+    );
 
     @Nullable
     @Override
@@ -89,6 +106,19 @@ public class RideDetailsFragment extends Fragment {
         // Map
         rideMap = view.findViewById(R.id.rideDetailsMap);
         setupMap();
+        rideMap.setOnTouchListener((v, event) -> {
+            switch (event.getActionMasked()) {
+                case android.view.MotionEvent.ACTION_DOWN:
+                case android.view.MotionEvent.ACTION_MOVE:
+                    v.getParent().requestDisallowInterceptTouchEvent(true);
+                    break;
+                case android.view.MotionEvent.ACTION_UP:
+                case android.view.MotionEvent.ACTION_CANCEL:
+                    v.getParent().requestDisallowInterceptTouchEvent(false);
+                    break;
+            }
+            return false;
+        });
 
         if (ride == null) {
             tvRideId.setText("Ride not found");
@@ -193,21 +223,16 @@ public class RideDetailsFragment extends Fragment {
     }
 
     private void setupMap() {
-        rideMap.setTileSource(TileSourceFactory.MAPNIK);
+        rideMap.setTileSource(CARTO_POSITRON);
         rideMap.setMultiTouchControls(true);
         rideMap.getController().setZoom(13.5);
     }
 
     private void drawRideRouteOnMap(Ride ride, List<Stop> sortedStops) {
-        // You must have coordinates available:
-        // ride.pickupLocation / ride.dropoffLocation and stop.location (LatLng)
-
         GeoPoint start = toGeoPoint(ride.pickupLocation);
         GeoPoint end = toGeoPoint(ride.dropoffLocation);
 
         if (start == null || end == null) {
-            // No coordinates -> can't draw route
-            // You can hide the map card here if you want.
             return;
         }
 
@@ -220,20 +245,6 @@ public class RideDetailsFragment extends Fragment {
         }
 
         waypoints.add(end);
-
-        // Markers
-        addMarker(start, "Start");
-        for (int i = 0; i < waypoints.size(); i++) {
-            // Stops are inside the list, but we already add stop markers below only if you want
-        }
-        addMarker(end, "End");
-
-        // Optional: stop markers with numbers
-        int stopIndex = 1;
-        for (Stop s : sortedStops) {
-            GeoPoint p = toGeoPoint(s.getLocation());
-            if (p != null) addMarker(p, "Stop " + stopIndex++);
-        }
 
         // Route line: run network call off main thread
         bg.execute(() -> {
@@ -251,13 +262,20 @@ public class RideDetailsFragment extends Fragment {
 
                     routeLine = RoadManager.buildRoadOverlay(road);
                     // Make it BLUE (use your palette: status_active)
-                    int blue = ContextCompat.getColor(requireContext(), R.color.status_active);
+                    int blue = ContextCompat.getColor(requireContext(), R.color.status_cancelled);
                     routeLine.getOutlinePaint().setColor(blue);
                     routeLine.getOutlinePaint().setStrokeWidth(10f);
 
                     rideMap.getOverlays().add(routeLine);
 
-                    // Zoom to route bounds
+                    addMarker(start, "Start", R.drawable.ic_pin_start);
+                    int stopIndex = 1;
+                    for (Stop s : sortedStops) {
+                        GeoPoint p = toGeoPoint(s.getLocation());
+                        if (p != null) addMarker(p, "Stop " + stopIndex++, R.drawable.ic_pin_stop);
+                    }
+                    addMarker(end, "End", R.drawable.ic_pin_end);
+
                     org.osmdroid.util.BoundingBox bb = BoundingBoxUtil.fromGeoPoints(waypoints);
                     if (bb != null) {
                         rideMap.zoomToBoundingBox(bb, true, 80);
@@ -274,12 +292,38 @@ public class RideDetailsFragment extends Fragment {
         });
     }
 
-    private void addMarker(GeoPoint p, String title) {
+    private void addMarker(GeoPoint p, String title, int iconRes) {
         Marker m = new Marker(rideMap);
         m.setPosition(p);
-        m.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
         m.setTitle(title);
+
+        // try 26 for start/end, 22 for stops
+        int dp = (title.startsWith("Stop")) ? 44 : 48;
+        m.setIcon(getScaledMarker(iconRes, dp));
+
+        // anchor after setting icon
+        m.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+
         rideMap.getOverlays().add(m);
+    }
+
+    private GeoPoint offset(GeoPoint p, double dLat, double dLon) {
+        return new GeoPoint(p.getLatitude() + dLat, p.getLongitude() + dLon);
+    }
+
+    private Drawable getScaledMarker(@DrawableRes int resId, int sizeDp) {
+        Drawable d = ContextCompat.getDrawable(requireContext(), resId);
+        if (d == null) return null;
+
+        int sizePx = (int) (sizeDp * getResources().getDisplayMetrics().density);
+
+        Bitmap bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+
+        d.setBounds(0, 0, sizePx, sizePx);
+        d.draw(canvas);
+
+        return new BitmapDrawable(getResources(), bitmap);
     }
 
     @Override
@@ -300,9 +344,6 @@ public class RideDetailsFragment extends Fragment {
         super.onDestroy();
     }
 
-    /**
-     * Small helper to compute bounding box from points.
-     */
     private static class BoundingBoxUtil {
         static org.osmdroid.util.BoundingBox fromGeoPoints(List<GeoPoint> pts) {
             if (pts == null || pts.isEmpty()) return null;

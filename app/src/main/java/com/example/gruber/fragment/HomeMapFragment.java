@@ -17,6 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 // import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
@@ -33,6 +34,8 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 import org.osmdroid.bonuspack.routing.OSRMRoadManager;
 import org.osmdroid.bonuspack.routing.Road;
 import org.osmdroid.bonuspack.routing.RoadManager;
+import org.osmdroid.tileprovider.tilesource.ITileSource;
+import org.osmdroid.tileprovider.tilesource.XYTileSource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +69,16 @@ public class HomeMapFragment extends Fragment {
     private final List<Integer> vehiclePathIndex = new ArrayList<>();
     private Runnable movementRunnable;
 
+    private static final ITileSource CARTO_POSITRON = new XYTileSource(
+            "CartoPositron",
+            0, 20, 256, ".png",
+            new String[]{
+                    "https://a.basemaps.cartocdn.com/light_all/",
+                    "https://b.basemaps.cartocdn.com/light_all/",
+                    "https://c.basemaps.cartocdn.com/light_all/",
+                    "https://d.basemaps.cartocdn.com/light_all/"
+            }
+    );
 
     // Modern permission API (no deprecated override)
     private final ActivityResultLauncher<String[]> locationPermissionLauncher =
@@ -98,7 +111,7 @@ public class HomeMapFragment extends Fragment {
 
 
         map = view.findViewById(R.id.map);
-        map.setTileSource(TileSourceFactory.MAPNIK);
+        map.setTileSource(CARTO_POSITRON);
         map.setMultiTouchControls(true);
         map.setMinZoomLevel(4.0);
         map.setMaxZoomLevel(20.0);
@@ -111,10 +124,12 @@ public class HomeMapFragment extends Fragment {
 
         spawnRandomVehicles();
 
-//        view.findViewById(R.id.btnBookRide).setOnClickListener(v -> {
-//            NavHostFragment.findNavController(HomeMapFragment.this)
-//                    .navigate(R.id.action_homeMapFragment_to_bookRideFragment);
-//        });
+        Bundle args = new Bundle();
+        args.putString("rideId", "00002");
+        view.findViewById(R.id.btnBookRide).setOnClickListener(v -> {
+            NavHostFragment.findNavController(HomeMapFragment.this)
+                    .navigate(R.id.action_temp, args);
+        });
     }
 
     private void requestLocationPermissionIfNeeded() {

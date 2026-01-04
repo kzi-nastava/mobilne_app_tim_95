@@ -21,7 +21,7 @@ public class FakeSession {
                 "Marković",
                 "marko@mail.com",
                 "+38164123456",
-                UserRole.GUEST
+                UserRole.DRIVER
         );
 
         currentUser.setActiveHoursLast24h(5);
@@ -54,8 +54,8 @@ public class FakeSession {
     public static Ride ride2;
     static {
         otherPass2.add("zika@mail.com");
-        stopList3.add(new Stop("00001", "Sutjeska 2, Novi Sad", 1, new LatLng(20,20)));
-        stopList3.add(new Stop("00001", "Fruskogorska 16, Novi Sad", 2, new LatLng(20,20)));
+        stopList3.add(new Stop("00002", "Sutjeska 2, Novi Sad", 1, new LatLng(45.248035, 19.845716)));
+        stopList3.add(new Stop("00002", "Fruskogorska 16, Novi Sad", 2, new LatLng(45.241778, 19.847198)));
         ride2 = new Ride(
                 "00002",
                 "marko@mail.com",
@@ -63,6 +63,8 @@ public class FakeSession {
                 "Bulevar Cara Lazara 1, Novi Sad",
                 "Balzakova 15, Novi Sad");
         ride2.setDistanceMeters(2500);
+        ride2.setPickupLocation(new LatLng(45.24786, 19.85079));
+        ride2.setDropoffLocation(new LatLng(45.23873, 19.83243));
         ride2.setStartedAtMillis(LocalDateTime.now().minusHours(3).minusMinutes(12));
         ride2.setFinishedAtMillis(LocalDateTime.now().minusHours(3));
         ride2.setPanicTriggered(false);
