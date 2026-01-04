@@ -157,14 +157,12 @@ public class RideDetailsFragment extends Fragment {
                 TextView t = new TextView(requireContext());
                 t.setText("• " + email);
                 t.setTextSize(16f);
-                t.setTextColor(ContextCompat.getColor(requireContext(), R.color.color_text));
                 otherPassengersContainer.addView(t);
             }
         } else {
             TextView t = new TextView(requireContext());
             t.setText("• (none)");
             t.setTextSize(16f);
-            t.setTextColor(ContextCompat.getColor(requireContext(), R.color.color_text));
             otherPassengersContainer.addView(t);
         }
 
@@ -194,14 +192,12 @@ public class RideDetailsFragment extends Fragment {
                 TextView t = new TextView(requireContext());
                 t.setText(s.number + ". " + s.getAddress());
                 t.setTextSize(16f);
-                t.setTextColor(ContextCompat.getColor(requireContext(), R.color.color_text));
                 stopsContainer.addView(t);
             }
         } else {
             TextView t = new TextView(requireContext());
             t.setText("• (no stops)");
             t.setTextSize(16f);
-            t.setTextColor(ContextCompat.getColor(requireContext(), R.color.color_text));
             stopsContainer.addView(t);
         }
 
