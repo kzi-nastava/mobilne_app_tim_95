@@ -33,7 +33,7 @@ public class Ride {
     }
 
     public String cancelledBy;
-    public RideStatus status;  // "COMPLETED", "CANCELLED"...
+    public RideStatus status;
 
     public Ride(@NonNull String id, @NonNull String driverId, @NonNull String creatorUserId, String pickupAddress, String dropoffAddress) {
         this.id = id;
