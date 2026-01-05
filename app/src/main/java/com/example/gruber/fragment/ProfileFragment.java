@@ -12,16 +12,16 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
-import com.example.gruber.models.FakeSession;
 import com.example.gruber.models.User;
 import com.example.gruber.models.enums.UserRole;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 
 public class ProfileFragment extends Fragment {
-
-    private TextView txtName, txtEmail, txtPhone;
-    private TextView txtActiveHours, txtVehicle;
-    private LinearLayout driverSection;
 
     public ProfileFragment() {
         super(R.layout.fragment_profile);
@@ -31,37 +31,50 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        User user = FakeSession.currentUser;
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        txtName = view.findViewById(R.id.txtName);
-        txtEmail = view.findViewById(R.id.txtEmail);
-        txtPhone = view.findViewById(R.id.txtPhone);
-        driverSection = view.findViewById(R.id.driverSection);
-        txtActiveHours = view.findViewById(R.id.txtActiveHours);
-        txtVehicle = view.findViewById(R.id.txtVehicle);
+        TextView txtName = view.findViewById(R.id.txtName);
+        TextView txtEmail = view.findViewById(R.id.txtEmail);
+        TextView txtPhone = view.findViewById(R.id.txtPhone);
+        LinearLayout driverSection = view.findViewById(R.id.driverSection);
+        TextView txtActiveHours = view.findViewById(R.id.txtActiveHours);
+        TextView txtVehicle = view.findViewById(R.id.txtVehicle);
+        TextView txtRegistration = view.findViewById(R.id.txtVehicleRegistration);
 
-        txtName.setText(user.getFirstName() + " " + user.getLastName());
-        txtEmail.setText(user.getEmail());
-        txtPhone.setText(user.getPhone());
+        db.collection("users")
+                .whereEqualTo("email", "marko@mail.com")
+                .limit(1)
+                .get()
+                .addOnSuccessListener(query -> {
 
-        if (user.getRole() == UserRole.DRIVER) {
-            driverSection.setVisibility(View.VISIBLE);
-            txtActiveHours.setText("Active hours: " + user.getActiveHoursLast24h() + "h");
-            txtVehicle.setText("Vehicle: " + user.getVehicleModel() + " (" + user.getVehiclePlate() + ")");
-        }
+                    if (query.isEmpty()) return;
 
-        Button btnEdit = view.findViewById(R.id.btnEditProfile);
-        Button btnPassword = view.findViewById(R.id.btnChangePassword);
+                    User user = query.getDocuments().get(0).toObject(User.class);
+                    if (user == null) return;
 
+                    // ✅ SAFE: user is now loaded
+                    txtName.setText(user.getFirstName() + " " + user.getLastName());
+                    txtEmail.setText(user.getEmail());
+                    txtPhone.setText(user.getPhone());
+
+                    if (user.getRole() == UserRole.DRIVER) {
+                        driverSection.setVisibility(View.VISIBLE);
+                        txtActiveHours.setText(String.valueOf(user.getActiveHoursLast24h()));
+                        txtVehicle.setText(user.getVehicleModel());
+                        txtRegistration.setText(user.getVehiclePlate());
+                    } else {
+                        driverSection.setVisibility(View.GONE);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    e.printStackTrace();
+                });
+
+        Button btnEdit = view.findViewById(R.id.btnSettings);
         btnEdit.setOnClickListener(v ->
                 NavHostFragment.findNavController(ProfileFragment.this)
-                        .navigate(R.id.action_profile_to_editProfile)
+                        .navigate(R.id.action_profileFragment_to_settingsFragment)
         );
-
-        btnPassword.setOnClickListener(v ->
-                NavHostFragment.findNavController(ProfileFragment.this)
-                        .navigate(R.id.action_profile_to_changePassword)
-        );
-
     }
+
 }

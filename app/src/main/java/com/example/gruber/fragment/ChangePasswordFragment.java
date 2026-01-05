@@ -61,7 +61,7 @@ public class ChangePasswordFragment extends Fragment {
 
         btnCancel.setOnClickListener(v ->
                 NavHostFragment.findNavController(ChangePasswordFragment.this)
-                        .navigate(R.id.action_changePasswordFragment_to_profileFragment)
+                        .navigate(R.id.action_changePasswordFragment_to_settingsFragment)
         );
     }
 
