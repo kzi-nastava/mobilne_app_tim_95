@@ -7,7 +7,11 @@
     <fragment
         android:id="@+id/homeMapFragment"
         android:name="com.example.gruber.fragment.HomeMapFragment"
-        android:label="Home" />
+        android:label="Home">
+        <action
+            android:id="@+id/action_homeMapFragment_to_supportChatFragment"
+            app:destination="@id/supportChatFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/profileFragment"
@@ -65,5 +69,10 @@
             android:name="rideId"
             app:argType="string" />
     </fragment>
+
+    <fragment
+        android:id="@+id/supportChatFragment"
+        android:name="com.example.gruber.fragment.SupportChatFragment"
+        android:label="Support Chat" />
 
 </navigation>

@@ -3,6 +3,7 @@ package com.example.gruber.fragment;
 import android.Manifest;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -13,19 +14,19 @@ import android.os.Looper;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
-// import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
 import com.example.gruber.models.Vehicle;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
@@ -39,7 +40,6 @@ import org.osmdroid.tileprovider.tilesource.XYTileSource;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -99,7 +99,7 @@ public class HomeMapFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
         bg = Executors.newFixedThreadPool(2);
         // osmdroid config
         Configuration.getInstance().load(
@@ -127,8 +127,11 @@ public class HomeMapFragment extends Fragment {
         Bundle args = new Bundle();
         args.putString("rideId", "00002");
         view.findViewById(R.id.btnBookRide).setOnClickListener(v -> {
-            NavHostFragment.findNavController(HomeMapFragment.this)
-                    .navigate(R.id.action_temp, args);
+
+        });
+        view.findViewById(R.id.fab_support).setOnClickListener(v -> {
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.action_homeMapFragment_to_supportChatFragment);
         });
     }
 
@@ -145,6 +148,14 @@ public class HomeMapFragment extends Fragment {
         if (myLocationOverlay == null) {
             GpsMyLocationProvider provider = new GpsMyLocationProvider(requireContext());
             myLocationOverlay = new MyLocationNewOverlay(provider, map);
+
+            Bitmap person = drawableToBitmap(R.drawable.person_simple);
+
+            if (person != null) {
+                myLocationOverlay.setPersonIcon(person);
+                myLocationOverlay.setPersonHotspot(person.getWidth() / 2f, person.getHeight() / 2f);
+            }
+
             myLocationOverlay.enableFollowLocation(); // optional
             map.getOverlays().add(myLocationOverlay);
 
@@ -163,6 +174,21 @@ public class HomeMapFragment extends Fragment {
         }
         myLocationOverlay.enableMyLocation();
         map.invalidate();
+    }
+
+    private Bitmap drawableToBitmap(@DrawableRes int resId) {
+        Drawable drawable = ContextCompat.getDrawable(requireContext(), resId);
+        if (drawable == null) return null;
+
+        int sizePx = (int) (32 * getResources().getDisplayMetrics().density);
+
+        Bitmap bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+
+        drawable.setBounds(0, 0, sizePx, sizePx);
+        drawable.draw(canvas);
+
+        return bitmap;
     }
 
     private void spawnRandomVehicles() {
