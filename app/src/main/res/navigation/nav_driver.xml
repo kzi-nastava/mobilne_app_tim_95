@@ -11,6 +11,9 @@
         <action
             android:id="@+id/action_temp"
             app:destination="@id/rideTrackingFragment"/>
+        <action
+            android:id="@+id/action_homeMapFragment_to_supportChatFragment"
+            app:destination="@id/supportChatFragment" />
     </fragment>
 
     <fragment
@@ -69,5 +72,9 @@
             android:name="rideId"
             app:argType="string" />
     </fragment>
+    <fragment
+        android:id="@+id/supportChatFragment"
+        android:name="com.example.gruber.fragment.SupportChatFragment"
+        android:label="Support Chat" />
 
 </navigation>
