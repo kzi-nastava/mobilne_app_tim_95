@@ -16,6 +16,9 @@
         <action
             android:id="@+id/action_loginFragment_to_registerFragment"
             app:destination="@id/registerAccountFragment" />
+        <action
+            android:id="@+id/action_loginFragment_to_homeMap"
+            app:destination="@+id/homeMapFragment"/>
     </fragment>
 
     <!-- Register flow steps -->

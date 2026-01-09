@@ -1,12 +1,17 @@
 package com.example.gruber.models;
 
 import com.example.gruber.R;
+import com.example.gruber.app.AppModule;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.models.enums.UserRole;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import javax.inject.Inject;
 
 /*
 * PLACEHOLDER DATA CLASS BEFORE BACKEND IMPLEMENTATION
@@ -14,6 +19,29 @@ import java.util.List;
 public class FakeSession {
 
     public static User currentUser;
+    private final FirebaseFirestore db;
+
+    public static final List<User> USERS = Arrays.asList(
+
+            new User("Marko", "Petrovic", "marko@mail.com", "0611111111", UserRole.USER),
+
+            new User("Jelena", "Jovanovic", "jelena@mail.com", "0622222222", UserRole.USER),
+
+            new User("Nikola", "Ilic", "nikola@mail.com", "0633333333", UserRole.USER),
+
+            new User("Ana", "Kovacevic", "ana@mail.com", "0644444444", UserRole.USER),
+
+            new User("Stefan", "Milic", "stefan@mail.com", "0655555555", UserRole.DRIVER),
+
+            new User("Ivana", "Stankovic", "ivana@mail.com", "0666666666", UserRole.DRIVER),
+
+            new User("Petar", "Radovic", "petar@mail.com", "0677777777", UserRole.DRIVER),
+
+            new User("Sara", "Nikolic", "sara@mail.com", "0699999999", UserRole.USER),
+
+            new User("Veljko", "Ivanisevic", "veljko.cd.we@gmail.com", "0601234567", UserRole.ADMIN)
+    );
+
 
     static {
         currentUser = new User(
@@ -131,5 +159,19 @@ public class FakeSession {
             if (id.equals(r.id)) return r;
         }
         return null;
+    }
+
+    @Inject
+    public FakeSession() {
+        db = FirebaseFirestore.getInstance();
+    }
+
+    public void insertSeed() {
+        db.collection("users")
+                .document("2NF4R37XIjQtRV27jwQMyTcsJ7o2")
+                .set(USERS.get(8));
+//        for (User user : USERS) {
+//            db.collection("users").add(user);
+//        }
     }
 }
