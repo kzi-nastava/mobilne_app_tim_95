@@ -19,11 +19,6 @@ import com.example.gruber.models.enums.UserRole;
 
 public class EditProfileFragment extends Fragment {
 
-    private EditText etFirstName, etLastName, etPhone;
-    private EditText etVehicleModel, etVehiclePlate;
-    private LinearLayout driverEditSection;
-    private TextView txtPendingInfo;
-
     public EditProfileFragment() {
         super(R.layout.fragment_edit_profile);
     }
@@ -34,13 +29,13 @@ public class EditProfileFragment extends Fragment {
 
         User user = FakeSession.currentUser;
 
-        etFirstName = view.findViewById(R.id.etFirstName);
-        etLastName = view.findViewById(R.id.etLastName);
-        etPhone = view.findViewById(R.id.etPhone);
-        driverEditSection = view.findViewById(R.id.driverEditSection);
-        etVehicleModel = view.findViewById(R.id.etVehicleModel);
-        etVehiclePlate = view.findViewById(R.id.etVehiclePlate);
-        txtPendingInfo = view.findViewById(R.id.txtPendingInfo);
+        EditText etFirstName = view.findViewById(R.id.etFirstName);
+        EditText etLastName = view.findViewById(R.id.etLastName);
+        EditText etPhone = view.findViewById(R.id.etPhone);
+        LinearLayout driverEditSection = view.findViewById(R.id.driverEditSection);
+        EditText etVehicleModel = view.findViewById(R.id.etVehicleModel);
+        EditText etVehiclePlate = view.findViewById(R.id.etVehiclePlate);
+        TextView txtPendingInfo = view.findViewById(R.id.txtPendingInfo);
         Button btnSave = view.findViewById(R.id.btnSave);
         Button btnCancel = view.findViewById(R.id.btnCancel);
 
@@ -71,7 +66,7 @@ public class EditProfileFragment extends Fragment {
 
         btnCancel.setOnClickListener(v ->
                 NavHostFragment.findNavController(EditProfileFragment.this)
-                        .navigate(R.id.action_editProfileFragment_to_profileFragment)
+                        .navigate(R.id.action_editProfileFragment_to_settingsFragment)
         );
     }
 }

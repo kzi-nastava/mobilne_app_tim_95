@@ -42,7 +42,9 @@ public class User {
     // SETTERS
     public void setFirstName(String firstName) { this.firstName = firstName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
+    public void setEmail(String email) { this.email = email; }
     public void setPhone(String phone) { this.phone = phone; }
+    public void setRole(String role) { this.role = UserRole.valueOf(role); }
     public void setActiveHoursLast24h(int activeHoursLast24h) { this.activeHoursLast24h = activeHoursLast24h; }
     public void setVehicleModel(String vehicleModel) { this.vehicleModel = vehicleModel; }
     public void setVehiclePlate(String vehiclePlate) { this.vehiclePlate = vehiclePlate; }
