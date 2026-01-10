@@ -1,0 +1,57 @@
+package com.example.gruber.services;
+
+import com.example.gruber.R;
+import com.example.gruber.SessionManager;
+import com.example.gruber.models.Login;
+import com.example.gruber.models.enums.UserRole;
+import com.example.gruber.services.callbacks.AuthCallback;
+import com.example.gruber.viewModels.AccountViewModel;
+import com.google.firebase.Firebase;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import javax.inject.Inject;
+
+public class UserService {
+// does application logic without communication with firebase
+    private final SessionManager sessionManager;
+    private final FirebaseAuth firebaseAuth;
+    private final FirebaseFirestore firebaseFirestore;
+
+    @Inject
+    public UserService(SessionManager sessionManager, FirebaseAuth firebaseAuth, FirebaseFirestore firebaseFirestore) {
+        this.sessionManager = sessionManager;
+        this.firebaseAuth = firebaseAuth;
+        this.firebaseFirestore = firebaseFirestore;
+    }
+
+    //
+    public boolean logIn(Login login, AuthCallback callback) {
+        firebaseAuth.signInWithEmailAndPassword(login.email, login.password)
+                .addOnSuccessListener(result -> {
+                            String uid = result.getUser().getUid();
+                            firebaseFirestore
+                                    .collection("users")
+                                    .document(uid)
+                                    .get()
+                                    .addOnSuccessListener(snapshot -> {
+                                       String role = snapshot.getString("role");
+                                       UserRole _role = UserRole.valueOf(role);
+                                       sessionManager.setUserID(login.email, result.getUser().getUid(), _role);
+                                       callback.onSuccess(result.getUser().getUid(), _role);
+
+                                    });
+
+
+
+                        }
+                        )
+                .addOnFailureListener(callback::onError);
+
+
+        return false;
+    }
+    public boolean register(AccountViewModel accountViewModel) {
+        return false;
+    }
+}

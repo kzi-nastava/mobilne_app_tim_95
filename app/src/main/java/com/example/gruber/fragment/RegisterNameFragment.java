@@ -90,12 +90,18 @@ public class RegisterNameFragment extends Fragment {
 
     private void onPreviousClicked() {
         // Back within nav graph
+        String firstName = etFirstName.getText() != null ? etFirstName.getText().toString() : "";
+        String lastName = etLastName.getText() != null ? etLastName.getText().toString() : "";
+
+        accountViewModel.setFirstName(firstName);
+        accountViewModel.setLastName(lastName);
         findNavController(this).navigateUp();
     }
 
     private void onAddImageClicked() {
         // Launch system picker for images
         pickImageLauncher.launch("image/*");
+
     }
 
     private boolean isValid(String firstName, String lastName) {
