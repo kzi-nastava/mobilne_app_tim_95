@@ -64,7 +64,7 @@
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>
 
-<!--    FIRESTORE COLLECTIONS  -->
+    <!--    FIRESTORE COLLECTIONS  -->
     <string name="users">users</string>
     <string name="role">role</string>
 

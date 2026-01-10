@@ -1,8 +1,10 @@
 package com.example.gruber.adapter;
 
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -39,6 +41,17 @@ public class SupportChatAdapter extends RecyclerView.Adapter<SupportChatAdapter.
 
         boolean mine = m.senderUid != null && m.senderUid.equals(myUid);
         h.tv.setBackgroundResource(mine ? R.drawable.bg_msg_mine : R.drawable.bg_msg_other);
+
+        FrameLayout.LayoutParams lp =
+                (FrameLayout.LayoutParams) h.tv.getLayoutParams();
+
+        if (mine) {
+            lp.gravity = Gravity.END;
+        } else {
+            lp.gravity = Gravity.START;
+        }
+
+        h.tv.setLayoutParams(lp);
     }
 
     @Override

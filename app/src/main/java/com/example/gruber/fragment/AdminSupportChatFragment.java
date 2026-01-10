@@ -17,9 +17,10 @@ import com.example.gruber.services.SupportChatService;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class SupportChatFragment extends Fragment {
+public class AdminSupportChatFragment extends Fragment {
 
     private RecyclerView rv;
     private TextInputEditText et;
@@ -30,8 +31,17 @@ public class SupportChatFragment extends Fragment {
 
     private final SupportChatService service = new SupportChatService();
 
-    public SupportChatFragment() {
-        super(R.layout.fragment_support_chat);
+    private String userUid;
+
+    public AdminSupportChatFragment() {
+        super(R.layout.fragment_admin_support_chat);
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        userUid = (getArguments() != null) ? getArguments().getString("userUid") : null;
+        if (userUid == null) userUid = "";
     }
 
     @Override
@@ -42,16 +52,20 @@ public class SupportChatFragment extends Fragment {
         et = view.findViewById(R.id.et_message);
         btn = view.findViewById(R.id.btn_send);
 
-        if (!service.isLoggedIn()) {
-            Toast.makeText(requireContext(), "Please login first.", Toast.LENGTH_SHORT).show();
+        if (userUid.isEmpty()) {
+            Toast.makeText(requireContext(), "Missing userUid.", Toast.LENGTH_LONG).show();
             return;
         }
 
-        adapter = new SupportChatAdapter(items, service.getMyUid());
+        // This makes bubbles appear "mine" for ADMIN.
+        String myUid = service.getMyUid();
+        if (myUid == null) myUid = "ADMIN";
+
+        adapter = new SupportChatAdapter(items, myUid);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
         rv.setAdapter(adapter);
 
-        service.startListening(messages -> {
+        service.startAdminListening(userUid, messages -> {
             items.clear();
             items.addAll(messages);
             adapter.notifyDataSetChanged();
@@ -62,10 +76,12 @@ public class SupportChatFragment extends Fragment {
         });
 
         btn.setOnClickListener(v -> {
-            String text = (et.getText() != null) ? et.getText().toString() : "";
+            String text = (et.getText() != null) ? et.getText().toString().trim() : "";
+            if (text.isEmpty()) return;
 
             btn.setEnabled(false);
-            service.sendMessage(text, () -> {
+
+            service.sendAdminMessage(userUid, text, () -> {
                 et.setText("");
                 btn.setEnabled(true);
             }, e -> {
@@ -82,4 +98,3 @@ public class SupportChatFragment extends Fragment {
         super.onDestroyView();
     }
 }
-
