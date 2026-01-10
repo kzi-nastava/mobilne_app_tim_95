@@ -21,6 +21,7 @@
     <string name="edit_profile">Edit profile</string>
     <string name="change_password">Change password</string>
     <string name="profile_picture">Profile picture</string>
+    <string name="profile_image">Profile image</string>
     <string name="active_hours">Active hours</string>
     <string name="settings">Settings</string>
     <string name="return_profile">Return to profile</string>
@@ -35,6 +36,7 @@
     <string name="save_change_btn">Save changes</string>
     <string name="cancel_btn">Cancel</string>
     <string name="user_info">User info</string>
+    <string name="tap_to_change_photo">Tap to change photo</string>
 
     <!-- CHANGE PASSWORD  -->
     <string name="password_old">Old password</string>

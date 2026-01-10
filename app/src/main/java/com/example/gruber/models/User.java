@@ -13,6 +13,7 @@ public class User {
     private String email;
     private String phone;
     private UserRole role;
+    private String photoUri;
 
     // DRIVER ONLY
     private int activeHoursLast24h;
@@ -35,6 +36,7 @@ public class User {
     public String getEmail() { return email; }
     public String getPhone() { return phone; }
     public UserRole getRole() { return role; }
+    public String getPhotoUri() { return photoUri; }
     public int getActiveHoursLast24h() { return activeHoursLast24h; }
     public String getVehicleModel() { return vehicleModel; }
     public String getVehiclePlate() { return vehiclePlate; }
@@ -45,6 +47,7 @@ public class User {
     public void setEmail(String email) { this.email = email; }
     public void setPhone(String phone) { this.phone = phone; }
     public void setRole(String role) { this.role = UserRole.valueOf(role); }
+    public void setPhotoUri(String photoUri) { this.photoUri = photoUri; }
     public void setActiveHoursLast24h(int activeHoursLast24h) { this.activeHoursLast24h = activeHoursLast24h; }
     public void setVehicleModel(String vehicleModel) { this.vehicleModel = vehicleModel; }
     public void setVehiclePlate(String vehiclePlate) { this.vehiclePlate = vehiclePlate; }
