@@ -23,6 +23,8 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
 import com.example.gruber.models.Vehicle;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.osmdroid.api.IMapController;
@@ -59,6 +61,9 @@ public class HomeMapFragment extends Fragment {
     private static final double NS_MAX_LAT = 45.280;
     private static final double NS_MIN_LON = 19.780;
     private static final double NS_MAX_LON = 19.870;
+
+    private View unreadDot;
+    private FloatingActionButton fabSupport;
 
     private ExecutorService bg;
     private final Handler ui = new Handler(Looper.getMainLooper());
@@ -109,6 +114,25 @@ public class HomeMapFragment extends Fragment {
         // important: user agent (tile servers may block default)
         Configuration.getInstance().setUserAgentValue("com.example.gruber");
 
+        fabSupport = view.findViewById(R.id.fab_support);
+        unreadDot = view.findViewById(R.id.v_support_unread_dot);
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        if (auth.getCurrentUser() != null) {
+            String uid = auth.getCurrentUser().getUid();
+
+            db.collection("support_threads")
+                    .document(uid)
+                    .addSnapshotListener((snap, err) -> {
+                        if (err != null || snap == null || !snap.exists()) return;
+
+                        Boolean unread = snap.getBoolean("unreadForUser");
+                        boolean hasUnread = unread != null && unread;
+
+                        unreadDot.setVisibility(hasUnread ? View.VISIBLE : View.GONE);
+                    });
+        }
 
         map = view.findViewById(R.id.map);
         map.setTileSource(CARTO_POSITRON);

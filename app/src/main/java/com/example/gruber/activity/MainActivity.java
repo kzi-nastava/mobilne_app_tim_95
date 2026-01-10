@@ -46,48 +46,20 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = navHostFragment.getNavController();
 
         // Pick role (replace with your real session/user)
-        UserRole role = FakeSession.currentUser != null
-                ? FakeSession.currentUser.getRole()
-                : UserRole.GUEST;
+//        UserRole role = FakeSession.currentUser != null
+//                ? FakeSession.currentUser.getRole()
+//                : UserRole.GUEST;
         //Inserting dummy data purposes only
 //        FakeSession fakeSession = new FakeSession();
 //        fakeSession.insertSeed();
 
-        role = UserRole.GUEST;
-
-        int graphRes;
-        int menuRes;
-
-        switch (role) {
-            case DRIVER:
-                graphRes = R.navigation.nav_driver;
-                menuRes = R.menu.bottom_nav_driver;
-                break;
-
-            case ADMIN:
-                graphRes = R.navigation.nav_admin;
-                menuRes = R.menu.bottom_nav_admin;
-                break;
-
-            case GUEST:
-                graphRes = R.navigation.nav_guest;
-                menuRes = R.menu.bottom_nav_guest;
-                break;
-
-            case USER:
-            default:
-                graphRes = R.navigation.nav_user;
-                menuRes = R.menu.bottom_nav_user;
-                break;
-        }
-
         // Set role-specific nav graph
-        NavGraph graph = navController.getNavInflater().inflate(graphRes);
+        NavGraph graph = navController.getNavInflater().inflate(R.navigation.nav_guest);
         navController.setGraph(graph);
 
         // Set role-specific bottom menu
         bottomNav.getMenu().clear();
-        bottomNav.inflateMenu(menuRes);
+        bottomNav.inflateMenu(R.menu.bottom_nav_guest);
 
         // Connect BottomNav with NavController
         NavigationUI.setupWithNavController(bottomNav, navController);
@@ -99,8 +71,7 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
         switch (role) {
             case ADMIN:
-                NavGraph graph = navController.getNavInflater().inflate(R.navigation.nav_admin);
-                navController.setGraph(graph);
+                navController.setGraph(R.navigation.nav_admin);
                 bottomNav.getMenu().clear();
                 bottomNav.inflateMenu(R.menu.bottom_nav_admin);
                 NavigationUI.setupWithNavController(bottomNav, navController);

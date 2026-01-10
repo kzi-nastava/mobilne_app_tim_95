@@ -64,10 +64,26 @@
 <!--        android:name="com.example.gruber.fragment.admin.AdminActiveRidesFragment"-->
 <!--        android:label="Active rides" />-->
 
-<!--    <fragment-->
-<!--        android:id="@+id/adminSupportFragment"-->
-<!--        android:name="com.example.gruber.fragment.admin.AdminSupportFragment"-->
-<!--        android:label="Support" />-->
+    <fragment
+        android:id="@+id/adminSupportThreadsFragment"
+        android:name="com.example.gruber.fragment.AdminSupportThreadsFragment"
+        android:label="Support Chats">
+        <action
+            android:id="@+id/action_adminSupportThreadsFragment_to_adminSupportChatFragment"
+            app:destination="@id/adminSupportChatFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminSupportChatFragment"
+        android:name="com.example.gruber.fragment.AdminSupportChatFragment"
+        android:label="Support Chat">
+        <argument
+            android:name="userUid"
+            app:argType="string" />
+        <argument
+            android:name="userEmail"
+            app:argType="string" />
+    </fragment>
 
 <!--    <fragment-->
 <!--        android:id="@+id/adminUsersFragment"-->

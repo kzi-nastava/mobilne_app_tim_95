@@ -24,16 +24,35 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_support"
+    <FrameLayout
+        android:id="@+id/fab_support_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:contentDescription="Live support"
         android:layout_margin="16dp"
-        app:srcCompat="@drawable/messages_question"
-        app:backgroundTint="@color/color_primary_variant"
-        app:tint="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_support"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            app:elevation="0dp"
+            android:outlineProvider="none"
+            android:contentDescription="Live support"
+            app:srcCompat="@drawable/messages_question"
+            app:backgroundTint="@color/color_primary_variant"
+            app:tint="@color/white"/>
+
+        <View
+            android:id="@+id/v_support_unread_dot"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:layout_gravity="top|end"
+            android:translationZ="16dp"
+            android:background="@drawable/bg_red_dot"
+            android:visibility="gone"/>
+
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
