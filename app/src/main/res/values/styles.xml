@@ -23,6 +23,17 @@
         <item name="android:layout_marginHorizontal">50dp</item>
         <item name="android:textAppearance">@style/TextAppearance.GrUber.BodyMedium</item>
     </style>
+    <style name="TextAppearance.GrUber.TextView.Title"
+        parent="TextAppearance.Material3.TitleLarge">
+
+        <item name="android:layout_marginHorizontal">50dp</item>
+        <item name="android:layout_marginTop">10dp</item>
+
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textAlignment">center</item>
+
+    </style>
+
     <style name="TextAppearance.GrUber.BodyMedium"
         parent="TextAppearance.Material3.BodyMedium">
         <item name="android:textColor">@color/black</item>

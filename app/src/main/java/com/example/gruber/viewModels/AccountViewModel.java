@@ -4,21 +4,39 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.gruber.models.Address;
+import com.example.gruber.models.User;
+import com.example.gruber.models.enums.UserRole;
+import com.example.gruber.services.UserService;
+import com.example.gruber.services.callbacks.AuthCallback;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class AccountViewModel extends ViewModel {
-    private final MutableLiveData<String> email = new MutableLiveData<>();
-    private final MutableLiveData<String> password = new MutableLiveData<>();
-    private final MutableLiveData<String> firstName = new MutableLiveData<>();
-    private final MutableLiveData<String> lastName = new MutableLiveData<>();
-    private final MutableLiveData<String> phone = new MutableLiveData<>();
-    private final MutableLiveData<Address> address = new MutableLiveData<>();
-    private final MutableLiveData<String> image = new MutableLiveData<>();
+
+    protected final UserService userService;
+
+    protected final MutableLiveData<String> email = new MutableLiveData<>();
+    protected final MutableLiveData<UserRole> role = new MutableLiveData<>();
+    protected final MutableLiveData<String> firstName = new MutableLiveData<>();
+    protected final MutableLiveData<String> lastName = new MutableLiveData<>();
+    protected final MutableLiveData<String> phone = new MutableLiveData<>();
+    protected final MutableLiveData<Address> address = new MutableLiveData<>();
+    protected final MutableLiveData<String> image = new MutableLiveData<>();
+
+    @Inject
+    public AccountViewModel(UserService userService) {
+        this.userService = userService;
+    }
+
 
     public void setEmail(String email) {
         this.email.setValue(email);
     }
-    public void setPassword(String password) {
-        this.password.setValue(password);
+    public void setRole(UserRole role) {
+        this.role.setValue(role);
     }
     public void setFirstName(String firstName) {
         this.firstName.setValue(firstName);
@@ -40,8 +58,8 @@ public class AccountViewModel extends ViewModel {
         return email;
     }
 
-    public MutableLiveData<String> getPassword() {
-        return password;
+    public MutableLiveData<UserRole> getRole() {
+        return role;
     }
 
     public MutableLiveData<String> getFirstName() {
@@ -61,5 +79,25 @@ public class AccountViewModel extends ViewModel {
     }
     public MutableLiveData<String> getImage() {
         return image;
+    }
+
+    public User toUser() {
+        return new User(
+                firstName.getValue(),
+                lastName.getValue(),
+                email.getValue(),
+                phone.getValue(),
+                role.getValue(),
+                image.getValue()
+        );
+    }
+
+    public void logOut() {
+        firstName.setValue("");
+        lastName.setValue("");
+        email.setValue("");
+        phone.setValue("");
+        role.setValue(UserRole.GUEST);
+        image.setValue("");
     }
 }

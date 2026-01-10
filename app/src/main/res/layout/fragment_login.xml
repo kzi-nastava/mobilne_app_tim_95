@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragment.LoginFragment"
+    tools:context=".fragment.registration.LoginFragment"
     app:layout_constraintHorizontal_chainStyle="packed">
 
     <com.google.android.material.imageview.ShapeableImageView
@@ -21,6 +21,18 @@
         app:layout_constraintTop_toTopOf="parent"
         app:shapeAppearanceOverlay="@style/ShapeAppearance.GrUber.Circle"
         app:srcCompat="@drawable/logo" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/imageView"
+        app:layout_constraintBottom_toTopOf="@id/usernameLayout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:text="@string/welcome"
+        style="@style/TextAppearance.GrUber.TextView.Title"
+        />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/usernameLayout"

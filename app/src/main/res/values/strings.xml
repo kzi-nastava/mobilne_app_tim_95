@@ -25,6 +25,7 @@
     <string name="active_hours">Active hours</string>
     <string name="settings">Settings</string>
     <string name="return_profile">Return to profile</string>
+    <string name="log_out">Log out</string>
     <!--  EDIT PROFILE  -->
     <string name="name_first">First name</string>
     <string name="name_last">Last name</string>
@@ -64,7 +65,7 @@
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>
 
-<!--    FIRESTORE COLLECTIONS  -->
+    <!--    FIRESTORE COLLECTIONS  -->
     <string name="users">users</string>
     <string name="role">role</string>
 

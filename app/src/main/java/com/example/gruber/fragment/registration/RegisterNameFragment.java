@@ -1,6 +1,5 @@
-package com.example.gruber.fragment;
+package com.example.gruber.fragment.registration;
 
-import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -10,6 +9,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +29,8 @@ public class RegisterNameFragment extends Fragment {
     private TextInputLayout tilFirstName;
     private TextInputEditText etLastName;
     private TextInputLayout tilLastName;
+    private TextInputEditText etPhone;
+    private TextInputLayout tilPhone;
 
     private ActivityResultLauncher<String> pickImageLauncher;
 
@@ -62,9 +64,11 @@ public class RegisterNameFragment extends Fragment {
 
         tilFirstName = view.findViewById(R.id.til_reg_first_name);
         tilLastName = view.findViewById(R.id.til_reg_last_name);
+        tilPhone = view.findViewById(R.id.til_reg_phone);
 
         etFirstName = view.findViewById(R.id.et_reg_first_name);
         etLastName = view.findViewById(R.id.et_reg_last_name);
+        etPhone = view.findViewById(R.id.et_reg_phone);
 
         view.findViewById(R.id.btn_reg_add_image).setOnClickListener(v -> onAddImageClicked());
         view.findViewById(R.id.btn_reg_previous_name).setOnClickListener(v -> onPreviousClicked());
@@ -78,11 +82,13 @@ public class RegisterNameFragment extends Fragment {
 
         String firstName = etFirstName.getText() != null ? etFirstName.getText().toString() : "";
         String lastName = etLastName.getText() != null ? etLastName.getText().toString() : "";
+        String phone = etPhone.getText() != null ? etPhone.getText().toString() : "";
 
-        if (!isValid(firstName, lastName)) return;
+        if (!isValid(firstName, lastName, phone)) return;
 
         accountViewModel.setFirstName(firstName);
         accountViewModel.setLastName(lastName);
+        accountViewModel.setPhone(phone);
 
         // Navigate to address step via nav_guest action
         findNavController(this).navigate(R.id.action_registerNameFragment_to_registerAddressFragment);
@@ -104,7 +110,7 @@ public class RegisterNameFragment extends Fragment {
 
     }
 
-    private boolean isValid(String firstName, String lastName) {
+    private boolean isValid(String firstName, String lastName, String phone) {
         boolean valid = true;
 
         if (firstName.trim().isEmpty()) {
@@ -113,6 +119,10 @@ public class RegisterNameFragment extends Fragment {
         }
         if (lastName.trim().isEmpty()) {
             tilLastName.setError("Last name must not be empty");
+            valid = false;
+        }
+        if (!Patterns.PHONE.matcher(phone).matches()) {
+            tilPhone.setError("Please enter your phone number");
             valid = false;
         }
         return valid;
