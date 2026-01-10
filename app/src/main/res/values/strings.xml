@@ -12,31 +12,36 @@
     <string name="street">Street</string>
     <string name="number">Number</string>
     <string name="city">City</string>
-
+    <string name="phone">Phone</string>
     <!--    Buttons -->
     <string name="next">Next</string>
     <string name="previous">Previous</string>
 
     <!-- PROFILE   -->
-    <string name="edit_profile">EDIT PROFILE</string>
-    <string name="change_password">CHANGE PASSWORD</string>
-    <string name="profile_picture">Profile Picture</string>
-
+    <string name="edit_profile">Edit profile</string>
+    <string name="change_password">Change password</string>
+    <string name="profile_picture">Profile picture</string>
+    <string name="profile_image">Profile image</string>
+    <string name="active_hours">Active hours</string>
+    <string name="settings">Settings</string>
+    <string name="return_profile">Return to profile</string>
     <!--  EDIT PROFILE  -->
     <string name="name_first">First name</string>
     <string name="name_last">Last name</string>
     <string name="phone_number">Phone number</string>
-    <string name="vehicle_info">Vehicle Info</string>
-    <string name="vehicle_model">Model</string>
+    <string name="vehicle_info">Vehicle info</string>
+    <string name="vehicle_model">Vehicle model</string>
     <string name="vehicle_registration">Registration</string>
     <string name="edit_message">Changes will be visible after admin approval.</string>
-    <string name="save_change_btn">SAVE CHANGES</string>
-    <string name="cancel_btn">CANCEL</string>
+    <string name="save_change_btn">Save changes</string>
+    <string name="cancel_btn">Cancel</string>
+    <string name="user_info">User info</string>
+    <string name="tap_to_change_photo">Tap to change photo</string>
 
     <!-- CHANGE PASSWORD  -->
-    <string name="password_old">Old Password</string>
-    <string name="password_new">New Password</string>
-    <string name="password_confirm">Confirm Password</string>
+    <string name="password_old">Old password</string>
+    <string name="password_new">New password</string>
+    <string name="password_confirm">Confirm password</string>
 
     <!--  DRIVER'S RIDES OVERVIEW  -->
     <string name="today">Today</string>

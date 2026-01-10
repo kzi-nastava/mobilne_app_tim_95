@@ -5,6 +5,56 @@
     app:startDestination="@id/homeMapFragment">
 
     <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.gruber.fragment.SettingsFragment"
+        android:label="Settings">
+        <action
+            android:id="@+id/action_settingsFragment_to_editProfileFragment"
+            app:destination="@id/editProfileFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_changePasswordFragment"
+            app:destination="@id/changePasswordFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_profileFragment"
+            app:destination="@id/profileFragment" />
+    </fragment>
+    <action
+        android:id="@+id/action_profileFragment_to_settingsFragment"
+        app:destination="@id/settingsFragment" />
+    <action
+        android:id="@+id/action_settingsFragment_to_editProfileFragment"
+        app:destination="@id/editProfileFragment" />
+    <fragment
+        android:id="@+id/changePasswordFragment"
+        android:name="com.example.gruber.fragment.ChangePasswordFragment"
+        android:label="Password Change">
+        <action
+            android:id="@+id/action_changePasswordFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.example.gruber.fragment.EditProfileFragment"
+        android:label="Profile Edit">
+        <action
+            android:id="@+id/action_editProfileFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.gruber.fragment.ProfileFragment"
+        android:label="Profile">
+        <action
+            android:id="@+id/action_profileFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+    </fragment>
+    <action
+        android:id="@+id/action_settingsFragment_to_changePasswordFragment"
+        app:destination="@id/changePasswordFragment" />
+    <action
+        android:id="@+id/action_editProfileFragment_to_settingsFragment"
+        app:destination="@id/settingsFragment" />
+    <fragment
         android:id="@+id/homeMapFragment"
         android:name="com.example.gruber.fragment.HomeMapFragment"
         android:label="Home" />
