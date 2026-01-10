@@ -19,6 +19,25 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
+        <ImageView
+            android:id="@+id/ivProfileImage"
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="8dp"
+            android:contentDescription="@string/profile_image"
+            android:src="@mipmap/ic_launcher"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/txtChangePhotoHint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/tap_to_change_photo" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
