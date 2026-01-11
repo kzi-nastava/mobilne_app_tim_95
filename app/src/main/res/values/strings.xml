@@ -69,4 +69,10 @@
     <string name="users">users</string>
     <string name="role">role</string>
 
+    <!--    RIDE BOOKING    -->
+    <string name="book_ride">Book ride</string>
+    <string name="show_estimate">Show estimate</string>
+    <string name="start_location">Start location</string>
+    <string name="end_location">Destination</string>
+
 </resources>

@@ -50,7 +50,7 @@ public class RegisterAddressFragment extends Fragment {
         accountViewModel = new ViewModelProvider(requireActivity()).get(AccountViewModel.class);
         loginViewModel = new ViewModelProvider(requireActivity()).get(LoginViewModel.class);
 
-        tilStreet = view.findViewById(R.id.til_set_street);
+        tilStreet = view.findViewById(R.id.til_destination_street);
         tilStreetNumber = view.findViewById(R.id.til_set_street_number);
         tilCity = view.findViewById(R.id.til_set_city);
 

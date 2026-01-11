@@ -46,4 +46,19 @@
         <item name="cornerSize">50%</item>
     </style>
 
+    <style name="Theme.GrUber.FullScreenDialog"
+        parent="Theme.Material3.DayNight.NoActionBar">
+
+        <!-- Fullscreen behavior -->
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+    </style>
+
+
 </resources>

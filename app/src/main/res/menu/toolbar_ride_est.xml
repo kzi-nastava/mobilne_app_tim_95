@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/show_estimate"
+        android:title="@string/show_estimate"
+        android:icon="@drawable/ic_route"
+        app:showAsAction="ifRoom"
+        />
+    <item
+        android:id="@+id/action_book_ride"
+        android:title="@string/book_a_ride"
+        android:icon="@drawable/ic_call"
+        app:showAsAction="ifRoom"
+
+        />
+</menu>
