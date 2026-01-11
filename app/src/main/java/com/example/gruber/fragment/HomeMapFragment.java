@@ -157,6 +157,10 @@ public class HomeMapFragment extends Fragment {
             NavHostFragment.findNavController(this)
                     .navigate(R.id.action_homeMapFragment_to_supportChatFragment);
         });
+        view.findViewById(R.id.btnBookRide).setOnClickListener(v -> {
+            new RideOrderDialogFragment()
+                    .show(getParentFragmentManager(), "BookRideDilalog");
+        });
     }
 
     private void requestLocationPermissionIfNeeded() {

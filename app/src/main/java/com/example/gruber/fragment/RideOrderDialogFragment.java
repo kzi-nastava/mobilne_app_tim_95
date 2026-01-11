@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 
 import com.example.gruber.R;
 import com.example.gruber.viewModels.RideViewModel;
+import com.google.android.material.appbar.MaterialToolbar;
 
 
 public class RideOrderDialogFragment extends DialogFragment {
@@ -39,4 +40,14 @@ public class RideOrderDialogFragment extends DialogFragment {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_ride_order, container, false);
     }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        MaterialToolbar toolbar = view.findViewById(R.id.tb_ride_estimate);
+        toolbar.setNavigationOnClickListener(v -> dismiss());
+    }
+
+
 }
