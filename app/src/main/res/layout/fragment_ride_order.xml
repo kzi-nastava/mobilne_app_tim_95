@@ -19,6 +19,7 @@
         app:menu="@menu/toolbar_ride_est"
         app:navigationIconTint="?attr/colorOnSurface"
         app:itemIconTint="?attr/colorOnSurface"
+        app:itemTextColor="?attr/colorOnSurface"
         app:popupTheme="@style/ThemeOverlay.Material3.Light"
 
         />

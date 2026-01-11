@@ -6,12 +6,14 @@
         android:title="@string/show_estimate"
         android:icon="@drawable/ic_route"
         app:showAsAction="ifRoom"
+        android:iconTint="?attr/colorOnSurface"
         />
     <item
         android:id="@+id/action_book_ride"
         android:title="@string/book_a_ride"
         android:icon="@drawable/ic_call"
         app:showAsAction="ifRoom"
-
+        android:iconTint="?attr/colorOnSurface"
+        
         />
 </menu>
