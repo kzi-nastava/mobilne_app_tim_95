@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragment.RegisterAccountFragment">
+    tools:context=".fragment.registration.RegisterAccountFragment">
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/imageView"
@@ -20,6 +20,17 @@
         app:shapeAppearanceOverlay="@style/ShapeAppearance.GrUber.Circle"
         app:srcCompat="@drawable/logo" />
 
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/imageView"
+        app:layout_constraintBottom_toTopOf="@id/til_reg_email"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:text="@string/welcome"
+        style="@style/TextAppearance.GrUber.TextView.Title"
+        />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/til_reg_email"
@@ -85,5 +96,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         style="@style/Widget.GrUber.Button.Primary"
         android:text="@string/next"/>
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

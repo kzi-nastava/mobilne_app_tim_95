@@ -30,6 +30,27 @@ public class User {
         this.role = role;
     }
 
+    public User(String firstName, String lastName, String email, String phone, UserRole role, String photoUri) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.phone = phone;
+        this.role = role;
+        this.photoUri = photoUri;
+    }
+
+    public User(String firstName, String lastName, String email, String phone, UserRole role, String photoUri, String vehicleModel, String vehiclePlate, int activeHoursLast24h) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.phone = phone;
+        this.role = role;
+        this.photoUri = photoUri;
+        this.vehicleModel = vehicleModel;
+        this.vehiclePlate = vehiclePlate;
+        this.activeHoursLast24h = activeHoursLast24h;
+    }
+
     // GETTERS
     public String getFirstName() { return firstName; }
     public String getLastName() { return lastName; }

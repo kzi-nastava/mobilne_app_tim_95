@@ -1,11 +1,11 @@
-package com.example.gruber.fragment;
+package com.example.gruber.fragment.registration;
 
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.fragment.NavHostFragment;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,13 +15,18 @@ import static androidx.navigation.fragment.NavHostFragment.findNavController;
 
 import com.example.gruber.R;
 import com.example.gruber.models.Address;
+import com.example.gruber.models.enums.UserRole;
+import com.example.gruber.services.callbacks.AuthCallback;
 import com.example.gruber.viewModels.AccountViewModel;
+import com.example.gruber.viewModels.LoginViewModel;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 public class RegisterAddressFragment extends Fragment {
 
     private AccountViewModel accountViewModel;
+    private LoginViewModel loginViewModel;
 
     private TextInputEditText etStreet;
     private TextInputLayout tilStreet;
@@ -43,8 +48,9 @@ public class RegisterAddressFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_register_address, container, false);
 
         accountViewModel = new ViewModelProvider(requireActivity()).get(AccountViewModel.class);
+        loginViewModel = new ViewModelProvider(requireActivity()).get(LoginViewModel.class);
 
-        tilStreet = view.findViewById(R.id.til_set_street);
+        tilStreet = view.findViewById(R.id.til_destination_street);
         tilStreetNumber = view.findViewById(R.id.til_set_street_number);
         tilCity = view.findViewById(R.id.til_set_city);
 
@@ -66,14 +72,22 @@ public class RegisterAddressFragment extends Fragment {
         if (!isValid(address)) return;
 
         accountViewModel.setAddress(address);
+        loginViewModel.register(accountViewModel, new AuthCallback() {
+            @Override
+            public void onSuccess(String userId, UserRole role) {
+                //show modal with info that registration mail is sent
+                showInformationDialog("Registration success", "Your registration has been successful. Please visit your email and verify your account.");
+                NavHostFragment.findNavController(RegisterAddressFragment.this).navigate(R.id.action_registerAddressFragment_to_loginFragment);
+            }
 
-        // TODO: Here is typically where you'd call your register API and on success navigate.
-        // For now, go back to Home (or wherever you want) after address step:
-        // Option A: navigate using an action (recommended)
-        // findNavController(this).navigate(R.id.action_registerAddressFragment_to_homeMapFragment);
+            @Override
+            public void onError(Throwable error) {
+                //show modal with error message
+                showInformationDialog("Registration unsuccessfull", "Your registration has not been successful. Email is already taken, please try again.");
+                findNavController(requireParentFragment()).navigate(R.id.action_registerAddressFragment_to_registerAccountFragment);
+            }
+        });
 
-        // Option B: direct destination id
-        findNavController(this).navigate(R.id.homeMapFragment);
     }
 
     private void onPreviousClicked() {
@@ -115,10 +129,17 @@ public class RegisterAddressFragment extends Fragment {
 
         return valid;
     }
-
     private void clearErrors() {
         tilStreet.setError(null);
         tilStreetNumber.setError(null);
         tilCity.setError(null);
     }
+    private void showInformationDialog(String title, String message){
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(title)
+                .setMessage(message)
+                .setNeutralButton("Ok", ((dialog, which) -> dialog.dismiss()))
+                .show();
+    }
+
 }

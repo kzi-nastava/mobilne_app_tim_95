@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragment.RegisterAccountFragment">
+    tools:context=".fragment.registration.RegisterAccountFragment">
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/imageView"
@@ -12,7 +12,7 @@
         android:layout_height="120dp"
         android:contentDescription="Profile photo"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/til_set_street"
+        app:layout_constraintBottom_toTopOf="@id/til_destination_street"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="40dp"
@@ -22,7 +22,7 @@
 
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/til_set_street"
+        android:id="@+id/til_destination_street"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
@@ -48,7 +48,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/til_set_street"
+        app:layout_constraintStart_toEndOf="@id/til_destination_street"
         app:layout_constraintEnd_toEndOf="parent"
         style="@style/Widget.GrUber.TextInput.Default"
         android:layout_marginStart="0dp"
@@ -67,7 +67,7 @@
         android:id="@+id/til_set_city"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/til_set_street"
+        app:layout_constraintTop_toBottomOf="@id/til_destination_street"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         style="@style/Widget.GrUber.TextInput.Default">

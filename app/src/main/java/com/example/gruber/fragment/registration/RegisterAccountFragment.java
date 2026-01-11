@@ -1,4 +1,4 @@
-package com.example.gruber.fragment;
+package com.example.gruber.fragment.registration;
 
 import android.os.Bundle;
 import android.util.Patterns;
@@ -7,20 +7,22 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import static androidx.navigation.fragment.NavHostFragment.findNavController;
 
 import com.example.gruber.R;
+import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.viewModels.AccountViewModel;
+import com.example.gruber.viewModels.LoginViewModel;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 public class RegisterAccountFragment extends Fragment {
 
     private AccountViewModel accountViewModel;
+    private LoginViewModel loginViewModel;
 
     private TextInputEditText etEmail;
     private TextInputLayout tilEmail;
@@ -39,6 +41,7 @@ public class RegisterAccountFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_register_account, container, false);
         accountViewModel = new ViewModelProvider(requireActivity()).get(AccountViewModel.class);
+        loginViewModel = new ViewModelProvider(requireActivity()).get(LoginViewModel.class);
 
         tilEmail = view.findViewById(R.id.til_reg_email);
         tilPassword = view.findViewById(R.id.til_reg_password);
@@ -65,7 +68,9 @@ public class RegisterAccountFragment extends Fragment {
         if (!isValid(email, password, passwordConf)) return;
 
         accountViewModel.setEmail(email);
-        accountViewModel.setPassword(password);
+        accountViewModel.setRole(UserRole.USER);
+        loginViewModel.setEmail(email);
+        loginViewModel.setPassword(password);
 
         findNavController(this).navigate(R.id.action_registerAccountFragment_to_registerNameFragment);
     }

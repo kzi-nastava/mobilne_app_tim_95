@@ -3,9 +3,11 @@ package com.example.gruber.services;
 import com.example.gruber.R;
 import com.example.gruber.SessionManager;
 import com.example.gruber.models.Login;
+import com.example.gruber.models.User;
 import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.callbacks.AuthCallback;
 import com.example.gruber.viewModels.AccountViewModel;
+import com.example.gruber.viewModels.LoginViewModel;
 import com.google.firebase.Firebase;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -37,21 +39,26 @@ public class UserService {
                                     .addOnSuccessListener(snapshot -> {
                                        String role = snapshot.getString("role");
                                        UserRole _role = UserRole.valueOf(role);
-                                       sessionManager.setUserID(login.email, result.getUser().getUid(), _role);
                                        callback.onSuccess(result.getUser().getUid(), _role);
 
                                     });
-
-
-
                         }
                         )
                 .addOnFailureListener(callback::onError);
 
-
         return false;
     }
-    public boolean register(AccountViewModel accountViewModel) {
-        return false;
+    public void register(LoginViewModel loginViewModel, AccountViewModel accountViewModel, AuthCallback callback) {
+        firebaseAuth.createUserWithEmailAndPassword(loginViewModel.getEmail(), loginViewModel.getPassword())
+                .addOnSuccessListener(result -> {
+                    String uid = result.getUser().getUid();
+                    firebaseFirestore.collection("users")
+                            .document(uid)
+                            .set(accountViewModel.toUser())
+                            .addOnSuccessListener(snapshot -> {
+                                callback.onSuccess(uid, accountViewModel.getRole().getValue());
+                            });
+                })
+                .addOnFailureListener(callback::onError);
     }
 }

@@ -11,6 +11,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import com.example.gruber.R;
+import com.example.gruber.SessionManager;
 import com.example.gruber.models.FakeSession;
 import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.viewModels.LoginViewModel;
@@ -23,14 +24,12 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class MainActivity extends AppCompatActivity {
 
-    private LoginViewModel loginViewModel;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        loginViewModel = new ViewModelProvider(this).get(LoginViewModel.class);
+        LoginViewModel loginViewModel = new ViewModelProvider(this).get(LoginViewModel.class);
 
         loginViewModel.getRole().observe(this, this::onRoleChanged);
 

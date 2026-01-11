@@ -1,6 +1,5 @@
-package com.example.gruber.fragment;
+package com.example.gruber.fragment.registration;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,7 +12,6 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
-import com.example.gruber.activity.MainActivity;
 import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.callbacks.AuthCallback;
 import com.example.gruber.viewModels.LoginViewModel;
@@ -69,10 +67,12 @@ public class LoginFragment extends Fragment {
     private void onLoginClicked() {
         clearErrors();
 
-        String _email = etEmail.getText() != null ? etEmail.getText().toString() : "";
+        if (!isValid()) return;
+
+        String _email = etEmail.getText() != null ? etEmail.getText().toString() : " ";
         loginViewModel.setEmail(_email);
 
-        String _password = etPassword.getText() != null ? etPassword.getText().toString() : "";
+        String _password = etPassword.getText() != null ? etPassword.getText().toString() : " ";
         loginViewModel.setPassword(_password);
         loginViewModel.login(new AuthCallback() {
             @Override
@@ -86,6 +86,21 @@ public class LoginFragment extends Fragment {
             }
         });
     }
+
+    private boolean isValid() {
+        clearErrors();
+        boolean valid = true;
+        if (etEmail.getText().toString().isEmpty()) {
+            tilEmail.setError("Email field is empty.");
+            valid = false;
+        }
+        if (etPassword.getText().toString().isEmpty()) {
+            tilPassword.setError("Password field is empty.");
+            valid = false;
+        }
+        return valid;
+    }
+
     private void clearErrors() {
         tilEmail.setError(null);
         tilPassword.setError(null);

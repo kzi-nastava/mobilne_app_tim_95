@@ -23,6 +23,17 @@
         <item name="android:layout_marginHorizontal">50dp</item>
         <item name="android:textAppearance">@style/TextAppearance.GrUber.BodyMedium</item>
     </style>
+    <style name="TextAppearance.GrUber.TextView.Title"
+        parent="TextAppearance.Material3.TitleLarge">
+
+        <item name="android:layout_marginHorizontal">50dp</item>
+        <item name="android:layout_marginTop">10dp</item>
+
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textAlignment">center</item>
+
+    </style>
+
     <style name="TextAppearance.GrUber.BodyMedium"
         parent="TextAppearance.Material3.BodyMedium">
         <item name="android:textColor">@color/black</item>
@@ -34,5 +45,20 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
     </style>
+
+    <style name="Theme.GrUber.FullScreenDialog"
+        parent="Theme.Material3.DayNight.NoActionBar">
+
+        <!-- Fullscreen behavior -->
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+    </style>
+
 
 </resources>
