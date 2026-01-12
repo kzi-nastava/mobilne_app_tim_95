@@ -22,7 +22,9 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
+import com.example.gruber.SessionManager;
 import com.example.gruber.models.Vehicle;
+import com.example.gruber.models.enums.UserRole;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -135,6 +137,37 @@ public class HomeMapFragment extends Fragment {
         }
 
         map = view.findViewById(R.id.map);
+        SessionManager sessionManager = new SessionManager(requireContext());
+        UserRole role = sessionManager.getUserRole();
+
+        View fabSupportContainer = view.findViewById(R.id.fab_support_container);
+        View btnBookRide = view.findViewById(R.id.btnBookRide);
+
+        if (role != null) {
+            switch (role) {
+                case GUEST:
+                    // Guest → no support, can book
+                    fabSupportContainer.setVisibility(View.GONE);
+                    break;
+
+                case DRIVER:
+                    // Driver → support ok, cannot book
+                    btnBookRide.setVisibility(View.GONE);
+                    break;
+
+                case ADMIN:
+                    // Admin → sees neither
+                    fabSupportContainer.setVisibility(View.GONE);
+                    btnBookRide.setVisibility(View.GONE);
+                    break;
+
+                case USER:
+                    // Normal user → sees both
+                    break;
+            }
+        }
+
+
         map.setTileSource(CARTO_POSITRON);
         map.setMultiTouchControls(true);
         map.setMinZoomLevel(4.0);

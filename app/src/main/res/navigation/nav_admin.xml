@@ -85,6 +85,12 @@
             app:argType="string" />
     </fragment>
 
+    <fragment
+        android:id="@+id/adminVehiclePricingFragment"
+        android:name="com.example.gruber.fragment.VehiclePricingFragment"
+        android:label="Vehicle Pricing">
+    </fragment>
+
 <!--    <fragment-->
 <!--        android:id="@+id/adminUsersFragment"-->
 <!--        android:name="com.example.gruber.fragment.admin.AdminUsersFragment"-->
