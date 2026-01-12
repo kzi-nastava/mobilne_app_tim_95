@@ -4,6 +4,7 @@ package com.example.gruber.app;
 import android.content.Context;
 
 import com.example.gruber.SessionManager;
+import com.example.gruber.services.RideService;
 import com.example.gruber.services.UserService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -45,6 +46,10 @@ public class AppModule {
         return new UserService(provideSessionManager(context), provideFireBaseAuth(), provideFirebaseFireStore());
     }
 
-
+    @Provides
+    @Singleton
+    public RideService provideRideService(@ApplicationContext Context context) {
+        return new RideService(provideFirebaseFireStore());
+    }
 
 }
