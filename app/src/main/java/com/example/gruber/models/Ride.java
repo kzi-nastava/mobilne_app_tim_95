@@ -65,6 +65,17 @@ public class Ride {
         this.driverEmail = driverEmail;
         this.status = status;
     }
+    public Ride() {
+
+    }
+
+    public void setStart(Stop start) {
+        stopList.add(0, start);
+    }
+
+    public void setEnd(Stop stop) {
+        stopList.add(stop);
+    }
 
     public LatLng getPickupLocation() { return pickupLocation; }
     public void setPickupLocation(LatLng pickupLocation) { this.pickupLocation = pickupLocation; }

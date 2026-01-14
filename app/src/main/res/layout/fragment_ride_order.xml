@@ -60,10 +60,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/start_location"
-            style="@style/TextAppearance.GrUber.BodyMedium"
+            style="@style/TextAppearance.Material3.BodyMedium"
             android:singleLine="true"
             android:scrollHorizontally="true"
-            android:inputType="text"/>
+            android:inputType="text"
+            android:completionThreshold="4"/>
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.divider.MaterialDivider
@@ -100,14 +101,15 @@
         >
 
         <com.google.android.material.textfield.MaterialAutoCompleteTextView
-            android:id="@+id/et_set_street"
+            android:id="@+id/et_end_street"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/end_location"
             android:inputType="text"
-            style="@style/TextAppearance.GrUber.BodyMedium"
+            style="@style/TextAppearance.Material3.BodyMedium"
             android:singleLine="true"
-            android:scrollHorizontally="true"/>
+            android:scrollHorizontally="true"
+            android:completionThreshold="4"/>
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.divider.MaterialDivider

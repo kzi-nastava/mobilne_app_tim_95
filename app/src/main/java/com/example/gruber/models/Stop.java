@@ -31,6 +31,16 @@ public class Stop implements Serializable {
         this.address = address;
     }
 
+    public Stop(String address, double lat, double lng) {
+        this.address = address;
+        this.location = new LatLng(lat, lng);
+    }
+
+    @Override
+    public String toString() {
+        return address;
+    }
+
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
 

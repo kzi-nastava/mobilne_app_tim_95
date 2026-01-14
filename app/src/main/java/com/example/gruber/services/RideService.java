@@ -9,21 +9,36 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.example.gruber.models.Route;
 import com.example.gruber.models.Ride;
+import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.services.callbacks.PriceCallback;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.osmdroid.bonuspack.routing.OSRMRoadManager;
 import org.osmdroid.bonuspack.routing.Road;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.overlay.Polyline;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 
 import javax.inject.Inject;
 
@@ -32,11 +47,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext;
 public class RideService {
 
     private final OSRMRoadManager roadManager;
-
     private final Geocoder geocoder;
-
     private final FirebaseFirestore firebaseFirestore;
-
+    private final Executor executor = Executors.newSingleThreadExecutor();
+    private static final String NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
     private static final String TYPE = "type";
     private static final String VEHICLE_TYPE = "vehicleType";
     private static final String RIDES = "rides";
@@ -137,4 +151,41 @@ public class RideService {
                 });
         return ridesLiveData;
     }
+
+    public void searchAddress(String query, Consumer<List<Stop>> onResult ) {
+        executor.execute(() -> {
+            try {
+                String url = NOMINATIM_URL + "?q="
+                        + URLEncoder.encode(query, "UTF-8")
+                        + "&format=json&addressdetails=1&limit=5&class=highway";
+
+                HttpURLConnection httpConnection = (HttpURLConnection) new URL(url).openConnection();
+                httpConnection.setRequestProperty("User-Agent", "GrUber-App");
+
+                InputStream is = httpConnection.getInputStream();
+                String json = new BufferedReader(new InputStreamReader(is))
+                        .lines().collect(Collectors.joining());
+
+                JSONArray jsonArray = new JSONArray(json);
+                List<Stop> results = new ArrayList<>();
+
+                for (int i = 0; i < jsonArray.length(); i++ ) {
+
+                    if (jsonArray.getJSONObject(i).get("class").equals("highway")) continue;
+
+                    JSONObject obj = jsonArray.getJSONObject(i);
+                    results.add(new Stop(
+                                            obj.getString("display_name"),
+                                            obj.getDouble("lat"),
+                                            obj.getDouble("lon")
+                                            ));
+                }
+                onResult.accept(results);
+            }
+            catch (Exception e) {
+                onResult.accept(Collections.emptyList());
+            }
+        });
+    }
+
 }
