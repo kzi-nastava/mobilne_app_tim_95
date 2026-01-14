@@ -44,14 +44,6 @@ public class MainActivity extends AppCompatActivity {
 
         NavController navController = navHostFragment.getNavController();
 
-        // Pick role (replace with your real session/user)
-//        UserRole role = FakeSession.currentUser != null
-//                ? FakeSession.currentUser.getRole()
-//                : UserRole.GUEST;
-        //Inserting dummy data purposes only
-//        FakeSession fakeSession = new FakeSession();
-//        fakeSession.insertSeed();
-
         // Set role-specific nav graph
         NavGraph graph = navController.getNavInflater().inflate(R.navigation.nav_guest);
         navController.setGraph(graph);
@@ -62,6 +54,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Connect BottomNav with NavController
         NavigationUI.setupWithNavController(bottomNav, navController);
+
+//        FakeSession fakeSession = new FakeSession();
+//        fakeSession.insertRideSeed();
     }
 
     private void onRoleChanged(UserRole role) {
@@ -87,7 +82,13 @@ public class MainActivity extends AppCompatActivity {
                 bottomNav.inflateMenu(R.menu.bottom_nav_user);
                 NavigationUI.setupWithNavController(bottomNav, navController);
                 break;
-
+            case GUEST:
+            default:
+                navController.setGraph(R.navigation.nav_guest);
+                bottomNav.getMenu().clear();
+                bottomNav.inflateMenu(R.menu.bottom_nav_guest);
+                NavigationUI.setupWithNavController(bottomNav, navController);
+                break;
         }
     }
 }

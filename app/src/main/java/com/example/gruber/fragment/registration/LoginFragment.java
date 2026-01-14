@@ -73,6 +73,7 @@ public class LoginFragment extends Fragment {
         loginViewModel.setEmail(_email);
 
         String _password = etPassword.getText() != null ? etPassword.getText().toString() : " ";
+        etPassword.setText("");
         loginViewModel.setPassword(_password);
         loginViewModel.login(new AuthCallback() {
             @Override

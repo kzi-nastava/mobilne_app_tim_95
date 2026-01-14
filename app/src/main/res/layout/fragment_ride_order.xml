@@ -19,6 +19,7 @@
         app:menu="@menu/toolbar_ride_est"
         app:navigationIconTint="?attr/colorOnSurface"
         app:itemIconTint="?attr/colorOnSurface"
+        app:itemTextColor="?attr/colorOnSurface"
         app:popupTheme="@style/ThemeOverlay.Material3.Light"
 
         />
@@ -46,65 +47,30 @@
     
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/til_start_street"
-        style="@style/Widget.GrUber.TextInput.Default"
+        style="@style/Widget.GrUber.TextInput.AutoComplete"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="50dp"
-        android:layout_marginEnd="10dp"
         app:layout_constraintTop_toBottomOf="@id/tv_start_location"
-        app:layout_constraintEnd_toStartOf="@id/til_set_street_number"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         >
 
-        <com.google.android.material.textfield.TextInputEditText
+        <com.google.android.material.textfield.MaterialAutoCompleteTextView
             android:id="@+id/et_start_street"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/street"
-            android:inputType="textEmailAddress" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/til_set_street_number"
-        style="@style/Widget.GrUber.TextInput.Default"
-        android:layout_width="85dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="0dp"
-        android:layout_marginEnd="50dp"
-        android:hint="@string/number"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/til_start_street"
-        app:layout_constraintTop_toBottomOf="@id/tv_start_location">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_set_street_number"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="number" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/til_set_city"
-        style="@style/Widget.GrUber.TextInput.Default"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/til_start_street">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_set_city"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/city"
-            android:inputType="text" />
-
+            android:hint="@string/start_location"
+            style="@style/TextAppearance.Material3.BodyMedium"
+            android:singleLine="true"
+            android:scrollHorizontally="true"
+            android:inputType="text"
+            android:completionThreshold="4"/>
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.divider.MaterialDivider
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/til_set_city"
+        app:layout_constraintTop_toBottomOf="@id/til_start_street"
         app:dividerThickness="1dp"
         android:layout_marginTop="10dp"
         />
@@ -114,7 +80,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/end_location"
-        app:layout_constraintTop_toBottomOf="@id/til_set_city"
+        app:layout_constraintTop_toBottomOf="@id/til_start_street"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         style="@style/TextAppearance.GrUber.BodyMedium"
@@ -126,59 +92,44 @@
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/til_destination_street"
-        style="@style/Widget.GrUber.TextInput.Default"
+        style="@style/Widget.GrUber.TextInput.AutoComplete"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="50dp"
-        android:layout_marginEnd="10dp"
         app:layout_constraintTop_toBottomOf="@id/tv_end_location"
-        app:layout_constraintEnd_toStartOf="@id/til_set_street_number"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         >
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_set_street"
+        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+            android:id="@+id/et_end_street"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/street"
-            android:inputType="textEmailAddress" />
+            android:hint="@string/end_location"
+            android:inputType="text"
+            style="@style/TextAppearance.Material3.BodyMedium"
+            android:singleLine="true"
+            android:scrollHorizontally="true"
+            android:completionThreshold="4"/>
     </com.google.android.material.textfield.TextInputLayout>
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/til_destination_street_number"
-        style="@style/Widget.GrUber.TextInput.Default"
-        android:layout_width="85dp"
+    <com.google.android.material.divider.MaterialDivider
+        android:id="@+id/d_fragment_divider"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="0dp"
-        android:layout_marginEnd="50dp"
-        android:hint="@string/number"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/til_destination_street"
-        app:layout_constraintTop_toBottomOf="@id/tv_end_location">
+        app:layout_constraintTop_toBottomOf="@id/til_destination_street"
+        app:dividerThickness="1dp"
+        android:layout_marginTop="10dp"
+        />
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_destination_street_number"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="number" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/til_destination_city"
-        style="@style/Widget.GrUber.TextInput.Default"
-        android:layout_width="0dp"
+    <androidx.fragment.app.FragmentContainerView
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/d_fragment_divider"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/til_destination_street">
+        app:layout_constraintEnd_toEndOf="parent">
+<!--            FRAGMENT FOR REGISTERED USER STUFF ONLY     -->
+    </androidx.fragment.app.FragmentContainerView>
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_destination_city"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/city"
-            android:inputType="text" />
-
-    </com.google.android.material.textfield.TextInputLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
