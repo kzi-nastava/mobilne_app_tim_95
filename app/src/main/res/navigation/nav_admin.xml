@@ -6,7 +6,7 @@
 
     <fragment
         android:id="@+id/settingsFragment"
-        android:name="com.example.gruber.fragment.SettingsFragment"
+        android:name="com.example.gruber.fragment.profile.SettingsFragment"
         android:label="Settings">
         <action
             android:id="@+id/action_settingsFragment_to_editProfileFragment"
@@ -17,6 +17,11 @@
         <action
             android:id="@+id/action_settingsFragment_to_profileFragment"
             app:destination="@id/profileFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_homeMapFragment"
+            app:destination="@id/homeMapFragment"
+            app:popUpTo="@id/settingsFragment"
+            app:popUpToInclusive="true" />
     </fragment>
     <action
         android:id="@+id/action_profileFragment_to_settingsFragment"
@@ -26,7 +31,7 @@
         app:destination="@id/editProfileFragment" />
     <fragment
         android:id="@+id/changePasswordFragment"
-        android:name="com.example.gruber.fragment.ChangePasswordFragment"
+        android:name="com.example.gruber.fragment.profile.ChangePasswordFragment"
         android:label="Password Change">
         <action
             android:id="@+id/action_changePasswordFragment_to_settingsFragment"
@@ -34,7 +39,7 @@
     </fragment>
     <fragment
         android:id="@+id/editProfileFragment"
-        android:name="com.example.gruber.fragment.EditProfileFragment"
+        android:name="com.example.gruber.fragment.profile.EditProfileFragment"
         android:label="Profile Edit">
         <action
             android:id="@+id/action_editProfileFragment_to_settingsFragment"
@@ -42,7 +47,7 @@
     </fragment>
     <fragment
         android:id="@+id/profileFragment"
-        android:name="com.example.gruber.fragment.ProfileFragment"
+        android:name="com.example.gruber.fragment.profile.ProfileFragment"
         android:label="Profile">
         <action
             android:id="@+id/action_profileFragment_to_settingsFragment"

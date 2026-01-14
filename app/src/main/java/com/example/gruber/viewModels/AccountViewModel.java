@@ -7,10 +7,7 @@ import com.example.gruber.models.Address;
 import com.example.gruber.models.User;
 import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.UserService;
-import com.example.gruber.services.callbacks.AuthCallback;
-
 import javax.inject.Inject;
-
 import dagger.hilt.android.lifecycle.HiltViewModel;
 
 @HiltViewModel
@@ -79,6 +76,31 @@ public class AccountViewModel extends ViewModel {
     }
     public MutableLiveData<String> getImage() {
         return image;
+    }
+
+    // Driver-specific methods (override in DriverViewModel)
+    public MutableLiveData<String> getVehicleModel() {
+        return new MutableLiveData<>();
+    }
+
+    public void setVehicleModel(String vehicleModel) {
+        // Override in DriverViewModel
+    }
+
+    public MutableLiveData<String> getVehiclePlate() {
+        return new MutableLiveData<>();
+    }
+
+    public void setVehiclePlate(String vehiclePlate) {
+        // Override in DriverViewModel
+    }
+
+    public MutableLiveData<Integer> getActiveHours() {
+        return new MutableLiveData<>();
+    }
+
+    public void setActiveHours(Integer activeHours) {
+        // Override in DriverViewModel
     }
 
     public User toUser() {
