@@ -41,6 +41,75 @@ public class FakeSession {
 
             new User("Veljko", "Ivanisevic", "veljko.cd.we@gmail.com", "0601234567", UserRole.ADMIN)
     );
+    public static final List<Stop> STOPS = Arrays.asList(
+
+            new Stop("Balzakova 20"),
+            new Stop("Sentandrejski put 30"),
+            new Stop("Preradoviceva 10"),
+            new Stop("Bulevar vojvode Stepe 61"),
+            new Stop("Bate Brkica 13"),
+            new Stop("Kej zrtava racije 10"),
+            new Stop("Mileticeva 23"),
+            new Stop("Kisacka 22"),
+            new Stop("Bulevar Evrope 24"),
+            new Stop("Bulevar oslobodjenja 100"),
+            new Stop("Vrsacka 15"),
+            new Stop("Sekspirova 16")
+
+    );
+    public static final List<Ride> RIDES = Arrays.asList(
+
+            new Ride(
+                    "user1@gmail.com","driver1@gmail.com",null,List.of("passenger1@gmail.com", "passenger2@gmail.com"),null,RideStatus.COMPLETED,LocalDateTime.now().minusHours(5),LocalDateTime.now().minusHours(4),1200),
+            new Ride(
+                    "user2@gmail.com",
+                    "driver2@gmail.com",
+                    Arrays.asList(STOPS.get(0), STOPS.get(1)),
+                    List.of("passenger3@gmail.com"),
+                    null,
+                    RideStatus.ACTIVE,
+                    LocalDateTime.now().minusMinutes(30),
+                    null,
+                    800
+            ),
+
+            new Ride(
+                    "user3@gmail.com",
+                    "driver1@gmail.com",
+                    Arrays.asList(STOPS.get(2), STOPS.get(3)),
+                    List.of(),
+                    null,
+                    RideStatus.PENDING,
+                    null,
+                    null,
+                    1500
+            ),
+
+            new Ride(
+                    "user4@gmail.com",
+                    "driver3@gmail.com",
+                    Arrays.asList(STOPS.get(4), STOPS.get(5)),
+                    List.of("passenger4@gmail.com"),
+                    null,
+                    RideStatus.CANCELLED,
+                    LocalDateTime.now().minusDays(1),
+                    null,
+                    0
+            ),
+
+            new Ride(
+                    "user5@gmail.com",
+                    "driver2@gmail.com",
+                    Arrays.asList(STOPS.get(6), STOPS.get(7)),
+                    List.of("passenger5@gmail.com", "passenger6@gmail.com"),
+                    null,
+                    RideStatus.COMPLETED,
+                    LocalDateTime.now().minusDays(2),
+                    LocalDateTime.now().minusDays(2).plusMinutes(40),
+                    2000
+            )
+    );
+
 
 
     static {
@@ -166,7 +235,7 @@ public class FakeSession {
         db = FirebaseFirestore.getInstance();
     }
 
-    public void insertSeed() {
+    public void insertUserSeed() {
         db.collection("users")
                 .document("2NF4R37XIjQtRV27jwQMyTcsJ7o2")
                 .set(USERS.get(8));
@@ -174,4 +243,11 @@ public class FakeSession {
 //            db.collection("users").add(user);
 //        }
     }
+    public void insertRideSeed() {
+        for (Ride ride : RIDES) {
+            db.collection("rides")
+                    .add(ride);
+        }
+    }
+
 }

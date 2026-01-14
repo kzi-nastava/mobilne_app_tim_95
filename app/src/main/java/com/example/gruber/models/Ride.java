@@ -3,10 +3,14 @@ import androidx.annotation.NonNull;
 
 import com.example.gruber.models.enums.RideStatus;
 
+import org.osmdroid.bonuspack.routing.Road;
+import org.osmdroid.views.overlay.Polyline;
+
 import java.util.List;
 import java.time.LocalDateTime;
 
 public class Ride {
+    // MUST HAVES - ovo mora da bude tu
     public String id;
     @NonNull
     public String creatorUserEmail;
@@ -14,26 +18,39 @@ public class Ride {
     public String driverEmail;
     public List<Stop> stopList;
     public List<String> passengerEmails;
+    public Route route;
+    public RideStatus status;
+    public LocalDateTime startedAt;
+    public LocalDateTime finishedAt;
+    public int priceDin;
+    public String cancelledBy;  // posto za cancel voznje treba i razlog zasto ovo bolje bih izbacio i dodao
+                                // novu kolekciju : class Cancelations { String canceledBy; String rideUid; String explanation; }
+
+    // REDUNDANT ?? - da li ovo ispod moze da se brise ??
     public String pickupAddress;
     public String dropoffAddress;
     public LatLng pickupLocation;
     public LatLng dropoffLocation;
-    public LocalDateTime startedAt;
-    public LocalDateTime finishedAt;
-    public int priceDin;
     public int distanceMeters;
     public boolean panicTriggered;
-
+    public void setCancelledBy(String cancelledBy) {
+        this.cancelledBy = cancelledBy;
+    }
     public String getCancelledBy() {
         return cancelledBy;
     }
 
-    public void setCancelledBy(String cancelledBy) {
-        this.cancelledBy = cancelledBy;
+    public Ride(@NonNull String creatorUserEmail, @NonNull String driverEmail, List<Stop> stopList, List<String> passengerEmails, Route route, RideStatus status, LocalDateTime startedAt, LocalDateTime finishedAt, int priceDin) {
+        this.creatorUserEmail = creatorUserEmail;
+        this.driverEmail = driverEmail;
+        this.stopList = stopList;
+        this.passengerEmails = passengerEmails;
+        this.route = route;
+        this.status = status;
+        this.startedAt = startedAt;
+        this.finishedAt = finishedAt;
+        this.priceDin = priceDin;
     }
-
-    public String cancelledBy;
-    public RideStatus status;
 
     public Ride(@NonNull String id, @NonNull String driverId, @NonNull String creatorUserId, String pickupAddress, String dropoffAddress) {
         this.id = id;
@@ -41,6 +58,12 @@ public class Ride {
         this.creatorUserEmail = creatorUserId;
         this.pickupAddress = pickupAddress;
         this.dropoffAddress = dropoffAddress;
+    }
+
+    public Ride(@NonNull String creatorUserEmail, @NonNull String driverEmail, RideStatus status) {
+        this.creatorUserEmail = creatorUserEmail;
+        this.driverEmail = driverEmail;
+        this.status = status;
     }
 
     public LatLng getPickupLocation() { return pickupLocation; }

@@ -1,25 +1,140 @@
 package com.example.gruber.services;
 
-import com.google.firebase.Firebase;
+import android.content.Context;
+import android.location.Address;
+import android.location.Geocoder;
+
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+
+import com.example.gruber.models.Route;
+import com.example.gruber.models.Ride;
+import com.example.gruber.models.enums.RideStatus;
+import com.example.gruber.services.callbacks.PriceCallback;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
+
+import org.osmdroid.bonuspack.routing.OSRMRoadManager;
+import org.osmdroid.bonuspack.routing.Road;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.overlay.Polyline;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
+import dagger.hilt.android.qualifiers.ApplicationContext;
+
 public class RideService {
+
+    private final OSRMRoadManager roadManager;
+
+    private final Geocoder geocoder;
 
     private final FirebaseFirestore firebaseFirestore;
 
+    private static final String TYPE = "type";
+    private static final String VEHICLE_TYPE = "vehicleType";
+    private static final String RIDES = "rides";
+    private static final String STATUS = "status";
+    private static final String USER_EMAIL = "creatorUserEmail";
+
+
     @Inject
-    public RideService(FirebaseFirestore firebaseFirestore) {
+    public RideService(@ApplicationContext Context context, FirebaseFirestore firebaseFirestore) {
+        this.roadManager = new OSRMRoadManager(context, "GrUber");
+        this.geocoder = new Geocoder(context);
         this.firebaseFirestore = firebaseFirestore;
+
     }
-    public int[] getPrices() {
-        // dobavaljanje cena
-        return new int[]{1, 2, 3};
+
+    public Route getRoute(String start, String end) throws IOException {
+        GeoPoint startPoint = getGeoPoint(start);
+        GeoPoint endPoint = getGeoPoint(end);
+
+        ArrayList<GeoPoint> waypoints = new ArrayList<GeoPoint>();
+        waypoints.add(startPoint);
+        waypoints.add(endPoint);
+
+        Road road = calculateRoad(waypoints);
+        Polyline line = OSRMRoadManager.buildRoadOverlay(road);
+
+        return new Route(road, line);
     }
-    // racunanje cena
-    // racunanje rute
-    // bind adrese na koordinate
-    // menjanje statusa moznje
-    //
+
+    public Road calculateRoad(ArrayList<GeoPoint> waypoints) {
+        return roadManager.getRoad(waypoints);
+    }
+
+    public GeoPoint getGeoPoint(String address) throws IOException {
+        List<Address> results = geocoder.getFromLocationName(address, 1);
+        Address a = results.get(0);
+        return new GeoPoint(a.getLatitude(), a.getLongitude());
+    }
+
+    public void getPrice(Road road, String driveBracket, PriceCallback callback) {
+        firebaseFirestore.collection(VEHICLE_TYPE)
+                .whereArrayContains(TYPE, driveBracket)
+                .get()
+                .addOnSuccessListener(response -> {
+                    int tariff = Integer.parseInt(response.getDocuments().get(0).getString(TYPE));
+                    double price = road.mLength * 120 + tariff;
+                    callback.onSuccess(price);
+                })
+                .addOnFailureListener(callback::onError);
+    }
+    public void setRideStatus(String rideID, RideStatus status) {
+        Map<String, Object> statusMap = new HashMap<>();
+        statusMap.put(STATUS, status);
+
+        firebaseFirestore.collection(RIDES)
+                .document(rideID)
+                .set(statusMap, SetOptions.merge());
+    }
+    public void addRide(Ride ride, PriceCallback callback) {
+        ride.status = RideStatus.PENDING;
+        firebaseFirestore.collection(RIDES)
+                .add(ride)
+                .addOnSuccessListener(result -> {
+                    callback.onSuccess(ride.priceDin);
+                })
+                .addOnFailureListener(result -> {
+                    callback.onError(new Exception("Failed writing ride to database."));
+                });
+    }
+    public LiveData<List<Ride>> getRides() {
+        MutableLiveData<List<Ride>> ridesLiveData = new MutableLiveData<>();
+        firebaseFirestore.collection(RIDES).get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Ride> rides = snapshot.toObjects(Ride.class);
+                    ridesLiveData.setValue(rides);
+                });
+        return ridesLiveData;
+    }
+    public LiveData<List<Ride>> getRidesWithStatus(RideStatus status) {
+        MutableLiveData<List<Ride>> ridesLiveData = new MutableLiveData<>();
+        firebaseFirestore.collection(RIDES)
+                .whereEqualTo(STATUS, status)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Ride> rides = snapshot.toObjects(Ride.class);
+                    ridesLiveData.setValue(rides);
+                });
+        return ridesLiveData;
+    }
+    public LiveData<List<Ride>> getRidesForUser(String userEmail) {
+        MutableLiveData<List<Ride>> ridesLiveData = new MutableLiveData<>();
+        firebaseFirestore.collection(RIDES)
+                .whereEqualTo(USER_EMAIL, userEmail)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Ride> rides = snapshot.toObjects(Ride.class);
+                    ridesLiveData.setValue(rides);
+                });
+        return ridesLiveData;
+    }
 }

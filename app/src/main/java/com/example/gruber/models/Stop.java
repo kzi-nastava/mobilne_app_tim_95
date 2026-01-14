@@ -27,6 +27,10 @@ public class Stop implements Serializable {
         this.location = location;
     }
 
+    public Stop(String address) {
+        this.address = address;
+    }
+
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
 

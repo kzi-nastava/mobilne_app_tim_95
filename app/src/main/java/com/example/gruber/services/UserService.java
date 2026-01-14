@@ -27,7 +27,6 @@ public class UserService {
         this.firebaseFirestore = firebaseFirestore;
     }
 
-    //
     public boolean logIn(Login login, AuthCallback callback) {
         firebaseAuth.signInWithEmailAndPassword(login.email, login.password)
                 .addOnSuccessListener(result -> {
@@ -38,6 +37,10 @@ public class UserService {
                                     .get()
                                     .addOnSuccessListener(snapshot -> {
                                        String role = snapshot.getString("role");
+                                       if (role == null) {
+                                           callback.onError(new Exception("Database data inconsistent. Mising role value."));
+                                           return;
+                                       }
                                        UserRole _role = UserRole.valueOf(role);
                                        callback.onSuccess(result.getUser().getUid(), _role);
 

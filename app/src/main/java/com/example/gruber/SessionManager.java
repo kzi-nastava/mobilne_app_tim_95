@@ -33,6 +33,7 @@ public class SessionManager {
         return prefs.getString(USER_ID, null);
     }
     public void clearSession() {
+        prefs.edit().putString(ROLE, UserRole.GUEST.toString()).apply();
         prefs.edit().clear().apply();
     }
 }

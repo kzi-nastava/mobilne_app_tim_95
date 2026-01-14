@@ -8,9 +8,11 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.ViewGroup;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -19,12 +21,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
 import com.example.gruber.SessionManager;
 import com.example.gruber.models.Vehicle;
 import com.example.gruber.models.enums.UserRole;
+import com.example.gruber.viewModels.RideViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -52,6 +56,8 @@ public class HomeMapFragment extends Fragment {
 
     private MapView map;
     private MyLocationNewOverlay myLocationOverlay;
+
+    private RideViewModel rideViewModel;
 
     private final List<Vehicle> vehicles = new ArrayList<>();
     private final List<Marker> vehicleMarkers = new ArrayList<>();
@@ -107,6 +113,7 @@ public class HomeMapFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+        rideViewModel = new ViewModelProvider(requireActivity()).get(RideViewModel.class);
         bg = Executors.newFixedThreadPool(2);
         // osmdroid config
         Configuration.getInstance().load(
