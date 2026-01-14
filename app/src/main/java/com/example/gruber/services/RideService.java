@@ -12,6 +12,7 @@ import com.example.gruber.models.Ride;
 import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.services.callbacks.PriceCallback;
+import com.example.gruber.services.callbacks.RouteCallback;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 
@@ -51,6 +52,7 @@ public class RideService {
     private final FirebaseFirestore firebaseFirestore;
     private final Executor executor = Executors.newSingleThreadExecutor();
     private static final String NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
+    private static final String PHOTON_URL = "https://photon.komoot.io/api/";
     private static final String TYPE = "type";
     private static final String VEHICLE_TYPE = "vehicleType";
     private static final String RIDES = "rides";
@@ -66,21 +68,31 @@ public class RideService {
 
     }
 
-    public Route getRoute(String start, String end) throws IOException {
+    public void getRoute(String start, String end, RouteCallback callback) throws IOException {
         GeoPoint startPoint = getGeoPoint(start);
         GeoPoint endPoint = getGeoPoint(end);
 
         ArrayList<GeoPoint> waypoints = new ArrayList<GeoPoint>();
         waypoints.add(startPoint);
         waypoints.add(endPoint);
+        executor.execute(() -> {
+            Road road = roadManager.getRoad(waypoints);
+            if (road != null) {
+                Polyline polyline = OSRMRoadManager.buildRoadOverlay(road);
+                callback.onSuccess(new Route(road, polyline));
+            }
+        });
 
-        Road road = calculateRoad(waypoints);
-        Polyline line = OSRMRoadManager.buildRoadOverlay(road);
-
-        return new Route(road, line);
+//        Road road = calculateRoad(waypoints);
+//        Polyline line = OSRMRoadManager.buildRoadOverlay(road);
+//        Route(road, line);
     }
 
     public Road calculateRoad(ArrayList<GeoPoint> waypoints) {
+        executor.execute(() -> {
+            Road road = roadManager.getRoad(waypoints);
+
+        });
         return roadManager.getRoad(waypoints);
     }
 
@@ -155,9 +167,10 @@ public class RideService {
     public void searchAddress(String query, Consumer<List<Stop>> onResult ) {
         executor.execute(() -> {
             try {
-                String url = NOMINATIM_URL + "?q="
+                String url = PHOTON_URL + "?q="
                         + URLEncoder.encode(query, "UTF-8")
-                        + "&format=json&addressdetails=1&limit=5&class=highway";
+                        + "&limit=30"
+                        + "&lat=45.2671&lon=19.8335&zoom=10";
 
                 HttpURLConnection httpConnection = (HttpURLConnection) new URL(url).openConnection();
                 httpConnection.setRequestProperty("User-Agent", "GrUber-App");
@@ -166,19 +179,32 @@ public class RideService {
                 String json = new BufferedReader(new InputStreamReader(is))
                         .lines().collect(Collectors.joining());
 
-                JSONArray jsonArray = new JSONArray(json);
+                JSONObject root = new JSONObject(json);
+                JSONArray features = root.getJSONArray("features");
+
                 List<Stop> results = new ArrayList<>();
 
-                for (int i = 0; i < jsonArray.length(); i++ ) {
+                for (int i = 0; i < features.length(); i++ ) {
 
-                    if (jsonArray.getJSONObject(i).get("class").equals("highway")) continue;
+                    JSONObject feature = features.getJSONObject(i);
 
-                    JSONObject obj = jsonArray.getJSONObject(i);
-                    results.add(new Stop(
-                                            obj.getString("display_name"),
-                                            obj.getDouble("lat"),
-                                            obj.getDouble("lon")
-                                            ));
+                    JSONObject properties = feature.getJSONObject("properties");
+
+//                    if (!properties.getString("country").equals("Србија")) continue;
+                    if (!properties.getString("countrycode").equals("RS")) continue;
+
+                    JSONObject geometry = feature.getJSONObject("geometry");
+                    JSONArray coordinates = geometry.getJSONArray("coordinates");
+
+                    double lat = coordinates.getDouble(0);
+                    double lng = coordinates.getDouble(1);
+
+                    String name = properties.optString("street", properties.optString("name", "Unknown street"));
+                    String city = properties.optString("city", properties.optString("county", "Unknown region"));
+                    String country = properties.optString("country", "Unknown country");
+                    String address = name + ", " + city + ", " + country;
+
+                    results.add(new Stop(address,lat,lng));
                 }
                 onResult.accept(results);
             }

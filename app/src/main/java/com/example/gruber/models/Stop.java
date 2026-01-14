@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 
-public class Stop implements Serializable {
+public class Stop { //implements Serializable {
 
     // Human-readable (display to user)
     public String address;
@@ -14,13 +14,16 @@ public class Stop implements Serializable {
     // Map-usable coordinates
     public LatLng location;
 
-    @NotNull
     public String rideId;
 
     // Order in route: 0 pickup, last dropoff (or 1..n if you prefer)
     public int number;
 
-    public Stop(@NonNull String rideId, String address, int number, LatLng location) {
+    @Override
+    public String toString() {
+        return address;
+    }
+    public Stop(String rideId, String address, int number, LatLng location) {
         this.address = address;
         this.rideId = rideId;
         this.number = number;
@@ -34,11 +37,6 @@ public class Stop implements Serializable {
     public Stop(String address, double lat, double lng) {
         this.address = address;
         this.location = new LatLng(lat, lng);
-    }
-
-    @Override
-    public String toString() {
-        return address;
     }
 
     public String getAddress() { return address; }

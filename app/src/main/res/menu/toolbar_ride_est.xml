@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/show_estimate"
+        android:id="@+id/action_show_estimate"
         android:title="@string/show_estimate"
         android:icon="@drawable/ic_route"
         app:showAsAction="ifRoom"

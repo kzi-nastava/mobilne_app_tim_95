@@ -4,6 +4,8 @@ import android.Manifest;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -26,6 +28,8 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
 import com.example.gruber.SessionManager;
+import com.example.gruber.models.Ride;
+import com.example.gruber.models.Route;
 import com.example.gruber.models.Vehicle;
 import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.viewModels.RideViewModel;
@@ -35,9 +39,12 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
+import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.Overlay;
+import org.osmdroid.views.overlay.Polyline;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 import org.osmdroid.bonuspack.routing.OSRMRoadManager;
@@ -47,6 +54,7 @@ import org.osmdroid.tileprovider.tilesource.ITileSource;
 import org.osmdroid.tileprovider.tilesource.XYTileSource;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -114,6 +122,10 @@ public class HomeMapFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         FirebaseFirestore firestore = FirebaseFirestore.getInstance();
         rideViewModel = new ViewModelProvider(requireActivity()).get(RideViewModel.class);
+        rideViewModel.getShowRouteTrigger().observe(getViewLifecycleOwner(), trigger -> {
+            drawRoute();
+        });
+
         bg = Executors.newFixedThreadPool(2);
         // osmdroid config
         Configuration.getInstance().load(
@@ -472,4 +484,28 @@ public class HomeMapFragment extends Fragment {
         super.onDestroy();
     }
 
+    private void drawRoute() {
+        Ride ride = rideViewModel.getRideValue();
+        Route route = ride.getRoute();
+
+        if (route == null || route.getPolyline() == null) return;
+
+        List<Overlay> overlays = map.getOverlays();
+        overlays.removeIf(overlay -> overlay instanceof Polyline);
+
+        map.getOverlays().add(route.getPolyline());
+
+        Polyline polyline = route.getPolyline();
+        colorUserPolyline(polyline);
+
+        BoundingBox boundingBox = route.getPolyline().getBounds();
+
+        if (boundingBox != null) map.zoomToBoundingBox(boundingBox, true);
+        map.invalidate();
+    }
+    private void colorUserPolyline(Polyline polyline) {
+        polyline.getOutlinePaint().setColor(Color.GREEN);
+        polyline.getOutlinePaint().setStrokeWidth(8f);
+        polyline.getOutlinePaint().setAntiAlias(true);
+    }
 }
