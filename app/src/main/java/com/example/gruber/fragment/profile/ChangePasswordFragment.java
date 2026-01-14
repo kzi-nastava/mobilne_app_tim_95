@@ -1,4 +1,4 @@
-package com.example.gruber.fragment;
+package com.example.gruber.fragment.profile;
 
 import android.os.Bundle;
 import android.view.View;

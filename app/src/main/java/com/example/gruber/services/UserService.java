@@ -1,21 +1,19 @@
 package com.example.gruber.services;
 
-import com.example.gruber.R;
 import com.example.gruber.SessionManager;
 import com.example.gruber.models.Login;
-import com.example.gruber.models.User;
 import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.callbacks.AuthCallback;
 import com.example.gruber.viewModels.AccountViewModel;
 import com.example.gruber.viewModels.LoginViewModel;
-import com.google.firebase.Firebase;
+import com.example.gruber.viewModels.DriverViewModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
-
+import com.google.firebase.firestore.DocumentSnapshot;
 import javax.inject.Inject;
 
 public class UserService {
-// does application logic without communication with firebase
+
     private final SessionManager sessionManager;
     private final FirebaseAuth firebaseAuth;
     private final FirebaseFirestore firebaseFirestore;
@@ -27,27 +25,26 @@ public class UserService {
         this.firebaseFirestore = firebaseFirestore;
     }
 
-    //
     public boolean logIn(Login login, AuthCallback callback) {
         firebaseAuth.signInWithEmailAndPassword(login.email, login.password)
                 .addOnSuccessListener(result -> {
-                            String uid = result.getUser().getUid();
-                            firebaseFirestore
-                                    .collection("users")
-                                    .document(uid)
-                                    .get()
-                                    .addOnSuccessListener(snapshot -> {
-                                       String role = snapshot.getString("role");
-                                       UserRole _role = UserRole.valueOf(role);
-                                       callback.onSuccess(result.getUser().getUid(), _role);
+                    String uid = result.getUser().getUid();
+                    firebaseFirestore
+                            .collection("users")
+                            .document(uid)
+                            .get()
+                            .addOnSuccessListener(snapshot -> {
+                                String role = snapshot.getString("role");
+                                UserRole _role = UserRole.valueOf(role);
+                                callback.onSuccess(result.getUser().getUid(), _role);
 
-                                    });
-                        }
-                        )
+                            });
+                })
                 .addOnFailureListener(callback::onError);
 
         return false;
     }
+
     public void register(LoginViewModel loginViewModel, AccountViewModel accountViewModel, AuthCallback callback) {
         firebaseAuth.createUserWithEmailAndPassword(loginViewModel.getEmail(), loginViewModel.getPassword())
                 .addOnSuccessListener(result -> {
@@ -60,5 +57,51 @@ public class UserService {
                             });
                 })
                 .addOnFailureListener(callback::onError);
+    }
+
+    public void populateAccountViewModel(AccountViewModel accountViewModel) {
+        String uid = sessionManager.getUserID();
+        if (uid == null)
+            return;
+
+        firebaseFirestore.collection("users").document(uid).get()
+                .addOnSuccessListener((DocumentSnapshot snapshot) -> {
+                    if (snapshot == null)
+                        return;
+                    String email = snapshot.getString("email");
+                    String firstName = snapshot.getString("firstName");
+                    String lastName = snapshot.getString("lastName");
+                    String phone = snapshot.getString("phone");
+                    String image = snapshot.getString("photoUri");
+                    String role = snapshot.getString("role");
+                    String vehicleModel = snapshot.getString("vehicleModel");
+                    String vehiclePlate = snapshot.getString("vehiclePlate");
+                    Integer activeHours = snapshot.getLong("activeHoursLast24h").intValue();
+
+                    if (email != null)
+                        accountViewModel.setEmail(email);
+                    if (firstName != null)
+                        accountViewModel.setFirstName(firstName);
+                    if (lastName != null)
+                        accountViewModel.setLastName(lastName);
+                    if (phone != null)
+                        accountViewModel.setPhone(phone);
+                    if (image != null)
+                        accountViewModel.setImage(image);
+                    if (role != null)
+                        accountViewModel.setRole(UserRole.valueOf(role));
+
+                    if (accountViewModel instanceof DriverViewModel) {
+                        DriverViewModel driverViewModel = (DriverViewModel) accountViewModel;
+                        if (vehicleModel != null)
+                            driverViewModel.setVehicleModel(vehicleModel);
+                        if (vehiclePlate != null)
+                            driverViewModel.setVehiclePlate(vehiclePlate);
+                        if (activeHours != null)
+                            driverViewModel.setActiveHours(activeHours);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                });
     }
 }
