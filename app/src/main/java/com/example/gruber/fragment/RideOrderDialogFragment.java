@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
 import com.example.gruber.R;
 import com.example.gruber.models.Stop;
@@ -20,6 +21,7 @@ import com.example.gruber.viewModels.RideViewModel;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 
@@ -59,6 +61,7 @@ public class RideOrderDialogFragment extends DialogFragment {
                 new ArrayList<>()
         );
         startAutoCompleteTV.setAdapter(startAdapter);
+        startAutoCompleteTV.setThreshold(3);
 
         startAutoCompleteTV.setOnItemClickListener((parent, _view, position, id) -> {
             Stop stopSelected = (Stop) parent.getItemAtPosition(position);
@@ -72,6 +75,7 @@ public class RideOrderDialogFragment extends DialogFragment {
                 new ArrayList<>()
         );
         endAutoCompleteTv.setAdapter(endAdapter);
+        endAutoCompleteTv.setThreshold(3);
 
         endAutoCompleteTv.setOnItemClickListener((parent, _view, position, id) -> {
             Stop stopSelected = (Stop) parent.getItemAtPosition(position);
@@ -111,19 +115,46 @@ public class RideOrderDialogFragment extends DialogFragment {
         MaterialToolbar toolbar = view.findViewById(R.id.tb_ride_estimate);
         toolbar.setNavigationOnClickListener(v -> dismiss());
 
+        toolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_show_estimate) {
+                String start = String.valueOf(startAutoCompleteTV.getText());
+                String end = String.valueOf(endAutoCompleteTv.getText());
+                try {
+                    rideViewModel.setRideRoute(start, end);
+                } catch (IOException e) {
+                    Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+                dismiss();
+                return true;
+            }
+            else if (item.getItemId() == R.id.action_book_ride) {
+
+                dismiss();
+                return false;
+            }
+            return false;
+        });
+
         rideViewModel.getAddressStartSuggestions()
                 .observe(getViewLifecycleOwner(), suggestions -> {
                     startAdapter.clear();
                     startAdapter.addAll(suggestions);
                     startAdapter.notifyDataSetChanged();
-                });
 
+                    if (!suggestions.isEmpty()) startAutoCompleteTV.showDropDown();
+                    else startAutoCompleteTV.dismissDropDown();
+
+                });
 
         rideViewModel.getAddressEndSuggestions()
                 .observe(getViewLifecycleOwner(), suggestions -> {
                     endAdapter.clear();
                     endAdapter.addAll(suggestions);
                     endAdapter.notifyDataSetChanged();
+
+                    if (!suggestions.isEmpty()) endAutoCompleteTv.showDropDown();
+                    else endAutoCompleteTv.dismissDropDown();
+
                 });
 
     }

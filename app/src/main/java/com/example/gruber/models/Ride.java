@@ -6,6 +6,7 @@ import com.example.gruber.models.enums.RideStatus;
 import org.osmdroid.bonuspack.routing.Road;
 import org.osmdroid.views.overlay.Polyline;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDateTime;
 
@@ -66,7 +67,15 @@ public class Ride {
         this.status = status;
     }
     public Ride() {
+        stopList = new ArrayList<>();
+    }
 
+    public Route getRoute() {
+        return route;
+    }
+
+    public void setRoute(Route route) {
+        this.route = route;
     }
 
     public void setStart(Stop start) {

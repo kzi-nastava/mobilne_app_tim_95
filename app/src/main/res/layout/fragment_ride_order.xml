@@ -53,18 +53,18 @@
         app:layout_constraintTop_toBottomOf="@id/tv_start_location"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        android:hint="@string/start_location"
         >
 
         <com.google.android.material.textfield.MaterialAutoCompleteTextView
             android:id="@+id/et_start_street"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/start_location"
             style="@style/TextAppearance.Material3.BodyMedium"
             android:singleLine="true"
             android:scrollHorizontally="true"
             android:inputType="text"
-            android:completionThreshold="4"/>
+            />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.divider.MaterialDivider
@@ -98,18 +98,18 @@
         app:layout_constraintTop_toBottomOf="@id/tv_end_location"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        android:hint="@string/end_location"
         >
 
         <com.google.android.material.textfield.MaterialAutoCompleteTextView
             android:id="@+id/et_end_street"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/end_location"
             android:inputType="text"
             style="@style/TextAppearance.Material3.BodyMedium"
             android:singleLine="true"
             android:scrollHorizontally="true"
-            android:completionThreshold="4"/>
+            />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.divider.MaterialDivider
