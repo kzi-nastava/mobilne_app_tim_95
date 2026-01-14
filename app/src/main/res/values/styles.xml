@@ -23,6 +23,13 @@
         <item name="android:layout_marginHorizontal">50dp</item>
         <item name="android:textAppearance">@style/TextAppearance.GrUber.BodyMedium</item>
     </style>
+    <style name="Widget.GrUber.TextInput.AutoComplete"
+        parent="Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+        <item name="android:scrollHorizontally">true</item>
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:layout_marginHorizontal">50dp</item>
+        <item name="android:textAppearance">@style/TextAppearance.GrUber.BodyMedium</item>
+    </style>
     <style name="TextAppearance.GrUber.TextView.Title"
         parent="TextAppearance.Material3.TitleLarge">
 
