@@ -27,13 +27,12 @@ public class VehiclePricingFragment extends Fragment {
 
     private FirebaseFirestore db;
 
-    // Cache type -> docId (so updates are direct)
     private final Map<String, String> typeToDocId = new HashMap<>();
 
     private PriceRow standard, luxury, van;
 
     public VehiclePricingFragment() {
-        super(R.layout.fragment_vehicle_pricing); // your layout name
+        super(R.layout.fragment_vehicle_pricing);
     }
 
     @Override
@@ -212,7 +211,6 @@ public class VehiclePricingFragment extends Fragment {
                     .update("price", price);
         }
 
-        // fallback: find doc by type then update
         return db.collection("vehicleType")
                 .whereEqualTo("type", type)
                 .limit(1)
@@ -235,7 +233,6 @@ public class VehiclePricingFragment extends Fragment {
     }
 
     private String formatPrice(double v) {
-        // RSD typically no decimals, but keep it safe:
         if (Math.floor(v) == v) {
             return String.format(Locale.US, "%d RSD", (long) v);
         }
