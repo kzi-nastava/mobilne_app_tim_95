@@ -64,7 +64,7 @@ public class ChangePasswordFragment extends Fragment {
             }
 
             btnChange.setEnabled(false);
-            btnChange.setText("Changing...");
+            btnChange.setText(R.string.changing);
 
             userService.changePassword(oldPass, newPass, new AuthCallback() {
                 @Override
@@ -76,7 +76,7 @@ public class ChangePasswordFragment extends Fragment {
                 @Override
                 public void onError(Throwable error) {
                     btnChange.setEnabled(true);
-                    btnChange.setText("Change Password");
+                    btnChange.setText(R.string.change_password);
                     String errorMsg = error.getMessage();
                     if (errorMsg != null && errorMsg.contains("wrong password")) {
                         showError(txtError, "Current password is incorrect.");
