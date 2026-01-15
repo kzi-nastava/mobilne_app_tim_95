@@ -11,6 +11,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.DocumentSnapshot;
+import java.util.HashMap;
+import java.util.Map;
 import javax.inject.Inject;
 
 public class UserService {
@@ -130,6 +132,39 @@ public class UserService {
                         .addOnSuccessListener(updateResult -> callback
                                 .onSuccess(firebaseAuth.getCurrentUser().getUid(), UserRole.GUEST))
                         .addOnFailureListener(callback::onError))
+                .addOnFailureListener(callback::onError);
+    }
+
+    public void updateUserProfile(AccountViewModel accountViewModel, AuthCallback callback) {
+        String uid = sessionManager.getUserID();
+        if (uid == null) {
+            callback.onError(new Exception("User not authenticated"));
+            return;
+        }
+
+        Map<String, Object> updates = new HashMap<>();
+        
+        if (accountViewModel.getFirstName().getValue() != null)
+            updates.put("firstName", accountViewModel.getFirstName().getValue());
+        if (accountViewModel.getLastName().getValue() != null)
+            updates.put("lastName", accountViewModel.getLastName().getValue());
+        if (accountViewModel.getPhone().getValue() != null)
+            updates.put("phone", accountViewModel.getPhone().getValue());
+        if (accountViewModel.getImage().getValue() != null)
+            updates.put("photoUri", accountViewModel.getImage().getValue());
+
+        if (accountViewModel instanceof DriverViewModel) {
+            DriverViewModel driverViewModel = (DriverViewModel) accountViewModel;
+            if (driverViewModel.getVehicleModel().getValue() != null)
+                updates.put("vehicleModel", driverViewModel.getVehicleModel().getValue());
+            if (driverViewModel.getVehiclePlate().getValue() != null)
+                updates.put("vehiclePlate", driverViewModel.getVehiclePlate().getValue());
+        }
+
+        firebaseFirestore.collection("users")
+                .document(uid)
+                .update(updates)
+                .addOnSuccessListener(aVoid -> callback.onSuccess(uid, accountViewModel.getRole().getValue()))
                 .addOnFailureListener(callback::onError);
     }
 }

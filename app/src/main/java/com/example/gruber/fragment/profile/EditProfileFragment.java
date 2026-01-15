@@ -8,6 +8,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.activity.result.ActivityResultLauncher;
@@ -18,6 +19,8 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.example.gruber.R;
 import com.example.gruber.SessionManager;
 import com.example.gruber.models.enums.UserRole;
+import com.example.gruber.services.UserService;
+import com.example.gruber.services.callbacks.AuthCallback;
 import com.example.gruber.viewModels.AccountViewModel;
 import com.example.gruber.viewModels.DriverViewModel;
 import javax.inject.Inject;
@@ -28,6 +31,9 @@ public class EditProfileFragment extends Fragment {
 
     @Inject
     SessionManager sessionManager;
+
+    @Inject
+    UserService userService;
 
     public EditProfileFragment() {
         super(R.layout.fragment_edit_profile);
@@ -43,8 +49,7 @@ public class EditProfileFragment extends Fragment {
         // Create the appropriate ViewModel based on role
         AccountViewModel accountViewModel;
         if (userRole == UserRole.DRIVER) {
-            DriverViewModel driverViewModel = new ViewModelProvider(requireActivity()).get(DriverViewModel.class);
-            accountViewModel = driverViewModel;
+            accountViewModel = new ViewModelProvider(requireActivity()).get(DriverViewModel.class);
         } else {
             accountViewModel = new ViewModelProvider(requireActivity()).get(AccountViewModel.class);
         }
@@ -93,7 +98,7 @@ public class EditProfileFragment extends Fragment {
         ivProfileImage.setOnClickListener(v -> pickImageLauncher.launch("image/*"));
 
         accountViewModel.getRole().observe(getViewLifecycleOwner(), r -> {
-            if (r != null && r == UserRole.DRIVER) {
+            if (r == UserRole.DRIVER) {
                 driverEditSection.setVisibility(View.VISIBLE);
                 DriverViewModel driverViewModel = (DriverViewModel) accountViewModel;
                 etVehicleModel.setText(driverViewModel.getVehicleModel().getValue());
@@ -104,17 +109,35 @@ public class EditProfileFragment extends Fragment {
         });
 
         btnSave.setOnClickListener(v -> {
-            if (accountViewModel.getRole().getValue() != null
-                    && accountViewModel.getRole().getValue().equals(UserRole.DRIVER.toString())) {
-                txtPendingInfo.setVisibility(View.VISIBLE);
-            } else {
-                accountViewModel.setFirstName(etFirstName.getText().toString());
-                accountViewModel.setLastName(etLastName.getText().toString());
-                accountViewModel.setPhone(etPhone.getText().toString());
 
-                NavHostFragment.findNavController(EditProfileFragment.this)
-                        .popBackStack();
+            accountViewModel.setFirstName(etFirstName.getText().toString());
+            accountViewModel.setLastName(etLastName.getText().toString());
+            accountViewModel.setPhone(etPhone.getText().toString());
+
+            if (accountViewModel instanceof DriverViewModel) {
+                DriverViewModel driverViewModel = (DriverViewModel) accountViewModel;
+                driverViewModel.setVehicleModel(etVehicleModel.getText().toString());
+                driverViewModel.setVehiclePlate(etVehiclePlate.getText().toString());
             }
+
+            btnSave.setEnabled(false);
+            btnSave.setText(R.string.saving);
+
+            userService.updateUserProfile(accountViewModel, new AuthCallback() {
+                @Override
+                public void onSuccess(String userId, UserRole role) {
+                    Toast.makeText(getContext(), "Profile updated successfully.", Toast.LENGTH_SHORT).show();
+                    NavHostFragment.findNavController(EditProfileFragment.this).popBackStack();
+                }
+
+                @Override
+                public void onError(Throwable error) {
+                    btnSave.setEnabled(true);
+                    btnSave.setText(R.string.save_change_btn);
+                    String errorMsg = error.getMessage() != null ? error.getMessage() : "Unknown error";
+                    Toast.makeText(getContext(), "Error saving profile: " + errorMsg, Toast.LENGTH_SHORT).show();
+                }
+            });
         });
 
         btnCancel.setOnClickListener(v -> NavHostFragment.findNavController(EditProfileFragment.this)
