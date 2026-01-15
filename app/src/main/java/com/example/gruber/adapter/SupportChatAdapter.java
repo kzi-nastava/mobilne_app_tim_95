@@ -11,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gruber.R;
-import com.example.gruber.fragment.SupportChatFragment;
 import com.example.gruber.models.SupportMessage;
 
 import java.util.List;

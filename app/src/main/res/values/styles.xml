@@ -67,5 +67,9 @@
 
     </style>
 
+    <style name="ChatInputTextAppearance" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
 
 </resources>

@@ -2,11 +2,13 @@ package com.example.gruber.fragment;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,6 +26,7 @@ public class SupportChatFragment extends Fragment {
     private RecyclerView rv;
     private TextInputEditText et;
     private MaterialButton btn;
+    private ImageButton btnBack;
 
     private final List<SupportMessage> items = new ArrayList<>();
     private SupportChatAdapter adapter;
@@ -41,6 +44,10 @@ public class SupportChatFragment extends Fragment {
         rv = view.findViewById(R.id.rv_messages);
         et = view.findViewById(R.id.et_message);
         btn = view.findViewById(R.id.btn_send);
+
+        btnBack = view.findViewById(R.id.btnBack);
+
+        btnBack.setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
 
         if (!service.isLoggedIn()) {
             Toast.makeText(requireContext(), "Please login first.", Toast.LENGTH_SHORT).show();
