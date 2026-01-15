@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
 import com.example.gruber.models.FakeSession;
@@ -103,6 +104,7 @@ public class RideDetailsFragment extends Fragment {
         TextView tvCancelledBy = view.findViewById(R.id.tvCancelledBy);
         TextView tvPanic = view.findViewById(R.id.tvPanic);
 
+
         // Map
         rideMap = view.findViewById(R.id.rideDetailsMap);
         setupMap();
@@ -145,7 +147,9 @@ public class RideDetailsFragment extends Fragment {
                     break;
             }
         }
-        tvStatus.setTextColor(ContextCompat.getColor(requireContext(), statusColorRes));
+        Drawable bg = tvStatus.getBackground().mutate();
+        bg.setTint(ContextCompat.getColor(requireContext(), statusColorRes));
+        tvStatus.setBackground(bg);
 
         // --- Passenger emails
         tvMainPassengerEmail.setText(ride.creatorUserEmail != null ? ride.creatorUserEmail : "-");
@@ -216,6 +220,10 @@ public class RideDetailsFragment extends Fragment {
 
         // --- DRAW MAP ROUTE (Pickup -> stops -> dropoff)
         drawRideRouteOnMap(ride, sortedStops);
+
+        view.findViewById(R.id.btnBack).setOnClickListener(v ->
+                NavHostFragment.findNavController(this).navigateUp()
+        );
     }
 
     private void setupMap() {
