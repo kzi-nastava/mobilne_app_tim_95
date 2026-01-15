@@ -75,5 +75,6 @@
     <string name="start_location">Start location</string>
     <string name="end_location">Destination</string>
     <string name="changing">Changing…</string>
+    <string name="saving">Saving...</string>
 
 </resources>
