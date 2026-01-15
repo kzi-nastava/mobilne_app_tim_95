@@ -13,8 +13,18 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
+import com.example.gruber.services.UserService;
+import com.example.gruber.services.callbacks.AuthCallback;
+import com.example.gruber.models.enums.UserRole;
 
+import javax.inject.Inject;
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class ChangePasswordFragment extends Fragment {
+
+    @Inject
+    UserService userService;
 
     public ChangePasswordFragment() {
         super(R.layout.fragment_change_password);
@@ -53,16 +63,34 @@ public class ChangePasswordFragment extends Fragment {
                 return;
             }
 
-            Toast.makeText(getContext(), "Password changed successfully.", Toast.LENGTH_SHORT).show();
+            btnChange.setEnabled(false);
+            btnChange.setText(R.string.changing);
 
-            NavHostFragment.findNavController(ChangePasswordFragment.this)
-                    .popBackStack();
+            userService.changePassword(oldPass, newPass, new AuthCallback() {
+                @Override
+                public void onSuccess(String userId, UserRole role) {
+                    Toast.makeText(getContext(), "Password changed successfully.", Toast.LENGTH_SHORT).show();
+                    NavHostFragment.findNavController(ChangePasswordFragment.this).popBackStack();
+                }
+
+                @Override
+                public void onError(Throwable error) {
+                    btnChange.setEnabled(true);
+                    btnChange.setText(R.string.change_password);
+                    String errorMsg = error.getMessage();
+                    if (errorMsg != null && errorMsg.contains("wrong password")) {
+                        showError(txtError, "Current password is incorrect.");
+                    } else if (errorMsg != null && errorMsg.contains("too many requests")) {
+                        showError(txtError, "Too many failed attempts. Try again later.");
+                    } else {
+                        showError(txtError, "Error: " + (errorMsg != null ? errorMsg : "Unknown error"));
+                    }
+                }
+            });
         });
 
-        btnCancel.setOnClickListener(v ->
-                NavHostFragment.findNavController(ChangePasswordFragment.this)
-                        .navigate(R.id.action_changePasswordFragment_to_settingsFragment)
-        );
+        btnCancel.setOnClickListener(v -> NavHostFragment.findNavController(ChangePasswordFragment.this)
+                .navigate(R.id.action_changePasswordFragment_to_settingsFragment));
     }
 
     private void showError(TextView txt, String msg) {
