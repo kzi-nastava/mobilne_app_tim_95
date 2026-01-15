@@ -10,6 +10,7 @@ import com.example.gruber.viewModels.AccountViewModel;
 import com.example.gruber.viewModels.LoginViewModel;
 import com.example.gruber.viewModels.DriverViewModel;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.DocumentSnapshot;
 import javax.inject.Inject;
@@ -110,5 +111,29 @@ public class UserService {
                 })
                 .addOnFailureListener(e -> {
                 });
+    }
+
+    public void changePassword(String currentPassword, String newPassword, AuthCallback callback) {
+        if (firebaseAuth.getCurrentUser() == null) {
+            callback.onError(new Exception("User not authenticated"));
+            return;
+        }
+
+        String email = firebaseAuth.getCurrentUser().getEmail();
+        if (email == null) {
+            callback.onError(new Exception("Could not retrieve user email"));
+            return;
+        }
+
+        firebaseAuth.getCurrentUser()
+                .reauthenticate(EmailAuthProvider.getCredential(email, currentPassword))
+                .addOnSuccessListener(result -> {
+                    firebaseAuth.getCurrentUser()
+                            .updatePassword(newPassword)
+                            .addOnSuccessListener(updateResult -> callback
+                                    .onSuccess(firebaseAuth.getCurrentUser().getUid(), UserRole.GUEST))
+                            .addOnFailureListener(callback::onError);
+                })
+                .addOnFailureListener(callback::onError);
     }
 }
