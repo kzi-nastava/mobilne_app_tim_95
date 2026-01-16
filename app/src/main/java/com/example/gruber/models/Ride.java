@@ -81,9 +81,24 @@ public class Ride {
     public void setStart(Stop start) {
         stopList.add(0, start);
     }
+    public String getStartAddress() {
+        try {
+            return stopList.get(0).getAddress();
 
+        } catch (Exception e) {
+            return "";
+        }
+    }
     public void setEnd(Stop stop) {
         stopList.add(stop);
+    }
+    public String getEndAddress() {
+        try {
+            int size = stopList.size() - 1;
+            return stopList.get(size).getAddress();
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     public LatLng getPickupLocation() { return pickupLocation; }

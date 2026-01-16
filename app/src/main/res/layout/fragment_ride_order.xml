@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/tb_ride_estimate"
         app:dividerThickness="2dp"
-        app:dividerColor="?attr/colorOnSurface"
+        app:dividerColor="@color/color_secondary_variant"
         />
 
     <TextView
@@ -73,6 +73,7 @@
         app:layout_constraintTop_toBottomOf="@id/til_start_street"
         app:dividerThickness="1dp"
         android:layout_marginTop="10dp"
+        app:dividerColor="@color/color_secondary_variant"
         />
 
     <TextView
@@ -119,6 +120,7 @@
         app:layout_constraintTop_toBottomOf="@id/til_destination_street"
         app:dividerThickness="1dp"
         android:layout_marginTop="10dp"
+        app:dividerColor="@color/color_secondary_variant"
         />
 
     <androidx.fragment.app.FragmentContainerView
