@@ -85,7 +85,7 @@ public class HomeMapFragment extends Fragment {
                     fabSupportContainer.setVisibility(View.GONE);
                     btnBookRide.setVisibility(View.GONE);
                     break;
-                case USER:
+                default:
                     break;
             }
         }

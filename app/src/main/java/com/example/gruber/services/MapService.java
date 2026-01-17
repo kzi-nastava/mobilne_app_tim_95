@@ -102,6 +102,7 @@ public class MapService {
         Configuration.getInstance().setUserAgentValue(appCtx.getPackageName());
 
         map.setTileSource(CARTO_POSITRON);
+
         map.setMultiTouchControls(true);
         map.setMinZoomLevel(4.0);
         map.setMaxZoomLevel(20.0);
