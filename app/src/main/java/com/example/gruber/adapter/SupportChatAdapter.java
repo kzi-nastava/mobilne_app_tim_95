@@ -41,6 +41,7 @@ public class SupportChatAdapter extends RecyclerView.Adapter<SupportChatAdapter.
         boolean mine = m.senderUid != null && m.senderUid.equals(myUid);
         h.tv.setBackgroundResource(mine ? R.drawable.bg_msg_mine : R.drawable.bg_msg_other);
 
+
         FrameLayout.LayoutParams lp =
                 (FrameLayout.LayoutParams) h.tv.getLayoutParams();
 

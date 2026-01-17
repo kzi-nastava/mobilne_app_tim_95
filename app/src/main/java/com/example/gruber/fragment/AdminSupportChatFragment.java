@@ -62,6 +62,7 @@ public class AdminSupportChatFragment extends Fragment {
 
         btnBack.setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
 
+
         if (userUid.isEmpty()) {
             Toast.makeText(requireContext(), "Missing userUid.", Toast.LENGTH_LONG).show();
             return;

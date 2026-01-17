@@ -48,6 +48,7 @@ public class SupportChatFragment extends Fragment {
         btnBack = view.findViewById(R.id.btnBack);
 
         btnBack.setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
+        
 
         if (!service.isLoggedIn()) {
             Toast.makeText(requireContext(), "Please login first.", Toast.LENGTH_SHORT).show();
