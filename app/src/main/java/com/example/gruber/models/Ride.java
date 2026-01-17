@@ -2,10 +2,11 @@ package com.example.gruber.models;
 import androidx.annotation.NonNull;
 
 import com.example.gruber.models.enums.RideStatus;
+import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.Exclude;
 
-import org.osmdroid.bonuspack.routing.Road;
-import org.osmdroid.views.overlay.Polyline;
 
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDateTime;
@@ -21,8 +22,8 @@ public class Ride {
     public List<String> passengerEmails;
     public Route route;
     public RideStatus status;
-    public LocalDateTime startedAt;
-    public LocalDateTime finishedAt;
+    public Timestamp startedAt;
+    public Timestamp finishedAt;
     public int priceDin;
     public String cancelledBy;  // posto za cancel voznje treba i razlog zasto ovo bolje bih izbacio i dodao
                                 // novu kolekciju : class Cancelations { String canceledBy; String rideUid; String explanation; }
@@ -41,7 +42,7 @@ public class Ride {
         return cancelledBy;
     }
 
-    public Ride(@NonNull String creatorUserEmail, @NonNull String driverEmail, List<Stop> stopList, List<String> passengerEmails, Route route, RideStatus status, LocalDateTime startedAt, LocalDateTime finishedAt, int priceDin) {
+    public Ride(@NonNull String creatorUserEmail, @NonNull String driverEmail, List<Stop> stopList, List<String> passengerEmails, Route route, RideStatus status, Timestamp startedAt, Timestamp finishedAt, int priceDin) {
         this.creatorUserEmail = creatorUserEmail;
         this.driverEmail = driverEmail;
         this.stopList = stopList;
@@ -157,20 +158,42 @@ public class Ride {
         this.dropoffAddress = dropoffAddress;
     }
 
-    public LocalDateTime getFinishedAtMillis() {
+    public Timestamp getFinishedAt() {
         return finishedAt;
     }
-
-    public void setFinishedAtMillis(LocalDateTime finishedAtMillis) {
-        this.finishedAt = finishedAtMillis;
+    @Exclude
+    public LocalDateTime getFinishedAtLocalDateTime() {
+        return finishedAt.toDate()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
     }
 
-    public LocalDateTime getStartedAtMillis() {
+    public void setFinishedAt(Timestamp finishedAt) {
+        this.finishedAt = finishedAt;
+    }
+    @Exclude
+    public void setFinishedAtLocalDateTime(LocalDateTime localDateTime) {
+        this.finishedAt = new Timestamp(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+    public Timestamp getStartedAt() {
         return startedAt;
     }
+    @Exclude
+    public LocalDateTime getStartedAtLocalDateTime() {
+        return startedAt.toDate()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+    }
 
-    public void setStartedAtMillis(LocalDateTime startedAtMillis) {
-        this.startedAt = startedAtMillis;
+    public void setStartedAt(Timestamp startedAt) {
+        this.startedAt = startedAt;
+    }
+    @Exclude
+    public void setStartedAtLocalDateTime(LocalDateTime localDateTime) {
+        this.startedAt = new Timestamp(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
     }
 
     public int getPriceDin() {

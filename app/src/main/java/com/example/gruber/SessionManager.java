@@ -28,7 +28,7 @@ public class SessionManager {
         String role = prefs.getString(ROLE, null);
         return role != null ? UserRole.valueOf(role) : UserRole.GUEST;
     }
-
+    public String getUserEmail() { return prefs.getString(EMAIL, null);}
     public String getUserID() {
         return prefs.getString(USER_ID, null);
     }
