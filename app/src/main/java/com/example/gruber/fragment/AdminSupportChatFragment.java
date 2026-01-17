@@ -2,11 +2,14 @@ package com.example.gruber.fragment;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -25,6 +28,8 @@ public class AdminSupportChatFragment extends Fragment {
     private RecyclerView rv;
     private TextInputEditText et;
     private MaterialButton btn;
+    private ImageButton btnBack;
+    private TextView tvUserName;
 
     private final List<SupportMessage> items = new ArrayList<>();
     private SupportChatAdapter adapter;
@@ -48,14 +53,29 @@ public class AdminSupportChatFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        btnBack = view.findViewById(R.id.btnBack);
+        tvUserName = view.findViewById(R.id.tvUserName);
+
         rv = view.findViewById(R.id.rv_messages);
         et = view.findViewById(R.id.et_message);
         btn = view.findViewById(R.id.btn_send);
+
+        btnBack.setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
+
 
         if (userUid.isEmpty()) {
             Toast.makeText(requireContext(), "Missing userUid.", Toast.LENGTH_LONG).show();
             return;
         }
+
+        tvUserName.setText("User");
+        service.loadUserDisplayName(userUid, name -> {
+            if (!isAdded()) return;
+            tvUserName.setText(name);
+        }, e -> {
+            if (!isAdded()) return;
+            tvUserName.setText("User: " + userUid);
+        });
 
         // This makes bubbles appear "mine" for ADMIN.
         String myUid = service.getMyUid();

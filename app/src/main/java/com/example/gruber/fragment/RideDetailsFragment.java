@@ -281,7 +281,8 @@ public class RideDetailsFragment extends Fragment {
                     // Make it BLUE (use your palette: status_active)
                     int blue = ContextCompat.getColor(requireContext(), R.color.status_cancelled);
                     routeLine.getOutlinePaint().setColor(blue);
-                    routeLine.getOutlinePaint().setStrokeWidth(10f);
+                    routeLine.getOutlinePaint().setStrokeWidth(8f);
+                    routeLine.getOutlinePaint().setAntiAlias(true);
 
                     rideMap.getOverlays().add(routeLine);
 
@@ -315,7 +316,7 @@ public class RideDetailsFragment extends Fragment {
         m.setTitle(title);
 
         // try 26 for start/end, 22 for stops
-        int dp = (title.startsWith("Stop")) ? 44 : 48;
+        int dp = (title.startsWith("Stop")) ? 36 : 48;
         m.setIcon(getScaledMarker(iconRes, dp));
 
         // anchor after setting icon

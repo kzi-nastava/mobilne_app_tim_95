@@ -36,6 +36,7 @@ public class AdminSupportThreadsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+
         rv = view.findViewById(R.id.rv_threads);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
 

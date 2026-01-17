@@ -14,13 +14,14 @@ public class SupportChatService {
     public interface MessagesListener {
         void onMessages(@NonNull List<SupportMessage> messages);
     }
-
     public interface Callback {
         void onSuccess();
     }
-
     public interface ErrorListener {
         void onError(@NonNull Exception e);
+    }
+    public interface StringListener {
+        void onValue(@NonNull String value);
     }
 
     private final FirebaseAuth auth;
@@ -123,13 +124,52 @@ public class SupportChatService {
         }
     }
 
-
     public void stopListening() {
         if (messagesRegistration != null) {
             messagesRegistration.remove();
             messagesRegistration = null;
         }
     }
+
+    public void loadUserDisplayName(@NonNull String userUid,
+                                    @NonNull StringListener onSuccess,
+                                    @NonNull ErrorListener onError) {
+        String uid = userUid.trim();
+        if (uid.isEmpty()) {
+            onError.onError(new IllegalArgumentException("Missing userUid"));
+            return;
+        }
+
+        db.collection("users")
+                .document(uid)
+                .get()
+                .addOnSuccessListener(doc -> {
+                    if (doc == null || !doc.exists()) {
+                        onSuccess.onValue("User: " + uid);
+                        return;
+                    }
+
+                    // Prefer full name if you store it in support_threads
+                    String first = doc.getString("firstName");
+                    String last = doc.getString("lastName");
+                    String email = doc.getString("email");
+
+                    String fullName = "";
+                    if (first != null) fullName += first.trim();
+                    if (last != null) fullName += (fullName.isEmpty() ? "" : " ") + last.trim();
+                    fullName = fullName.trim();
+
+                    if (!fullName.isEmpty()) {
+                        onSuccess.onValue(fullName);
+                    } else if (email != null && !email.trim().isEmpty()) {
+                        onSuccess.onValue(email.trim());
+                    } else {
+                        onSuccess.onValue("User: " + uid);
+                    }
+                })
+                .addOnFailureListener(onError::onError);
+    }
+
 
     /**
      * Send message from current user (and update thread meta).
