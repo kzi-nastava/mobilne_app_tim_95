@@ -34,6 +34,8 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.Polyline;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -170,13 +172,24 @@ public class RideDetailsFragment extends Fragment {
             otherPassengersContainer.addView(t);
         }
 
+        // Conversion because of switch from LocalDate to firebase.Timestamp
+        LocalDateTime _start = ride.startedAt.toDate()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+        LocalDateTime _end = ride.finishedAt.toDate()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+
         // --- Times + duration
-        String startTxt = (ride.startedAt != null) ? ride.startedAt.format(DATE_TIME_FMT) : "-";
-        String endTxt = (ride.finishedAt != null) ? ride.finishedAt.format(DATE_TIME_FMT) : "-";
+        String startTxt = (ride.startedAt != null) ? _start.format(DATE_TIME_FMT) : "-";
+        String endTxt = (ride.finishedAt != null) ? _end.format(DATE_TIME_FMT) : "-";
 
         String durationTxt = "";
         if (ride.startedAt != null && ride.finishedAt != null) {
-            long minutes = java.time.Duration.between(ride.startedAt, ride.finishedAt).toMinutes();
+
+            long minutes = java.time.Duration.between(_start, _end).toMinutes();
             durationTxt = " (" + minutes + " min)";
         }
         tvTimes.setText(startTxt + " - " + endTxt + durationTxt);

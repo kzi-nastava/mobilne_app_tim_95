@@ -15,6 +15,7 @@ import com.example.gruber.R;
 import com.example.gruber.models.Ride;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,13 +77,16 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.VH> {
 
         // ---- DATE ----
         if (ride.startedAt != null) {
-            LocalDate rideDate = ride.startedAt.toLocalDate();
+            LocalDate rideDate = ride.startedAt.toDate()
+                    .toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
             if (rideDate.equals(LocalDate.now())) {
                 datePart = holder.itemView.getContext().getString(R.string.today);
             } else if (rideDate.equals(LocalDate.now().minusDays(1))) {
                 datePart = holder.itemView.getContext().getString(R.string.yesterday);
             } else {
-                datePart = ride.startedAt.format(dateFmt);
+                datePart = ride.getStartedAtLocalDateTime().format(dateFmt);
             }
         } else {
             datePart = "-";
@@ -90,12 +94,17 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.VH> {
 
 // ---- TIME ----
         String start = (ride.startedAt != null)
-                ? ride.startedAt.toLocalTime().format(timeFmt)
-                : "";
+                ? ride.startedAt.toDate()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime()
+                .format(timeFmt) : "";
 
         String end = (ride.finishedAt != null)
-                ? ride.finishedAt.toLocalTime().format(timeFmt)
-                : "";
+                ? ride.finishedAt.toDate()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime().format(timeFmt) : "";
 
         timePart = start + " – " + end;
 

@@ -11,6 +11,9 @@ public class Route {
         this.road = road;
         this.polyline = polyline;
     }
+    public Route() {
+
+    }
 
     public Road getRoad() {
         return road;
