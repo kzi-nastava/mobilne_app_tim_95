@@ -29,9 +29,15 @@ public class UserService {
     }
 
     //
-    public boolean logIn(Login login, AuthCallback callback) {
+    public void logIn(Login login, AuthCallback callback) {
         firebaseAuth.signInWithEmailAndPassword(login.email, login.password)
                 .addOnSuccessListener(result -> {
+                            var fbUser = result.getUser();
+                            if (fbUser != null && !fbUser.isEmailVerified()) {
+                                callback.onError(new Exception("Email unverified."));
+                                return;
+                            }
+
                             String uid = result.getUser().getUid();
                             firebaseFirestore
                                     .collection("users")
@@ -51,12 +57,13 @@ public class UserService {
                         )
                 .addOnFailureListener(callback::onError);
 
-        return false;
     }
     public void register(LoginViewModel loginViewModel, AccountViewModel accountViewModel, AuthCallback callback) {
         firebaseAuth.createUserWithEmailAndPassword(loginViewModel.getEmail(), loginViewModel.getPassword())
                 .addOnSuccessListener(result -> {
                     String uid = result.getUser().getUid();
+                    var fbUser = result.getUser();
+                    fbUser.sendEmailVerification();
                     firebaseFirestore.collection("users")
                             .document(uid)
                             .set(accountViewModel.toUser())
