@@ -9,6 +9,7 @@ import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 import com.example.gruber.R;
+import com.example.gruber.models.FakeSession;
 import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.viewModels.LoginViewModel;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -41,8 +42,8 @@ public class MainActivity extends AppCompatActivity {
         // ? FakeSession.currentUser.getRole()
         // : UserRole.GUEST;
         // Inserting dummy data purposes only
-        // FakeSession fakeSession = new FakeSession();
-        // fakeSession.insertSeed();
+//         FakeSession fakeSession = new FakeSession();
+//         fakeSession.insertRideSeed();
 
         // Set role-specific nav graph
         NavGraph graph = navController.getNavInflater().inflate(R.navigation.nav_guest);

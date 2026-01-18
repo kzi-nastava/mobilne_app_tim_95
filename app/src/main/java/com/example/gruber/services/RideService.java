@@ -16,6 +16,7 @@ import com.example.gruber.models.VehicleType;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.callbacks.PriceCallback;
+import com.example.gruber.services.callbacks.RidesListCallback;
 import com.example.gruber.services.callbacks.RouteCallback;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
@@ -214,16 +215,15 @@ public class RideService {
                 });
         return ridesLiveData;
     }
-    public LiveData<List<Ride>> getRidesForUser(String userEmail) {
-        MutableLiveData<List<Ride>> ridesLiveData = new MutableLiveData<>();
+    public void getRidesForUser(String userEmail, RidesListCallback callback) {
         firebaseFirestore.collection(RIDES)
                 .whereEqualTo(USER_EMAIL, userEmail)
                 .get()
                 .addOnSuccessListener(snapshot -> {
                     List<Ride> rides = snapshot.toObjects(Ride.class);
-                    ridesLiveData.setValue(rides);
-                });
-        return ridesLiveData;
+                    callback.onSuccess(rides);
+                })
+                .addOnFailureListener(e -> callback.onSuccess(Collections.emptyList()));
     }
 
     public void searchAddress(String query, Consumer<List<Stop>> onResult ) {

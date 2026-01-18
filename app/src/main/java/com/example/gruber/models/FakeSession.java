@@ -1,12 +1,12 @@
 package com.example.gruber.models;
 
-import com.example.gruber.R;
-import com.example.gruber.app.AppModule;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.models.enums.UserRole;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,7 +60,17 @@ public class FakeSession {
     public static final List<Ride> RIDES = Arrays.asList(
 
             new Ride(
-                    "user1@gmail.com","driver1@gmail.com",null,List.of("passenger1@gmail.com", "passenger2@gmail.com"),null,RideStatus.COMPLETED,LocalDateTime.now().minusHours(5),LocalDateTime.now().minusHours(4),1200),
+                    "veljko.cd.we@gmail.com",
+                    "driver1@gmail.com",
+                    null,
+                    List.of("passenger1@gmail.com", "passenger2@gmail.com"),
+                    null,RideStatus.COMPLETED,
+                    new Timestamp(LocalDateTime.now().minusDays(5).atZone(ZoneId.systemDefault())
+                            .toInstant()),
+                    new Timestamp(LocalDateTime.now().minusDays(5).plusMinutes(40).atZone(ZoneId.systemDefault())
+                            .toInstant()),
+                    1200
+            ),
             new Ride(
                     "user2@gmail.com",
                     "driver2@gmail.com",
@@ -68,44 +78,52 @@ public class FakeSession {
                     List.of("passenger3@gmail.com"),
                     null,
                     RideStatus.ACTIVE,
-                    LocalDateTime.now().minusMinutes(30),
-                    null,
+                    new Timestamp(LocalDateTime.now().minusDays(4).atZone(ZoneId.systemDefault())
+                            .toInstant()),
+                    new Timestamp(LocalDateTime.now().minusDays(4).plusMinutes(40).atZone(ZoneId.systemDefault())
+                            .toInstant()),
                     800
             ),
 
             new Ride(
-                    "user3@gmail.com",
+                    "veljko.cd.we@gmail.com",
                     "driver1@gmail.com",
                     Arrays.asList(STOPS.get(2), STOPS.get(3)),
                     List.of(),
                     null,
                     RideStatus.PENDING,
-                    null,
-                    null,
+                    new Timestamp(LocalDateTime.now().minusDays(3).atZone(ZoneId.systemDefault())
+                            .toInstant()),
+                    new Timestamp(LocalDateTime.now().minusDays(3).plusMinutes(40).atZone(ZoneId.systemDefault())
+                            .toInstant()),
                     1500
             ),
 
             new Ride(
-                    "user4@gmail.com",
+                    "veljko.cd.we@gmail.com",
                     "driver3@gmail.com",
                     Arrays.asList(STOPS.get(4), STOPS.get(5)),
                     List.of("passenger4@gmail.com"),
                     null,
                     RideStatus.CANCELLED,
-                    LocalDateTime.now().minusDays(1),
-                    null,
+                    new Timestamp(LocalDateTime.now().minusDays(1).atZone(ZoneId.systemDefault())
+                            .toInstant()),
+                    new Timestamp(LocalDateTime.now().minusDays(1).plusMinutes(40).atZone(ZoneId.systemDefault())
+                            .toInstant()),
                     0
             ),
 
             new Ride(
-                    "user5@gmail.com",
+                    "veljko.cd.we@gmail.com",
                     "driver2@gmail.com",
                     Arrays.asList(STOPS.get(6), STOPS.get(7)),
                     List.of("passenger5@gmail.com", "passenger6@gmail.com"),
                     null,
                     RideStatus.COMPLETED,
-                    LocalDateTime.now().minusDays(2),
-                    LocalDateTime.now().minusDays(2).plusMinutes(40),
+                    new Timestamp(LocalDateTime.now().minusDays(2).atZone(ZoneId.systemDefault())
+                            .toInstant()),
+                    new Timestamp(LocalDateTime.now().minusDays(2).plusMinutes(40).atZone(ZoneId.systemDefault())
+                            .toInstant()),
                     2000
             )
     );
@@ -138,8 +156,8 @@ public class FakeSession {
                 "Bulevar Patrijarha Pavla 15, Novi Sad",
                 "Bulevar Cara Lazara 15, Novi Sad");
         ride1.setDistanceMeters(2700);
-        ride1.setStartedAtMillis(LocalDateTime.now().minusHours(4).minusMinutes(17));
-        ride1.setFinishedAtMillis(LocalDateTime.now().minusHours(4));
+        ride1.setStartedAtLocalDateTime(LocalDateTime.now().minusHours(4).minusMinutes(17));
+        ride1.setFinishedAtLocalDateTime(LocalDateTime.now().minusHours(4));
         ride1.setPanicTriggered(false);
         ride1.setStatus(RideStatus.COMPLETED);
         ride1.setPriceDin(450);
@@ -162,8 +180,8 @@ public class FakeSession {
         ride2.setDistanceMeters(2500);
         ride2.setPickupLocation(new LatLng(45.24786, 19.85079));
         ride2.setDropoffLocation(new LatLng(45.23873, 19.83243));
-        ride2.setStartedAtMillis(LocalDateTime.now().minusHours(3).minusMinutes(12));
-        ride2.setFinishedAtMillis(LocalDateTime.now().minusHours(3));
+        ride2.setStartedAtLocalDateTime(LocalDateTime.now().minusHours(3).minusMinutes(12));
+        ride2.setFinishedAtLocalDateTime(LocalDateTime.now().minusHours(3));
         ride2.setPanicTriggered(false);
         ride2.setStopList(stopList3);
         ride2.setStatus(RideStatus.COMPLETED);
@@ -181,7 +199,7 @@ public class FakeSession {
                 "Bulevar Cara Lazara 1, Novi Sad",
                 "Balzakova 15, Novi Sad");
         ride3.setDistanceMeters(0);
-        ride3.setStartedAtMillis(LocalDateTime.now().minusDays(3).minusHours(7).minusMinutes(12));
+        ride3.setStartedAtLocalDateTime(LocalDateTime.now().minusDays(3).minusHours(7).minusMinutes(12));
         ride3.setPanicTriggered(false);
         ride3.setStatus(RideStatus.CANCELLED);
         ride3.setCancelledBy("mika@mail.com");
@@ -197,7 +215,7 @@ public class FakeSession {
                 "Bulevar Cara Lazara 1, Novi Sad",
                 "Balzakova 15, Novi Sad");
         ride4.setDistanceMeters(0);
-        ride4.setStartedAtMillis(LocalDateTime.now().minusMinutes(7));
+        ride4.setStartedAtLocalDateTime(LocalDateTime.now().minusMinutes(7));
         ride4.setPanicTriggered(false);
         ride4.setStatus(RideStatus.ACTIVE);
         ride4.setPriceDin(0);
@@ -212,8 +230,8 @@ public class FakeSession {
                 "Bulevar Cara Lazara 1, Novi Sad",
                 "Balzakova 15, Novi Sad");
         ride5.setDistanceMeters(2500);
-        ride5.setStartedAtMillis(LocalDateTime.now().minusDays(4).minusHours(3).minusMinutes(12));
-        ride5.setFinishedAtMillis(LocalDateTime.now().minusDays(4).minusHours(3));
+        ride5.setStartedAtLocalDateTime(LocalDateTime.now().minusDays(4).minusHours(3).minusMinutes(12));
+        ride5.setFinishedAtLocalDateTime(LocalDateTime.now().minusDays(4).minusHours(3));
         ride5.setPanicTriggered(false);
         ride5.setStopList(stopList3);
         ride5.setStatus(RideStatus.COMPLETED);

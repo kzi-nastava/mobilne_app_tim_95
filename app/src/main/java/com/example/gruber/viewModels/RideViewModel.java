@@ -26,7 +26,6 @@ public class RideViewModel extends ViewModel {
     private final RideService rideService;
 
     private final MutableLiveData<Ride> ride = new MutableLiveData<>();
-    private final LiveData<List<Ride>> rides = new MutableLiveData<List<Ride>>();
     private final MutableLiveData<List<Stop>> addressStartSuggestions = new MutableLiveData<>();
     private final MutableLiveData<List<Stop>> addressEndSuggestions = new MutableLiveData<>();
     private final MutableLiveData<Boolean> showRouteTrigger = new MutableLiveData<>();

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingHorizontal="10dp"
+    android:paddingTop="16dp"
+    android:layout_alignParentBottom="true"
+    tools:context=".fragment.DriversRidesFragment">
+
+    <!-- FILTER / SORT BAR -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="12dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="From:"
+                android:layout_marginEnd="8dp"/>
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/tvFromDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:padding="10dp"
+                android:background="@android:drawable/editbox_background"
+                android:text="Select date"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="To:"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="8dp"/>
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/tvToDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:padding="10dp"
+                android:background="@android:drawable/editbox_background"
+                android:text="Select date"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="10dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ride status"
+                app:icon="@drawable/ic_arrow_drop_down"
+                app:iconGravity="end"
+                app:iconPadding="5dp"
+                />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_sort_by"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="Sort by"
+                app:icon="@drawable/ic_arrow_drop_down"
+                app:iconGravity="end"
+                app:iconPadding="5dp"
+                />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_sort_order"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                app:icon="@drawable/ic_arrow_down_small"
+                app:iconSize="16dp"
+                android:padding="0dp"
+                android:insetTop="0dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                app:iconGravity="textStart"
+                style="@style/Widget.Material3.Button.IconButton.Filled" />
+
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnApply"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:icon="@drawable/ic_search"
+                android:layout_marginStart="6dp"
+                style="@style/Widget.Material3.Button.Icon"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- LIST -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rides"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        tools:listitem="@layout/ride_card" />
+
+</LinearLayout>

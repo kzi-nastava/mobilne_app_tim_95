@@ -135,7 +135,7 @@ public class DriversRidesFragment extends Fragment {
 
         for (Ride r : allRides) {
             if (r.startedAt == null) continue; // skip invalid
-            LocalDate d = r.startedAt.toLocalDate(); // "date of creation" for now
+            LocalDate d = r.getStartedAtLocalDateTime().toLocalDate(); // "date of creation" for now
 
             if (fromDate != null && d.isBefore(fromDate)) continue;
             if (toDate != null && d.isAfter(toDate)) continue;
@@ -178,8 +178,8 @@ public class DriversRidesFragment extends Fragment {
                 "Bulevar Cara Lazara 15, Novi Sad"
         );
         ride1.setDistanceMeters(2700);
-        ride1.setStartedAtMillis(LocalDateTime.now().minusDays(1).minusHours(4).minusMinutes(17));
-        ride1.setFinishedAtMillis(LocalDateTime.now().minusDays(1).minusHours(4));
+        ride1.setStartedAtLocalDateTime(LocalDateTime.now().minusDays(1).minusHours(4).minusMinutes(17));
+        ride1.setFinishedAtLocalDateTime(LocalDateTime.now().minusDays(1).minusHours(4));
         ride1.setPanicTriggered(false);
         ride1.setPriceDin(450);
         ride1.setStatus(RideStatus.COMPLETED);
@@ -192,8 +192,8 @@ public class DriversRidesFragment extends Fragment {
                 "Balzakova 15, Novi Sad"
         );
         ride2.setDistanceMeters(2500);
-        ride2.setStartedAtMillis(LocalDateTime.now().minusHours(3).minusMinutes(12));
-        ride2.setFinishedAtMillis(LocalDateTime.now().minusHours(3));
+        ride2.setStartedAtLocalDateTime(LocalDateTime.now().minusHours(3).minusMinutes(12));
+        ride2.setFinishedAtLocalDateTime(LocalDateTime.now().minusHours(3));
         ride2.setPanicTriggered(false);
         ride1.setPriceDin(890);
         ride2.setStatus(RideStatus.COMPLETED);
@@ -205,7 +205,7 @@ public class DriversRidesFragment extends Fragment {
                 "Bulevar Cara Lazara 1, Novi Sad",
                 "Balzakova 15, Novi Sad"
         );
-        ride3.setStartedAtMillis(LocalDateTime.now().minusDays(3).minusHours(7).minusMinutes(12));
+        ride3.setStartedAtLocalDateTime(LocalDateTime.now().minusDays(3).minusHours(7).minusMinutes(12));
         ride3.setDistanceMeters(0);
         ride3.setPanicTriggered(false);
         ride3.setPriceDin(0);
@@ -218,7 +218,7 @@ public class DriversRidesFragment extends Fragment {
                 "Strazilovska 10, Novi Sad",
                 "Branka Copica 70, Novi Sad"
         );
-        ride4.setStartedAtMillis(LocalDateTime.now().minusMinutes(7));
+        ride4.setStartedAtLocalDateTime(LocalDateTime.now().minusMinutes(7));
         ride4.setPanicTriggered(false);
         ride3.setPriceDin(0);
         ride4.setStatus(RideStatus.ACTIVE);
@@ -231,8 +231,8 @@ public class DriversRidesFragment extends Fragment {
                 "Balzakova 15, Novi Sad"
         );
         ride5.setDistanceMeters(2500);
-        ride5.setStartedAtMillis(LocalDateTime.now().minusDays(4).minusHours(3).minusMinutes(12));
-        ride5.setFinishedAtMillis(LocalDateTime.now().minusDays(4).minusHours(3));
+        ride5.setStartedAtLocalDateTime(LocalDateTime.now().minusDays(4).minusHours(3).minusMinutes(12));
+        ride5.setFinishedAtLocalDateTime(LocalDateTime.now().minusDays(4).minusHours(3));
         ride3.setPriceDin(890);
         ride5.setPanicTriggered(false);
         ride5.setStatus(RideStatus.COMPLETED);

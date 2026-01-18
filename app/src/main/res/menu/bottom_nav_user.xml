@@ -3,7 +3,7 @@
     <item android:id="@+id/homeMapFragment"
         android:title="@string/home"
         android:icon="@drawable/map_point"/>
-    <item android:id="@+id/ridesHistory"
+    <item android:id="@+id/userRidesHistory"
         android:title="@string/ride_history"
         android:icon="@drawable/car_journey" />
     <item android:id="@+id/profileFragment"

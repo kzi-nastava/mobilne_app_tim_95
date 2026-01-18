@@ -11,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gruber.R;
-import com.example.gruber.fragment.SupportChatFragment;
 import com.example.gruber.models.SupportMessage;
 
 import java.util.List;
@@ -41,6 +40,7 @@ public class SupportChatAdapter extends RecyclerView.Adapter<SupportChatAdapter.
 
         boolean mine = m.senderUid != null && m.senderUid.equals(myUid);
         h.tv.setBackgroundResource(mine ? R.drawable.bg_msg_mine : R.drawable.bg_msg_other);
+
 
         FrameLayout.LayoutParams lp =
                 (FrameLayout.LayoutParams) h.tv.getLayoutParams();

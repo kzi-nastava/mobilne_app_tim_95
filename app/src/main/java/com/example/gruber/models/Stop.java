@@ -39,6 +39,10 @@ public class Stop { //implements Serializable {
         this.location = new LatLng(lat, lng);
     }
 
+    public Stop() {
+
+    }
+
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
 

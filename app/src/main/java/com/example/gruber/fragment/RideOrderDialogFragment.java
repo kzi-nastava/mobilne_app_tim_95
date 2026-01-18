@@ -75,6 +75,7 @@ public class RideOrderDialogFragment extends DialogFragment {
         );
         startAutoCompleteTV.setAdapter(startAdapter);
         startAutoCompleteTV.setThreshold(3);
+        startAutoCompleteTV.setText(rideViewModel.getRideValue().getStartAddress());
 
         startAutoCompleteTV.setOnItemClickListener((parent, _view, position, id) -> {
             Stop stopSelected = (Stop) parent.getItemAtPosition(position);
@@ -89,6 +90,7 @@ public class RideOrderDialogFragment extends DialogFragment {
         );
         endAutoCompleteTv.setAdapter(endAdapter);
         endAutoCompleteTv.setThreshold(3);
+        endAutoCompleteTv.setText(rideViewModel.getRideValue().getEndAddress());
 
         endAutoCompleteTv.setOnItemClickListener((parent, _view, position, id) -> {
             Stop stopSelected = (Stop) parent.getItemAtPosition(position);

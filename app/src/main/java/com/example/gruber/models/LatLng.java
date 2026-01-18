@@ -12,6 +12,9 @@ public class LatLng implements Serializable {
         this.lat = lat;
         this.lon = lon;
     }
+    public LatLng() {
+
+    }
 
     @NonNull
     @Override
