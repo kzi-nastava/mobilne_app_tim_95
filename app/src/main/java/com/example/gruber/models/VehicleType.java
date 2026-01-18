@@ -3,7 +3,7 @@ package com.example.gruber.models;
 public class VehicleType {
 
     public String type;
-    public int pricePerKm;
+    public int price;
 
     public String getType() {
         return type;
@@ -13,12 +13,12 @@ public class VehicleType {
         this.type = type;
     }
 
-    public int getPricePerKm() {
-        return pricePerKm;
+    public int getPrice() {
+        return price;
     }
 
-    public void setPricePerKm(int price) {
-        this.pricePerKm = price;
+    public void setPrice(int price) {
+        this.price = price;
     }
 
 }
