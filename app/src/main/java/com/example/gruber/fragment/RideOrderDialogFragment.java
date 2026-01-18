@@ -1,11 +1,13 @@
 package com.example.gruber.fragment;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.viewpager2.widget.ViewPager2;
 
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -14,20 +16,27 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
-
 import com.example.gruber.R;
+import com.example.gruber.adapter.RideOptionsViewPagerAdapter;
 import com.example.gruber.models.Stop;
+import com.example.gruber.models.enums.UserRole;
+import com.example.gruber.viewModels.LoginViewModel;
 import com.example.gruber.viewModels.RideViewModel;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
-
 import java.io.IOException;
 import java.util.ArrayList;
+import dagger.hilt.android.AndroidEntryPoint;
+import javax.inject.Inject;
 
 
+@AndroidEntryPoint
 public class RideOrderDialogFragment extends DialogFragment {
 
     private RideViewModel rideViewModel;
+    private LoginViewModel loginViewModel;
 
     private MaterialAutoCompleteTextView startAutoCompleteTV;
     private ArrayAdapter<Stop> startAdapter;
@@ -44,6 +53,7 @@ public class RideOrderDialogFragment extends DialogFragment {
         super.onCreate(savedInstanceState);
 
         rideViewModel = new ViewModelProvider(requireActivity()).get(RideViewModel.class);
+        loginViewModel = new ViewModelProvider(requireActivity()).get(LoginViewModel.class);
         setStyle(STYLE_NORMAL, R.style.Theme_GrUber_FullScreenDialog);
     }
 
@@ -53,6 +63,9 @@ public class RideOrderDialogFragment extends DialogFragment {
                              @Nullable Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_ride_order, container, false);
+
+        // Reset ride to clear old data from previous orders
+        rideViewModel.resetRide();
 
         startAutoCompleteTV = view.findViewById(R.id.et_start_street);
         startAdapter = new ArrayAdapter<>(
@@ -120,7 +133,21 @@ public class RideOrderDialogFragment extends DialogFragment {
                 String start = String.valueOf(startAutoCompleteTV.getText());
                 String end = String.valueOf(endAutoCompleteTv.getText());
                 try {
-                    rideViewModel.setRideRoute(start, end);
+                    // Provjeri da li korisnik ima intermediate stops
+                    boolean hasIntermediateStops = rideViewModel.getIntermediateStops().getValue() != null 
+                            && !rideViewModel.getIntermediateStops().getValue().isEmpty();
+                    
+                    // Provjeri da li je USER (nije GUEST)
+                    boolean isUser = loginViewModel.getRole().getValue() != null 
+                            && loginViewModel.getRole().getValue() != UserRole.GUEST;
+                    
+                    // Ako je USER i ima intermediate stops, koristi metodu sa stops-ovima
+                    if (isUser && hasIntermediateStops) {
+                        rideViewModel.setRideRouteWithStops(start, end);
+                    } else {
+                        // Inače koristi običnu metodu (samo start i end)
+                        rideViewModel.setRideRoute(start, end);
+                    }
                 } catch (IOException e) {
                     Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
@@ -128,9 +155,8 @@ public class RideOrderDialogFragment extends DialogFragment {
                 return true;
             }
             else if (item.getItemId() == R.id.action_book_ride) {
-
-                dismiss();
-                return false;
+                bookRide();
+                return true;
             }
             return false;
         });
@@ -157,7 +183,81 @@ public class RideOrderDialogFragment extends DialogFragment {
 
                 });
 
+        loginViewModel.getRole().observe(getViewLifecycleOwner(), userRole -> {
+            if (userRole != UserRole.GUEST) {
+                loadTabsWithViewPager(view);
+            } else {
+                TabLayout tabLayout = view.findViewById(R.id.tab_layout);
+                ViewPager2 viewPager = view.findViewById(R.id.view_pager);
+                
+                tabLayout.setVisibility(View.GONE);
+                viewPager.setVisibility(View.GONE);
+            }
+        });
     }
 
+    private void loadTabsWithViewPager(View view) {
+        TabLayout tabLayout = view.findViewById(R.id.tab_layout);
+        ViewPager2 viewPager = view.findViewById(R.id.view_pager);
 
+        RideOptionsViewPagerAdapter adapter = new RideOptionsViewPagerAdapter(requireActivity());
+        viewPager.setAdapter(adapter);
+
+        new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
+            switch (position) {
+                case 0:
+                    tab.setText("Stops");
+                    break;
+                case 1:
+                    tab.setText("Passengers");
+                    break;
+                case 2:
+                    tab.setText("Options");
+                    break;
+            }
+        }).attach();
+    }
+
+    private void bookRide() {
+        Log.d("RideOrderDialog", "bookRide: Button clicked, starting booking process");
+        // Uzmi email trenutnog korisnika
+        String userEmail = loginViewModel.getEmail();
+        Log.d("RideOrderDialog", "bookRide: User email from LoginViewModel: " + userEmail);
+
+        // Osiguraj da start/end budu postavljeni i ako korisnik nije kliknuo sugestiju
+        String startText = startAutoCompleteTV.getText() != null ? startAutoCompleteTV.getText().toString().trim() : "";
+        String endText = endAutoCompleteTv.getText() != null ? endAutoCompleteTv.getText().toString().trim() : "";
+
+        if ((rideViewModel.getRideValue().getStart() == null
+                || rideViewModel.getRideValue().getStart().getAddress() == null
+                || rideViewModel.getRideValue().getStart().getAddress().isEmpty())
+                && !startText.isEmpty()) {
+            Log.d("RideOrderDialog", "bookRide: Setting start from typed text");
+            rideViewModel.setRideStart(new Stop(startText));
+        }
+
+        if ((rideViewModel.getRideValue().getEnd() == null
+                || rideViewModel.getRideValue().getEnd().getAddress() == null
+                || rideViewModel.getRideValue().getEnd().getAddress().isEmpty())
+                && !endText.isEmpty()) {
+            Log.d("RideOrderDialog", "bookRide: Setting end from typed text");
+            rideViewModel.setRideEnd(new Stop(endText));
+        }
+        
+        if (userEmail != null && !userEmail.isEmpty()) {
+            Log.d("RideOrderDialog", "bookRide: Calling RideViewModel.bookRide()...");
+            rideViewModel.bookRide(userEmail, success -> {
+                Log.d("RideOrderDialog", "bookRide: Callback received, success=" + success);
+                if (success) {
+                    Toast.makeText(getContext(), "Ride booked! Looking for drivers...", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Failed to book ride. No drivers available.", Toast.LENGTH_SHORT).show();
+                }
+                dismiss();
+            });
+        } else {
+            Log.w("RideOrderDialog", "bookRide: User email is null or empty");
+            Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+        }
+    }
 }

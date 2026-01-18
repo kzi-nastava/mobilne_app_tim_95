@@ -312,6 +312,8 @@ public class HomeMapFragment extends Fragment {
 
     private void requestNewRouteForVehicle(int idx) {
         if (bg == null || bg.isShutdown()) return;
+        if (idx < 0 || idx >= vehicles.size() || idx >= vehiclePaths.size()) return;
+        
         Vehicle v = vehicles.get(idx);
 
         GeoPoint start = v.position;
@@ -329,8 +331,10 @@ public class HomeMapFragment extends Fragment {
                 List<GeoPoint> path = road.mRouteHigh;
 
                 ui.post(() -> {
-                    vehiclePaths.set(idx, (path != null) ? path : new ArrayList<>());
-                    vehiclePathIndex.set(idx, 0);
+                    if (idx < vehiclePaths.size() && idx < vehiclePathIndex.size()) {
+                        vehiclePaths.set(idx, (path != null) ? path : new ArrayList<>());
+                        vehiclePathIndex.set(idx, 0);
+                    }
                 });
 
             } catch (Exception e) {
@@ -352,6 +356,8 @@ public class HomeMapFragment extends Fragment {
                 }
 
                 for (int i = 0; i < vehicles.size(); i++) {
+                    if (i >= vehiclePaths.size() || i >= vehiclePathIndex.size()) continue;
+                    
                     List<GeoPoint> path = vehiclePaths.get(i);
                     if (path == null || path.size() < 2) continue;
 

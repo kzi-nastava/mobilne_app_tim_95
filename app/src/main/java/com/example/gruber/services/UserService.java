@@ -16,7 +16,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 public class UserService {
-// does application logic without communication with firebase
+    // does application logic without communication with firebase
     private final SessionManager sessionManager;
     private final FirebaseAuth firebaseAuth;
     private final FirebaseFirestore firebaseFirestore;
@@ -32,27 +32,27 @@ public class UserService {
     public boolean logIn(Login login, AuthCallback callback) {
         firebaseAuth.signInWithEmailAndPassword(login.email, login.password)
                 .addOnSuccessListener(result -> {
-                            String uid = result.getUser().getUid();
-                            firebaseFirestore
-                                    .collection("users")
-                                    .document(uid)
-                                    .get()
-                                    .addOnSuccessListener(snapshot -> {
-                                       String role = snapshot.getString("role");
-                                       if (role == null) {
-                                           callback.onError(new Exception("Database data inconsistent. Mising role value."));
-                                           return;
-                                       }
-                                       UserRole _role = UserRole.valueOf(role);
-                                       callback.onSuccess(result.getUser().getUid(), _role);
+                    String uid = result.getUser().getUid();
+                    firebaseFirestore
+                            .collection("users")
+                            .document(uid)
+                            .get()
+                            .addOnSuccessListener(snapshot -> {
+                                String role = snapshot.getString("role");
+                                if (role == null) {
+                                    callback.onError(new Exception("Database data inconsistent. Mising role value."));
+                                    return;
+                                }
+                                UserRole _role = UserRole.valueOf(role);
+                                callback.onSuccess(result.getUser().getUid(), _role);
 
-                                    });
-                        }
-                        )
+                            });
+                })
                 .addOnFailureListener(callback::onError);
 
         return false;
     }
+
     public void register(LoginViewModel loginViewModel, AccountViewModel accountViewModel, AuthCallback callback) {
         firebaseAuth.createUserWithEmailAndPassword(loginViewModel.getEmail(), loginViewModel.getPassword())
                 .addOnSuccessListener(result -> {
@@ -143,7 +143,7 @@ public class UserService {
         }
 
         Map<String, Object> updates = new HashMap<>();
-        
+
         if (accountViewModel.getFirstName().getValue() != null)
             updates.put("firstName", accountViewModel.getFirstName().getValue());
         if (accountViewModel.getLastName().getValue() != null)

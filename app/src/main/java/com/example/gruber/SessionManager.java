@@ -2,7 +2,6 @@ package com.example.gruber;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-
 import com.example.gruber.models.enums.UserRole;
 
 public class SessionManager {

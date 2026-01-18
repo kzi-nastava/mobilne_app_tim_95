@@ -3,6 +3,7 @@ package com.example.gruber.services;
 import android.content.Context;
 import android.location.Address;
 import android.location.Geocoder;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -10,7 +11,10 @@ import androidx.lifecycle.MutableLiveData;
 import com.example.gruber.models.Route;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.Stop;
+import com.example.gruber.models.User;
+import com.example.gruber.models.VehicleType;
 import com.example.gruber.models.enums.RideStatus;
+import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.callbacks.PriceCallback;
 import com.example.gruber.services.callbacks.RouteCallback;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -58,6 +62,8 @@ public class RideService {
     private static final String RIDES = "rides";
     private static final String STATUS = "status";
     private static final String USER_EMAIL = "creatorUserEmail";
+    private static final String USERS = "users";
+    private static final String ROLE = "role";
 
 
     @Inject
@@ -88,6 +94,40 @@ public class RideService {
 //        Route(road, line);
     }
 
+    // Metoda za rutu sa intermediate stops
+    public void getRouteWithStops(String start, List<Stop> intermediateStops, String end, RouteCallback callback) throws IOException {
+        ArrayList<GeoPoint> waypoints = new ArrayList<GeoPoint>();
+        
+        // Dodaj start point
+        GeoPoint startPoint = getGeoPoint(start);
+        waypoints.add(startPoint);
+        
+        // Dodaj sve intermediate stops
+        if (intermediateStops != null && !intermediateStops.isEmpty()) {
+            for (Stop stop : intermediateStops) {
+                if (stop.hasLocation()) {
+                    waypoints.add(new GeoPoint(stop.getLocation().lat, stop.getLocation().lon));
+                } else {
+                    // Ako stop nema koordinate, geocode-uj ga
+                    GeoPoint stopPoint = getGeoPoint(stop.getAddress());
+                    waypoints.add(stopPoint);
+                }
+            }
+        }
+        
+        // Dodaj end point
+        GeoPoint endPoint = getGeoPoint(end);
+        waypoints.add(endPoint);
+        
+        executor.execute(() -> {
+            Road road = roadManager.getRoad(waypoints);
+            if (road != null) {
+                Polyline polyline = OSRMRoadManager.buildRoadOverlay(road);
+                callback.onSuccess(new Route(road, polyline));
+            }
+        });
+    }
+
     public Road calculateRoad(ArrayList<GeoPoint> waypoints) {
         executor.execute(() -> {
             Road road = roadManager.getRoad(waypoints);
@@ -102,7 +142,7 @@ public class RideService {
         return new GeoPoint(a.getLatitude(), a.getLongitude());
     }
 
-    public void getPrice(Road road, String driveBracket, PriceCallback callback) {
+        public void getPrice(Road road, String driveBracket, PriceCallback callback) {
         firebaseFirestore.collection(VEHICLE_TYPE)
                 .whereArrayContains(TYPE, driveBracket)
                 .get()
@@ -113,6 +153,28 @@ public class RideService {
                 })
                 .addOnFailureListener(callback::onError);
     }
+
+    
+    // Geocode Stop object if it doesn't have coordinates
+    public void geocodeStop(Stop stop, Consumer<Stop> callback) {
+        if (stop.hasLocation()) {
+            // Already has coordinates
+            callback.accept(stop);
+            return;
+        }
+        
+        executor.execute(() -> {
+            try {
+                GeoPoint geoPoint = getGeoPoint(stop.getAddress());
+                Stop geocodedStop = new Stop(stop.getAddress(), geoPoint.getLatitude(), geoPoint.getLongitude());
+                callback.accept(geocodedStop);
+            } catch (IOException e) {
+                // If geocoding fails, return original stop
+                callback.accept(stop);
+            }
+        });
+    }
+
     public void setRideStatus(String rideID, RideStatus status) {
         Map<String, Object> statusMap = new HashMap<>();
         statusMap.put(STATUS, status);
@@ -123,15 +185,13 @@ public class RideService {
     }
     public void addRide(Ride ride, PriceCallback callback) {
         ride.status = RideStatus.PENDING;
+
         firebaseFirestore.collection(RIDES)
                 .add(ride)
-                .addOnSuccessListener(result -> {
-                    callback.onSuccess(ride.priceDin);
-                })
-                .addOnFailureListener(result -> {
-                    callback.onError(new Exception("Failed writing ride to database."));
-                });
+                .addOnSuccessListener(result -> callback.onSuccess(ride.priceDin))
+                .addOnFailureListener(result -> callback.onError(new Exception("Failed writing ride to database.")));
     }
+    
     public LiveData<List<Ride>> getRides() {
         MutableLiveData<List<Ride>> ridesLiveData = new MutableLiveData<>();
         firebaseFirestore.collection(RIDES).get()
@@ -211,6 +271,79 @@ public class RideService {
             catch (Exception e) {
                 onResult.accept(Collections.emptyList());
             }
+        });
+    }
+
+    // Pronađi prvog dostupnog drajvera
+    public void getFirstDriver(Consumer<User> callback) {
+        Log.d("RideService", "getFirstDriver: Starting driver search...");
+        firebaseFirestore.collection(USERS)
+                .whereEqualTo(ROLE, UserRole.DRIVER)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    Log.d("RideService", "getFirstDriver: Query successful, isEmpty=" + snapshot.isEmpty() + ", size=" + snapshot.size());
+                    if (!snapshot.isEmpty()) {
+                        User driver = snapshot.getDocuments().get(0).toObject(User.class);
+                        Log.d("RideService", "getFirstDriver: Found driver with email=" + (driver != null ? driver.getEmail() : "null"));
+                        callback.accept(driver);
+                    } else {
+                        Log.w("RideService", "getFirstDriver: No drivers found in database");
+                        callback.accept(null);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("RideService", "getFirstDriver: Query failed", e);
+                    callback.accept(null);
+                });
+    }
+
+    // Dobavi VehicleType iz Firebase-a po tipu
+    public void getVehicleTypeByType(String type, Consumer<VehicleType> callback) {
+        Log.d("RideService", "getVehicleTypeByType: Searching for type=" + type);
+        firebaseFirestore.collection(VEHICLE_TYPE)
+                .whereEqualTo(TYPE, type)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    Log.d("RideService", "getVehicleTypeByType: Query successful, isEmpty=" + snapshot.isEmpty() + ", size=" + snapshot.size());
+                    if (!snapshot.isEmpty()) {
+                        VehicleType vehicleType = snapshot.getDocuments().get(0).toObject(VehicleType.class);
+                        Log.d("RideService", "getVehicleTypeByType: Found vehicleType with price=" + (vehicleType != null ? vehicleType.getPrice() : "null"));
+                        callback.accept(vehicleType);
+                    } else {
+                        Log.w("RideService", "getVehicleTypeByType: No vehicle type found for type=" + type);
+                        callback.accept(null);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("RideService", "getVehicleTypeByType: Query failed for type=" + type, e);
+                    callback.accept(null);
+                });
+    }
+
+    // Izračunaj cijenu vožnje: price (iz baze) + (kilometri * 120)
+    public void calculateRidePrice(Route route, String vehicleTypeStr, Consumer<Integer> callback) {
+        Log.d("RideService", "calculateRidePrice: Starting, vehicleType=" + vehicleTypeStr);
+        if (route == null || route.getRoad() == null) {
+            Log.w("RideService", "calculateRidePrice: Route or Road is null");
+            callback.accept(0);
+            return;
+        }
+
+        // Dobavi VehicleType iz baze
+        getVehicleTypeByType(vehicleTypeStr, vehicleType -> {
+            if (vehicleType == null) {
+                Log.w("RideService", "calculateRidePrice: VehicleType not found");
+                callback.accept(0);
+                return;
+            }
+
+            // road.mLength je u metrima, konvertuj u kilometre
+            double kilometers = route.getRoad().mLength;
+            int price = vehicleType.getPrice() + (int)(kilometers * 120);
+            Log.d("RideService", "calculateRidePrice: Calculated price=" + price + " (base price=" + vehicleType.getPrice() + ", km=" + kilometers + ")");
+            callback.accept(price);
         });
     }
 
