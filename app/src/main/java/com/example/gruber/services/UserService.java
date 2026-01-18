@@ -63,11 +63,11 @@ public class UserService {
                 .addOnSuccessListener(result -> {
                     String uid = result.getUser().getUid();
                     var fbUser = result.getUser();
-                    fbUser.sendEmailVerification();
                     firebaseFirestore.collection("users")
                             .document(uid)
                             .set(accountViewModel.toUser())
                             .addOnSuccessListener(snapshot -> {
+                                fbUser.sendEmailVerification();
                                 callback.onSuccess(uid, accountViewModel.getRole().getValue());
                             });
                 })
