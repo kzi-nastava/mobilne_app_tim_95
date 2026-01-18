@@ -7,6 +7,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.viewpager2.widget.ViewPager2;
 
 import android.text.Editable;
@@ -246,13 +248,23 @@ public class RideOrderDialogFragment extends DialogFragment {
             rideViewModel.bookRide(userEmail, success -> {
                 if (success) {
                     Toast.makeText(getContext(), "Ride booked! Looking for drivers...", Toast.LENGTH_SHORT).show();
+                    dismiss();
+                    navigateToRideTracking();
                 } else {
                     Toast.makeText(getContext(), "Failed to book ride. No drivers available.", Toast.LENGTH_SHORT).show();
                 }
-                dismiss();
             });
         } else {
             Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void navigateToRideTracking() {
+        try {
+            NavController navController = NavHostFragment.findNavController(RideOrderDialogFragment.this);
+            navController.navigate(R.id.rideTrackingFragment);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
