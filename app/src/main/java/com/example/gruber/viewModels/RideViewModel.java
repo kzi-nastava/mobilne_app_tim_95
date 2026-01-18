@@ -249,8 +249,10 @@ public class RideViewModel extends ViewModel {
             linkedPassengers.postValue(passengers);
         }
     }
-
-    // Metoda za booking voznje - kalkulise cijenu na osnovu rute i tipa vozila, zatim pronalazi drajvera
+    //TODO: Algoritam izbora vozca
+    //TODO: Fragment za narucivanje za odredjeno vrijeme u sl. 5 sati
+    //TODO: Notifikacije o privatanju voznje
+    //TODO: Pocetak voznje kod vozaca
     public void bookRide(String creatorUserEmail, Consumer<Boolean> onComplete) {
         Ride bookingRide = ride.getValue();
 
@@ -306,7 +308,6 @@ public class RideViewModel extends ViewModel {
         }
     }
 
-    // Pripremi sve dodatne podatke za voznju i spremi je sa drajverom
     private void prepareAndSaveRide(Ride bookingRide, String creatorUserEmail, String vehicleTypeValue,
             Consumer<Boolean> onComplete) {
         bookingRide.creatorUserEmail = creatorUserEmail;

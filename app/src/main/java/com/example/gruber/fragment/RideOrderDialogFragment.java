@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import dagger.hilt.android.AndroidEntryPoint;
 import javax.inject.Inject;
 
-
 @AndroidEntryPoint
 public class RideOrderDialogFragment extends DialogFragment {
 
@@ -62,7 +61,7 @@ public class RideOrderDialogFragment extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+            @Nullable Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_ride_order, container, false);
 
@@ -73,8 +72,7 @@ public class RideOrderDialogFragment extends DialogFragment {
         startAdapter = new ArrayAdapter<>(
                 requireContext(),
                 android.R.layout.simple_dropdown_item_1line,
-                new ArrayList<>()
-        );
+                new ArrayList<>());
         startAutoCompleteTV.setAdapter(startAdapter);
         startAutoCompleteTV.setThreshold(3);
         startAutoCompleteTV.setText(rideViewModel.getRideValue().getStartAddress());
@@ -88,8 +86,7 @@ public class RideOrderDialogFragment extends DialogFragment {
         endAdapter = new ArrayAdapter<>(
                 requireContext(),
                 android.R.layout.simple_dropdown_item_1line,
-                new ArrayList<>()
-        );
+                new ArrayList<>());
         endAutoCompleteTv.setAdapter(endAdapter);
         endAutoCompleteTv.setThreshold(3);
         endAutoCompleteTv.setText(rideViewModel.getRideValue().getEndAddress());
@@ -104,10 +101,14 @@ public class RideOrderDialogFragment extends DialogFragment {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 rideViewModel.searchStartAddress(s.toString());
             }
+
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
             @Override
-            public void afterTextChanged(Editable s) {            }
+            public void afterTextChanged(Editable s) {
+            }
         });
 
         endAutoCompleteTv.addTextChangedListener(new TextWatcher() {
@@ -115,10 +116,14 @@ public class RideOrderDialogFragment extends DialogFragment {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 rideViewModel.searchEndAddress(s.toString());
             }
+
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
             @Override
-            public void afterTextChanged(Editable s) {            }
+            public void afterTextChanged(Editable s) {
+            }
         });
 
         // Inflate the layout for this fragment
@@ -138,13 +143,13 @@ public class RideOrderDialogFragment extends DialogFragment {
                 String end = String.valueOf(endAutoCompleteTv.getText());
                 try {
                     // Provjeri da li korisnik ima intermediate stops
-                    boolean hasIntermediateStops = rideViewModel.getIntermediateStops().getValue() != null 
+                    boolean hasIntermediateStops = rideViewModel.getIntermediateStops().getValue() != null
                             && !rideViewModel.getIntermediateStops().getValue().isEmpty();
-                    
+
                     // Provjeri da li je USER (nije GUEST)
-                    boolean isUser = loginViewModel.getRole().getValue() != null 
+                    boolean isUser = loginViewModel.getRole().getValue() != null
                             && loginViewModel.getRole().getValue() != UserRole.GUEST;
-                    
+
                     // Ako je USER i ima intermediate stops, koristi metodu sa stops-ovima
                     if (isUser && hasIntermediateStops) {
                         rideViewModel.setRideRouteWithStops(start, end);
@@ -157,8 +162,7 @@ public class RideOrderDialogFragment extends DialogFragment {
                 }
                 dismiss();
                 return true;
-            }
-            else if (item.getItemId() == R.id.action_book_ride) {
+            } else if (item.getItemId() == R.id.action_book_ride) {
                 bookRide();
                 return true;
             }
@@ -171,8 +175,10 @@ public class RideOrderDialogFragment extends DialogFragment {
                     startAdapter.addAll(suggestions);
                     startAdapter.notifyDataSetChanged();
 
-                    if (!suggestions.isEmpty()) startAutoCompleteTV.showDropDown();
-                    else startAutoCompleteTV.dismissDropDown();
+                    if (!suggestions.isEmpty())
+                        startAutoCompleteTV.showDropDown();
+                    else
+                        startAutoCompleteTV.dismissDropDown();
 
                 });
 
@@ -182,8 +188,10 @@ public class RideOrderDialogFragment extends DialogFragment {
                     endAdapter.addAll(suggestions);
                     endAdapter.notifyDataSetChanged();
 
-                    if (!suggestions.isEmpty()) endAutoCompleteTv.showDropDown();
-                    else endAutoCompleteTv.dismissDropDown();
+                    if (!suggestions.isEmpty())
+                        endAutoCompleteTv.showDropDown();
+                    else
+                        endAutoCompleteTv.dismissDropDown();
 
                 });
 
@@ -193,7 +201,7 @@ public class RideOrderDialogFragment extends DialogFragment {
             } else {
                 TabLayout tabLayout = view.findViewById(R.id.tab_layout);
                 ViewPager2 viewPager = view.findViewById(R.id.view_pager);
-                
+
                 tabLayout.setVisibility(View.GONE);
                 viewPager.setVisibility(View.GONE);
             }
@@ -243,7 +251,7 @@ public class RideOrderDialogFragment extends DialogFragment {
                 && !endText.isEmpty()) {
             rideViewModel.setRideEnd(new Stop(endText));
         }
-        
+
         if (userEmail != null && !userEmail.isEmpty()) {
             rideViewModel.bookRide(userEmail, success -> {
                 if (success) {
@@ -251,7 +259,8 @@ public class RideOrderDialogFragment extends DialogFragment {
                     dismiss();
                     navigateToRideTracking();
                 } else {
-                    Toast.makeText(getContext(), "Failed to book ride. No drivers available.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Failed to book ride. No drivers available.", Toast.LENGTH_SHORT)
+                            .show();
                 }
             });
         } else {
