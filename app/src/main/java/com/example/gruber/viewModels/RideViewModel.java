@@ -1,7 +1,5 @@
 package com.example.gruber.viewModels;
 
-import android.util.Log;
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -149,7 +147,7 @@ public class RideViewModel extends ViewModel {
         }
 
         List<Stop> geocodedStops = new ArrayList<>();
-        int[] counter = {0};
+        int[] counter = { 0 };
 
         for (Stop stop : stops) {
             rideService.geocodeStop(stop, geocodedStop -> {
@@ -172,7 +170,6 @@ public class RideViewModel extends ViewModel {
 
     // Reset ride to clear old data when starting a new order
     public void resetRide() {
-        Log.d("RideViewModel", "resetRide: Clearing old ride data");
         Ride freshRide = new Ride();
         ride.postValue(freshRide);
         intermediateStops.postValue(new ArrayList<>());
@@ -254,114 +251,97 @@ public class RideViewModel extends ViewModel {
         }
     }
 
-    // Metoda za booking voznje - formira Ride sa svim podacima i šalje u bazu
+    // Metoda za booking voznje - kalkulise cijenu na osnovu rute i tipa vozila, zatim pronalazi drajvera
     public void bookRide(String creatorUserEmail, Consumer<Boolean> onComplete) {
-        Log.d("RideViewModel", "bookRide: Starting booking process for user=" + creatorUserEmail);
         Ride bookingRide = ride.getValue();
 
         Stop start = bookingRide.getStart();
         Stop end = bookingRide.getEnd();
         if (start == null || end == null || start.getAddress() == null || end.getAddress() == null
                 || start.getAddress().isEmpty() || end.getAddress().isEmpty()) {
-            Log.w("RideViewModel", "bookRide: Missing start/end addresses, cannot save ride");
             onComplete.accept(false);
             return;
         }
 
-        Log.d("RideViewModel", "bookRide: Calculating price based on distance and vehicle type...");
-        // Calculate route to get distance for price calculation
         String vehicleTypeValue = vehicleType.getValue();
         if (vehicleTypeValue == null) {
             vehicleTypeValue = "Standard";
         }
-        final String finalVehicleTypeValue = vehicleTypeValue; // Make final for lambda
+        final String finalVehicleTypeValue = vehicleTypeValue;
+        final List<Stop> stops = intermediateStops.getValue();
+        final boolean hasIntermediateStops = stops != null && !stops.isEmpty();
 
         try {
-            rideService.getRoute(start.getAddress(), end.getAddress(), new RouteCallback() {
+            RouteCallback routeCallback = new RouteCallback() {
                 @Override
                 public void onSuccess(Route route) {
-                    Log.d("RideViewModel", "bookRide: Route calculated, now calculating price...");
-                    // Get distance in km and calculate price
-                    double distanceKm = route.getRoad().mLength / 1000.0;
-                    Log.d("RideViewModel", "bookRide: Distance = " + distanceKm + " km");
-                    
-                    // Get vehicle type price from DB
-                    rideService.getVehicleTypeByType(finalVehicleTypeValue, vehicleType -> {
-                        if (vehicleType == null) {
-                            Log.w("RideViewModel", "bookRide: Vehicle type not found");
+                    if (route == null || route.getRoad() == null || route.getRoad().mLength <= 0) {
+                        onComplete.accept(false);
+                        return;
+                    }
+                    double distanceKm = route.getRoad().mLength;
+                    rideService.getVehicleTypeByType(finalVehicleTypeValue, vt -> {
+                        if (vt == null) {
                             onComplete.accept(false);
                             return;
                         }
-                        int basePrice = vehicleType.getPrice();
-                        int calculatedPrice = basePrice + (int)(distanceKm * 120);
-                        Log.d("RideViewModel", "bookRide: Price = " + basePrice + " + (" + distanceKm + " * 120) = " + calculatedPrice);
-                        
-                        bookingRide.priceDin = calculatedPrice;
-                        continueBookingWithPrice(bookingRide, creatorUserEmail, finalVehicleTypeValue, onComplete);
+                        int price = vt.getPrice() + (int) (distanceKm * 120);
+                        bookingRide.priceDin = price;
+                        prepareAndSaveRide(bookingRide, creatorUserEmail, finalVehicleTypeValue, onComplete);
                     });
                 }
 
                 @Override
                 public void onError(Exception e) {
-                    Log.e("RideViewModel", "bookRide: Route calculation failed", e);
                     onComplete.accept(false);
                 }
-            });
+            };
+
+            if (hasIntermediateStops) {
+                rideService.getRouteWithStops(start.getAddress(), stops, end.getAddress(), routeCallback);
+            } else {
+                rideService.getRoute(start.getAddress(), end.getAddress(), routeCallback);
+            }
         } catch (IOException e) {
-            Log.e("RideViewModel", "bookRide: IOException during route calc", e);
             onComplete.accept(false);
         }
     }
 
-    private void continueBookingWithPrice(Ride bookingRide, String creatorUserEmail, String vehicleTypeValue, Consumer<Boolean> onComplete) {
-        // Postavi creator email
+    // Pripremi sve dodatne podatke za voznju i spremi je sa drajverom
+    private void prepareAndSaveRide(Ride bookingRide, String creatorUserEmail, String vehicleTypeValue,
+            Consumer<Boolean> onComplete) {
         bookingRide.creatorUserEmail = creatorUserEmail;
+        bookingRide.setVehicleType(vehicleTypeValue);
+        bookingRide.hasBabies = hasBabies.getValue() != null ? hasBabies.getValue() : false;
+        bookingRide.hasPets = hasPets.getValue() != null ? hasPets.getValue() : false;
 
-        // Postavi intermediate stops
         List<Stop> stops = intermediateStops.getValue();
         if (stops != null && !stops.isEmpty()) {
             bookingRide.addStops(bookingRide.getStart(), stops, bookingRide.getEnd());
         }
 
-        // Postavi passenger emails
         List<String> passengers = linkedPassengers.getValue();
         if (passengers != null && !passengers.isEmpty()) {
             bookingRide.setPassengerEmails(passengers);
         }
 
-        // Postavi vehicle type as String
-        bookingRide.setVehicleType(vehicleTypeValue);
-
-        // Postavi flags
-        bookingRide.hasBabies = hasBabies.getValue() != null ? hasBabies.getValue() : false;
-        bookingRide.hasPets = hasPets.getValue() != null ? hasPets.getValue() : false;
-
-        Log.d("RideViewModel", "bookRide: Searching for driver...");
-
-        // Pronađi drajvera i pošalji ride
         rideService.getFirstDriver(driver -> {
-            Log.d("RideViewModel", "bookRide: getFirstDriver callback received, driver=" + (driver != null ? driver.getEmail() : "null"));
             if (driver != null) {
                 bookingRide.driverEmail = driver.getEmail();
-                Log.d("RideViewModel", "bookRide: Driver assigned, saving ride to Firebase (addresses only)...");
                 rideService.addRide(bookingRide, new PriceCallback() {
                     @Override
                     public void onSuccess(double price) {
-                        Log.d("RideViewModel", "bookRide: Ride saved successfully!");
                         onComplete.accept(true);
                     }
 
                     @Override
                     public void onError(Throwable error) {
-                        Log.e("RideViewModel", "bookRide: Failed to save ride", error);
                         onComplete.accept(false);
                     }
                 });
             } else {
-                Log.w("RideViewModel", "bookRide: No driver found, booking failed");
                 onComplete.accept(false);
             }
         });
     }
 }
-

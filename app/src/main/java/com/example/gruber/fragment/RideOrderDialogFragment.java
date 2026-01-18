@@ -64,7 +64,7 @@ public class RideOrderDialogFragment extends DialogFragment {
 
         View view = inflater.inflate(R.layout.fragment_ride_order, container, false);
 
-        // Reset ride to clear old data from previous orders
+        // resetuje podatke koji se ponekad sacuvaju od proslog narucivanja voznje
         rideViewModel.resetRide();
 
         startAutoCompleteTV = view.findViewById(R.id.et_start_street);
@@ -219,10 +219,8 @@ public class RideOrderDialogFragment extends DialogFragment {
     }
 
     private void bookRide() {
-        Log.d("RideOrderDialog", "bookRide: Button clicked, starting booking process");
         // Uzmi email trenutnog korisnika
         String userEmail = loginViewModel.getEmail();
-        Log.d("RideOrderDialog", "bookRide: User email from LoginViewModel: " + userEmail);
 
         // Osiguraj da start/end budu postavljeni i ako korisnik nije kliknuo sugestiju
         String startText = startAutoCompleteTV.getText() != null ? startAutoCompleteTV.getText().toString().trim() : "";
@@ -232,7 +230,6 @@ public class RideOrderDialogFragment extends DialogFragment {
                 || rideViewModel.getRideValue().getStart().getAddress() == null
                 || rideViewModel.getRideValue().getStart().getAddress().isEmpty())
                 && !startText.isEmpty()) {
-            Log.d("RideOrderDialog", "bookRide: Setting start from typed text");
             rideViewModel.setRideStart(new Stop(startText));
         }
 
@@ -240,14 +237,11 @@ public class RideOrderDialogFragment extends DialogFragment {
                 || rideViewModel.getRideValue().getEnd().getAddress() == null
                 || rideViewModel.getRideValue().getEnd().getAddress().isEmpty())
                 && !endText.isEmpty()) {
-            Log.d("RideOrderDialog", "bookRide: Setting end from typed text");
             rideViewModel.setRideEnd(new Stop(endText));
         }
         
         if (userEmail != null && !userEmail.isEmpty()) {
-            Log.d("RideOrderDialog", "bookRide: Calling RideViewModel.bookRide()...");
             rideViewModel.bookRide(userEmail, success -> {
-                Log.d("RideOrderDialog", "bookRide: Callback received, success=" + success);
                 if (success) {
                     Toast.makeText(getContext(), "Ride booked! Looking for drivers...", Toast.LENGTH_SHORT).show();
                 } else {
@@ -256,7 +250,6 @@ public class RideOrderDialogFragment extends DialogFragment {
                 dismiss();
             });
         } else {
-            Log.w("RideOrderDialog", "bookRide: User email is null or empty");
             Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
         }
     }

@@ -1,6 +1,7 @@
 package com.example.gruber.models;
 
 import androidx.annotation.NonNull;
+import com.google.firebase.firestore.Exclude;
 
 import com.example.gruber.models.enums.RideStatus;
 
@@ -103,10 +104,12 @@ public class Ride {
     }
 
     // Getter metode za start i destination lokacije
+    @Exclude
     public Stop getStart() {
         return (stopList == null || stopList.isEmpty()) ? null : stopList.get(0);
     }
 
+    @Exclude
     public Stop getEnd() {
         if (stopList == null) return null;
         int size = stopList.size();

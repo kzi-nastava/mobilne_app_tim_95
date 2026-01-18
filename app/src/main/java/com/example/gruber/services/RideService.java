@@ -121,9 +121,11 @@ public class RideService {
         
         executor.execute(() -> {
             Road road = roadManager.getRoad(waypoints);
-            if (road != null) {
+            if (road != null && road.mLength > 0) {
                 Polyline polyline = OSRMRoadManager.buildRoadOverlay(road);
                 callback.onSuccess(new Route(road, polyline));
+            } else {
+                callback.onError(new Exception("Route calculation failed or returned zero distance"));
             }
         });
     }
@@ -276,73 +278,52 @@ public class RideService {
 
     // Pronađi prvog dostupnog drajvera
     public void getFirstDriver(Consumer<User> callback) {
-        Log.d("RideService", "getFirstDriver: Starting driver search...");
         firebaseFirestore.collection(USERS)
                 .whereEqualTo(ROLE, UserRole.DRIVER)
                 .limit(1)
                 .get()
                 .addOnSuccessListener(snapshot -> {
-                    Log.d("RideService", "getFirstDriver: Query successful, isEmpty=" + snapshot.isEmpty() + ", size=" + snapshot.size());
                     if (!snapshot.isEmpty()) {
                         User driver = snapshot.getDocuments().get(0).toObject(User.class);
-                        Log.d("RideService", "getFirstDriver: Found driver with email=" + (driver != null ? driver.getEmail() : "null"));
                         callback.accept(driver);
                     } else {
-                        Log.w("RideService", "getFirstDriver: No drivers found in database");
                         callback.accept(null);
                     }
                 })
-                .addOnFailureListener(e -> {
-                    Log.e("RideService", "getFirstDriver: Query failed", e);
-                    callback.accept(null);
-                });
+                .addOnFailureListener(e -> callback.accept(null));
     }
 
     // Dobavi VehicleType iz Firebase-a po tipu
     public void getVehicleTypeByType(String type, Consumer<VehicleType> callback) {
-        Log.d("RideService", "getVehicleTypeByType: Searching for type=" + type);
         firebaseFirestore.collection(VEHICLE_TYPE)
                 .whereEqualTo(TYPE, type)
                 .limit(1)
                 .get()
                 .addOnSuccessListener(snapshot -> {
-                    Log.d("RideService", "getVehicleTypeByType: Query successful, isEmpty=" + snapshot.isEmpty() + ", size=" + snapshot.size());
                     if (!snapshot.isEmpty()) {
                         VehicleType vehicleType = snapshot.getDocuments().get(0).toObject(VehicleType.class);
-                        Log.d("RideService", "getVehicleTypeByType: Found vehicleType with price=" + (vehicleType != null ? vehicleType.getPrice() : "null"));
                         callback.accept(vehicleType);
                     } else {
-                        Log.w("RideService", "getVehicleTypeByType: No vehicle type found for type=" + type);
                         callback.accept(null);
                     }
                 })
-                .addOnFailureListener(e -> {
-                    Log.e("RideService", "getVehicleTypeByType: Query failed for type=" + type, e);
-                    callback.accept(null);
-                });
+                .addOnFailureListener(e -> callback.accept(null));
     }
 
     // Izračunaj cijenu vožnje: price (iz baze) + (kilometri * 120)
     public void calculateRidePrice(Route route, String vehicleTypeStr, Consumer<Integer> callback) {
-        Log.d("RideService", "calculateRidePrice: Starting, vehicleType=" + vehicleTypeStr);
         if (route == null || route.getRoad() == null) {
-            Log.w("RideService", "calculateRidePrice: Route or Road is null");
             callback.accept(0);
             return;
         }
 
-        // Dobavi VehicleType iz baze
         getVehicleTypeByType(vehicleTypeStr, vehicleType -> {
             if (vehicleType == null) {
-                Log.w("RideService", "calculateRidePrice: VehicleType not found");
                 callback.accept(0);
                 return;
             }
-
-            // road.mLength je u metrima, konvertuj u kilometre
-            double kilometers = route.getRoad().mLength;
+            double kilometers = route.getRoad().mLength / 1000.0;
             int price = vehicleType.getPrice() + (int)(kilometers * 120);
-            Log.d("RideService", "calculateRidePrice: Calculated price=" + price + " (base price=" + vehicleType.getPrice() + ", km=" + kilometers + ")");
             callback.accept(price);
         });
     }
