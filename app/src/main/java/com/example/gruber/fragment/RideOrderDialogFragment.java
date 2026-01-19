@@ -218,13 +218,16 @@ public class RideOrderDialogFragment extends DialogFragment {
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
             switch (position) {
                 case 0:
-                    tab.setText("Stops");
+                    tab.setText(R.string.stops);
                     break;
                 case 1:
-                    tab.setText("Passengers");
+                    tab.setText(R.string.passengers);
                     break;
                 case 2:
-                    tab.setText("Options");
+                    tab.setText(R.string.options);
+                    break;
+                case 3:
+                    tab.setText(R.string.schedule);
                     break;
             }
         }).attach();

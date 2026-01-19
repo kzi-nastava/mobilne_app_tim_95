@@ -7,6 +7,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 import com.example.gruber.fragment.RideOptionsTabFragment;
 import com.example.gruber.fragment.RidePassengersTabFragment;
+import com.example.gruber.fragment.RideScheduleTabFragment;
 import com.example.gruber.fragment.RideStopsTabFragment;
 
 public class RideOptionsViewPagerAdapter extends FragmentStateAdapter {
@@ -25,6 +26,8 @@ public class RideOptionsViewPagerAdapter extends FragmentStateAdapter {
                 return new RidePassengersTabFragment();
             case 2:
                 return new RideOptionsTabFragment();
+            case 3:
+                return new RideScheduleTabFragment();
             default:
                 return new RideStopsTabFragment();
         }
@@ -32,6 +35,6 @@ public class RideOptionsViewPagerAdapter extends FragmentStateAdapter {
 
     @Override
     public int getItemCount() {
-        return 3;
+        return 4;
     }
 }

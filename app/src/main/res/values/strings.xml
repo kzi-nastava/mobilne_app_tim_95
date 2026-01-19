@@ -104,4 +104,18 @@
     <string name="additional_options">Additional options</string>
     <string name="options">Options</string>
 
+    <!--    RIDE SCHEDULING    -->
+    <string name="schedule">Schedule</string>
+    <string name="ride_scheduling">Ride Scheduling</string>
+    <string name="schedule_description">You can book a ride now or schedule it within the next 5 hours</string>
+    <string name="schedule_now">Now</string>
+    <string name="schedule_later">Scheduled time</string>
+    <string name="schedule_datetime">Date and time</string>
+    <string name="schedule_time">Time</string>
+    <string name="schedule_info">Select time within the next 5 hours</string>
+    <string name="schedule_error_past">Time cannot be in the past</string>
+    <string name="schedule_error_limit">Ride can be scheduled maximum 5 hours in advance</string>
+    <string name="schedule_in_hours">Ride in %1$d hour(s) and %2$d minute(s)</string>
+    <string name="schedule_in_minutes">Ride in %1$d minute(s)</string>
+
 </resources>
