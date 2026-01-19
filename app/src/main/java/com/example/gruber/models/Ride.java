@@ -1,5 +1,7 @@
 package com.example.gruber.models;
+
 import androidx.annotation.NonNull;
+import com.google.firebase.firestore.Exclude;
 
 import com.example.gruber.models.enums.RideStatus;
 import com.google.firebase.Timestamp;
@@ -25,8 +27,13 @@ public class Ride {
     public Timestamp startedAt;
     public Timestamp finishedAt;
     public int priceDin;
-    public String cancelledBy;  // posto za cancel voznje treba i razlog zasto ovo bolje bih izbacio i dodao
-                                // novu kolekciju : class Cancelations { String canceledBy; String rideUid; String explanation; }
+    public String cancelledBy; // posto za cancel voznje treba i razlog zasto ovo bolje bih izbacio i dodao
+                               // novu kolekciju : class Cancelations { String canceledBy; String rideUid;
+                               // String explanation; }
+    // Dodatne opcije za ulogovane korisnike
+    public String vehicleType; // Type name as String (e.g. "Standard", "Van")
+    public boolean hasBabies;
+    public boolean hasPets;
 
     // REDUNDANT ?? - da li ovo ispod moze da se brise ??
     public String pickupAddress;
@@ -35,14 +42,18 @@ public class Ride {
     public LatLng dropoffLocation;
     public int distanceMeters;
     public boolean panicTriggered;
+
     public void setCancelledBy(String cancelledBy) {
         this.cancelledBy = cancelledBy;
     }
+
     public String getCancelledBy() {
         return cancelledBy;
     }
 
-    public Ride(@NonNull String creatorUserEmail, @NonNull String driverEmail, List<Stop> stopList, List<String> passengerEmails, Route route, RideStatus status, Timestamp startedAt, Timestamp finishedAt, int priceDin) {
+    public Ride(@NonNull String creatorUserEmail, @NonNull String driverEmail, List<Stop> stopList,
+                List<String> passengerEmails, Route route, RideStatus status, Timestamp startedAt,
+                Timestamp finishedAt, int priceDin) {
         this.creatorUserEmail = creatorUserEmail;
         this.driverEmail = driverEmail;
         this.stopList = stopList;
@@ -54,7 +65,8 @@ public class Ride {
         this.priceDin = priceDin;
     }
 
-    public Ride(@NonNull String id, @NonNull String driverId, @NonNull String creatorUserId, String pickupAddress, String dropoffAddress) {
+    public Ride(@NonNull String id, @NonNull String driverId, @NonNull String creatorUserId, String pickupAddress,
+            String dropoffAddress) {
         this.id = id;
         this.driverEmail = driverId;
         this.creatorUserEmail = creatorUserId;
@@ -67,8 +79,13 @@ public class Ride {
         this.driverEmail = driverEmail;
         this.status = status;
     }
+
     public Ride() {
         stopList = new ArrayList<>();
+        passengerEmails = new ArrayList<>();
+        vehicleType = ""; // Empty string, will be set during booking
+        hasBabies = false;
+        hasPets = false;
     }
 
     public Route getRoute() {
@@ -102,11 +119,66 @@ public class Ride {
         }
     }
 
-    public LatLng getPickupLocation() { return pickupLocation; }
-    public void setPickupLocation(LatLng pickupLocation) { this.pickupLocation = pickupLocation; }
+    // Getter metode za start i destination lokacije
+    @Exclude
+    public Stop getStart() {
+        return (stopList == null || stopList.isEmpty()) ? null : stopList.get(0);
+    }
 
-    public LatLng getDropoffLocation() { return dropoffLocation; }
-    public void setDropoffLocation(LatLng dropoffLocation) { this.dropoffLocation = dropoffLocation; }
+    @Exclude
+    public Stop getEnd() {
+        if (stopList == null) return null;
+        int size = stopList.size();
+        return (size < 2) ? null : stopList.get(size - 1);
+    }
+
+    // Metoda za dodavanje stopova: startLocation, intermediate stops, i destination
+    public void addStops(Stop startLocation, List<Stop> stops, Stop destination) {
+        if (stopList == null) {
+            stopList = new ArrayList<>();
+        }
+        stopList.clear();
+        stopList.add(startLocation);
+        if (stops != null && !stops.isEmpty()) {
+            stopList.addAll(stops);
+        }
+        stopList.add(destination);
+    }
+
+    public void addPassengerEmail(String email) {
+        if (passengerEmails == null) {
+            passengerEmails = new ArrayList<>();
+        }
+        if (!passengerEmails.contains(email)) {
+            passengerEmails.add(email);
+        }
+    }
+
+    public void removePassengerEmail(String email) {
+        if (passengerEmails != null) {
+            passengerEmails.remove(email);
+        }
+    }
+
+    public boolean hasPassengerEmail(String email) {
+        return passengerEmails != null && passengerEmails.contains(email);
+    }
+
+    public LatLng getPickupLocation() {
+        return pickupLocation;
+    }
+
+    public void setPickupLocation(LatLng pickupLocation) {
+        this.pickupLocation = pickupLocation;
+    }
+
+    public LatLng getDropoffLocation() {
+        return dropoffLocation;
+    }
+
+    public void setDropoffLocation(LatLng dropoffLocation) {
+        this.dropoffLocation = dropoffLocation;
+    }
 
     @NonNull
     public String getCreatorUserEmail() {
@@ -140,6 +212,30 @@ public class Ride {
 
     public void setPassengerEmails(List<String> passengerEmails) {
         this.passengerEmails = passengerEmails;
+    }
+
+    public String getVehicleType() {
+        return vehicleType;
+    }
+
+    public void setVehicleType(String vehicleType) {
+        this.vehicleType = vehicleType;
+    }
+
+    public boolean isHasBabies() {
+        return hasBabies;
+    }
+
+    public void setHasBabies(boolean hasBabies) {
+        this.hasBabies = hasBabies;
+    }
+
+    public boolean isHasPets() {
+        return hasPets;
+    }
+
+    public void setHasPets(boolean hasPets) {
+        this.hasPets = hasPets;
     }
 
     public String getPickupAddress() {
