@@ -65,10 +65,32 @@ public class LoginViewModel extends ViewModel {
     }
 
     public void logOut() {
-        email.setValue("");
-        password.setValue("");
-        role.setValue(UserRole.GUEST);
-        sessionManager.clearSession();
+        String uid = sessionManager.getUserID();
+        if (uid != null) {
+            userService.logOut(uid, new AuthCallback() {
+                @Override
+                public void onSuccess(String userId, UserRole _role) {
+                    email.setValue("");
+                    password.setValue("");
+                    role.setValue(UserRole.GUEST);
+                    sessionManager.clearSession();
+                }
+
+                @Override
+                public void onError(Throwable error) {
+                    // Even if update fails, clear session locally
+                    email.setValue("");
+                    password.setValue("");
+                    role.setValue(UserRole.GUEST);
+                    sessionManager.clearSession();
+                }
+            });
+        } else {
+            email.setValue("");
+            password.setValue("");
+            role.setValue(UserRole.GUEST);
+            sessionManager.clearSession();
+        }
     }
 
 }

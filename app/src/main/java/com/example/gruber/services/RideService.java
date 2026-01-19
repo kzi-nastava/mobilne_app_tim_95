@@ -284,6 +284,7 @@ public class RideService {
     public void getDriver(Consumer<User> callback) {
         firebaseFirestore.collection(USERS)
                 .whereEqualTo(ROLE, UserRole.DRIVER)
+                .whereEqualTo("driverActive", true)
                 .get()
                 .addOnSuccessListener(snapshot -> {
                     List<User> allDrivers = snapshot.toObjects(User.class);
