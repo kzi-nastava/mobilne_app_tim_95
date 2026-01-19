@@ -17,7 +17,7 @@ public class User {
     private int activeHoursLast24h;
     private String vehicleModel;
     private String vehiclePlate;
-    private boolean driverActive; // Indicates if driver is currently logged in/active
+    private boolean active; // Indicates if driver is currently logged in/active/ the passanger is in a active ride
 
     public User() {}
 
@@ -60,7 +60,7 @@ public class User {
     public int getActiveHoursLast24h() { return activeHoursLast24h; }
     public String getVehicleModel() { return vehicleModel; }
     public String getVehiclePlate() { return vehiclePlate; }
-    public boolean isDriverActive() { return driverActive; }
+    public boolean isActive() { return active; }
 
     // SETTERS
     public void setFirstName(String firstName) { this.firstName = firstName; }
@@ -72,5 +72,5 @@ public class User {
     public void setActiveHoursLast24h(int activeHoursLast24h) { this.activeHoursLast24h = activeHoursLast24h; }
     public void setVehicleModel(String vehicleModel) { this.vehicleModel = vehicleModel; }
     public void setVehiclePlate(String vehiclePlate) { this.vehiclePlate = vehiclePlate; }
-    public void setDriverActive(boolean driverActive) { this.driverActive = driverActive; }
+    public void setActive(boolean active) { this.active = active; }
 }

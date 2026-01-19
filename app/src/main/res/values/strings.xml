@@ -124,4 +124,10 @@
     <string name="booking_error_user_not_logged">User not logged in</string>
     <string name="booking_error_no_drivers_with_hours">All drivers have exceeded their daily working hours.</string>
 
+    <!--    RIDE START/TRACKING    -->
+    <string name="start_ride">Start Ride</string>
+    <string name="no_pending_rides">No rides to start</string>
+    <string name="ride_started">Ride started</string>
+    <string name="ride_start_error">Failed to start ride</string>
+
 </resources>
