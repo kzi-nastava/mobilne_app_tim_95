@@ -187,7 +187,12 @@ public class RideService {
                 .set(statusMap, SetOptions.merge());
     }
     public void addRide(Ride ride, PriceCallback callback) {
-        ride.status = RideStatus.PENDING;
+        // If scheduled for later, set status to SCHEDULED, otherwise PENDING
+        if (ride.scheduledFor != null) {
+            ride.status = RideStatus.SCHEDULED;
+        } else {
+            ride.status = RideStatus.PENDING;
+        }
 
         firebaseFirestore.collection(RIDES)
                 .add(ride)
@@ -276,24 +281,108 @@ public class RideService {
         });
     }
 
-    // Pronađi prvog dostupnog drajvera
-    public void getFirstDriver(Consumer<User> callback) {
+    public void getDriver(Consumer<User> callback) {
         firebaseFirestore.collection(USERS)
                 .whereEqualTo(ROLE, UserRole.DRIVER)
-                .limit(1)
+                .whereEqualTo("driverActive", true)
                 .get()
                 .addOnSuccessListener(snapshot -> {
-                    if (!snapshot.isEmpty()) {
-                        User driver = snapshot.getDocuments().get(0).toObject(User.class);
-                        callback.accept(driver);
-                    } else {
+                    List<User> allDrivers = snapshot.toObjects(User.class);
+                    
+                    if (allDrivers.isEmpty()) {
                         callback.accept(null);
+                        return;
                     }
+                    
+                    List<User> availableDrivers = allDrivers.stream()
+                            .filter(d -> d.getActiveHoursLast24h() > 0 && d.getActiveHoursLast24h() < 8)
+                            .collect(Collectors.toList());
+                    
+                    if (availableDrivers.isEmpty()) {
+                        callback.accept(null);
+                        return;
+                    }
+                    
+                    firebaseFirestore.collection(RIDES)
+                            .whereIn(STATUS, 
+                                List.of(RideStatus.PENDING, RideStatus.ACTIVE, RideStatus.SCHEDULED))
+                            .get()
+                            .addOnSuccessListener(ridesSnapshot -> {
+                                List<Ride> activeRides = ridesSnapshot.toObjects(Ride.class);
+                                List<User> busyDrivers = new ArrayList<>();
+                                List<User> freeDrivers = new ArrayList<>();
+                                
+                                for (User driver : availableDrivers) {
+                                    boolean isBusy = activeRides.stream()
+                                            .anyMatch(r -> r.driverEmail.equals(driver.getEmail()));
+                                    
+                                    if (isBusy) {
+                                        busyDrivers.add(driver);
+                                    } else {
+                                        freeDrivers.add(driver);
+                                    }
+                                }
+                                if (!freeDrivers.isEmpty()) {
+                                    User closestDriver = freeDrivers.get(0);
+                                    double closestDistance = getSimulatedDistance(closestDriver);
+                                    
+                                    for (User driver : freeDrivers) {
+                                        double distance = getSimulatedDistance(driver);
+                                        if (distance < closestDistance) {
+                                            closestDriver = driver;
+                                            closestDistance = distance;
+                                        }
+                                    }
+                                    callback.accept(closestDriver);
+                                } else if (!busyDrivers.isEmpty()) {
+                                    User bestDriver = selectBestBusyDriver(busyDrivers, activeRides);
+                                    callback.accept(bestDriver);
+                                } else {
+                                    callback.accept(null);
+                                }
+                            })
+                            .addOnFailureListener(e -> callback.accept(null));
                 })
                 .addOnFailureListener(e -> callback.accept(null));
     }
+    
+    private User selectBestBusyDriver(List<User> busyDrivers, List<Ride> activeRides) {
+        User bestDriver = null;
+        double bestScore = Double.MAX_VALUE;
+        
+        for (User driver : busyDrivers) {
+            Ride currentRide = activeRides.stream()
+                    .filter(r -> r.driverEmail.equals(driver.getEmail()))
+                    .findFirst()
+                    .orElse(null);
+            
+            if (currentRide == null) continue;
+            
+            // Simulate distance to ride start
+            double distanceToStart = getSimulatedDistance(driver);
+            
+            // Simulate remaining time on current ride (10 minutes = 600000 ms)
+            long remainingTime = 600000;
+            
+            // Score: prefer closer drivers and those finishing soon
+            double score = (distanceToStart * 0.7) + (remainingTime * 0.3);
+            
+            if (score < bestScore) {
+                bestScore = score;
+                bestDriver = driver;
+            }
+        }
+        
+        return bestDriver;
+    }
+    
+    // Simulated distance calculation (placeholder)
+    // TODO: Replace with actual GPS location when available
+    private double getSimulatedDistance(User driver) {
+        long seed = driver.getEmail().hashCode();
+        return 0.5 + ((seed % 45) / 10.0);
+    }
 
-    // Dobavi VehicleType iz Firebase-a po tipu
     public void getVehicleTypeByType(String type, Consumer<VehicleType> callback) {
         firebaseFirestore.collection(VEHICLE_TYPE)
                 .whereEqualTo(TYPE, type)
@@ -310,7 +399,6 @@ public class RideService {
                 .addOnFailureListener(e -> callback.accept(null));
     }
 
-    // Izračunaj cijenu vožnje: price (iz baze) + (kilometri * 120)
     public void calculateRidePrice(Route route, String vehicleTypeStr, Consumer<Integer> callback) {
         if (route == null || route.getRoad() == null) {
             callback.accept(0);
@@ -322,7 +410,7 @@ public class RideService {
                 callback.accept(0);
                 return;
             }
-            double kilometers = route.getRoad().mLength / 1000.0;
+            double kilometers = route.getRoad().mLength;  
             int price = vehicleType.getPrice() + (int)(kilometers * 120);
             callback.accept(price);
         });

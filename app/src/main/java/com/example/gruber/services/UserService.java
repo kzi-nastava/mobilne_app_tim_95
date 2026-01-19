@@ -44,8 +44,19 @@ public class UserService {
                                     return;
                                 }
                                 UserRole _role = UserRole.valueOf(role);
-                                callback.onSuccess(result.getUser().getUid(), _role);
 
+                                // Set driverActive to true if user is a DRIVER
+                                if (_role == UserRole.DRIVER) {
+                                    Map<String, Object> updates = new HashMap<>();
+                                    updates.put("driverActive", true);
+                                    firebaseFirestore.collection("users")
+                                            .document(uid)
+                                            .update(updates)
+                                            .addOnSuccessListener(v -> callback.onSuccess(result.getUser().getUid(), _role))
+                                            .addOnFailureListener(callback::onError);
+                                } else {
+                                    callback.onSuccess(result.getUser().getUid(), _role);
+                                }
                             });
                 })
                 .addOnFailureListener(callback::onError);
@@ -165,6 +176,21 @@ public class UserService {
                 .document(uid)
                 .update(updates)
                 .addOnSuccessListener(aVoid -> callback.onSuccess(uid, accountViewModel.getRole().getValue()))
+                .addOnFailureListener(callback::onError);
+    }
+
+    public void logOut(String uid, AuthCallback callback) {
+        // Set driverActive to false when logging out
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("driverActive", false);
+
+        firebaseFirestore.collection("users")
+                .document(uid)
+                .update(updates)
+                .addOnSuccessListener(v -> {
+                    firebaseAuth.signOut();
+                    callback.onSuccess(uid, UserRole.GUEST);
+                })
                 .addOnFailureListener(callback::onError);
     }
 }
