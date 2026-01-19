@@ -18,6 +18,7 @@ import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.callbacks.PriceCallback;
 import com.example.gruber.services.callbacks.RidesListCallback;
 import com.example.gruber.services.callbacks.RouteCallback;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 
@@ -196,7 +197,10 @@ public class RideService {
 
         firebaseFirestore.collection(RIDES)
                 .add(ride)
-                .addOnSuccessListener(result -> callback.onSuccess(ride.priceDin))
+                .addOnSuccessListener(result -> {
+                    ride.id = result.getId(); // Set the ID from Firebase
+                    callback.onSuccess(ride.priceDin);
+                })
                 .addOnFailureListener(result -> callback.onError(new Exception("Failed writing ride to database.")));
     }
     
@@ -284,7 +288,7 @@ public class RideService {
     public void getDriver(Consumer<User> callback) {
         firebaseFirestore.collection(USERS)
                 .whereEqualTo(ROLE, UserRole.DRIVER)
-                .whereEqualTo("driverActive", true)
+                .whereEqualTo("active", true)
                 .get()
                 .addOnSuccessListener(snapshot -> {
                     List<User> allDrivers = snapshot.toObjects(User.class);
@@ -414,6 +418,117 @@ public class RideService {
             int price = vehicleType.getPrice() + (int)(kilometers * 120);
             callback.accept(price);
         });
+    }
+
+    public void getDriverRidesToStart(String driverEmail, Consumer<List<Ride>> callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereEqualTo("driverEmail", driverEmail)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Ride> allRides = new ArrayList<>();
+                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                        Ride ride = doc.toObject(Ride.class);
+                        if (ride != null) {
+                            ride.id = doc.getId();
+                            allRides.add(ride);
+                        }
+                    }
+                    
+                    List<Ride> ridesToStart = allRides.stream()
+                            .filter(r -> {
+                                if (r.status == null) return false;
+                                if (r.status == RideStatus.PENDING) return true;
+                                if (r.status == RideStatus.SCHEDULED && r.scheduledFor == null) return true;
+                                if (r.status == RideStatus.SCHEDULED && r.scheduledFor != null) {
+                                    return r.scheduledFor.getSeconds() <= System.currentTimeMillis() / 1000;
+                                }
+                                return false;
+                            })
+                            .collect(Collectors.toList());
+                    
+                    callback.accept(ridesToStart);
+                })
+                .addOnFailureListener(e -> callback.accept(Collections.emptyList()));
+    }
+
+    public void startRide(String rideId, Consumer<Boolean> callback) {
+        firebaseFirestore.collection(RIDES)
+                .document(rideId)
+                .get()
+                .addOnSuccessListener(rideSnapshot -> {
+                    Ride ride = rideSnapshot.toObject(Ride.class);
+                    if (ride == null) {
+                        callback.accept(false);
+                        return;
+                    }
+
+                    Map<String, Object> rideUpdate = new HashMap<>();
+                    rideUpdate.put(STATUS, RideStatus.ACTIVE);
+                    
+                    firebaseFirestore.collection(RIDES)
+                            .document(rideId)
+                            .update(rideUpdate)
+                            .addOnSuccessListener(v1 -> {
+                                updateUserActive(ride.driverEmail, true, success1 -> {
+                                    if (!success1) {
+                                        callback.accept(false);
+                                        return;
+                                    }
+
+                                    updateUserActive(ride.creatorUserEmail, true, success2 -> {
+                                        if (!success2) {
+                                            callback.accept(false);
+                                            return;
+                                        }
+
+                                        if (ride.passengerEmails == null || ride.passengerEmails.isEmpty()) {
+                                            callback.accept(true);
+                                            return;
+                                        }
+
+                                        int[] updateCount = {0};
+                                        int[] successCount = {0};
+                                        
+                                        for (String passengerEmail : ride.passengerEmails) {
+                                            updateCount[0]++;
+                                            updateUserActive(passengerEmail, true, success -> {
+                                                if (success) {
+                                                    successCount[0]++;
+                                                }
+                                                if (successCount[0] + (updateCount[0] - successCount[0]) == updateCount[0]) {
+                                                    callback.accept(successCount[0] == updateCount[0]);
+                                                }
+                                            });
+                                        }
+                                    });
+                                });
+                            })
+                            .addOnFailureListener(e -> callback.accept(false));
+                })
+                .addOnFailureListener(e -> callback.accept(false));
+    }
+
+    private void updateUserActive(String userEmail, boolean active, Consumer<Boolean> callback) {
+        firebaseFirestore.collection(USERS)
+                .whereEqualTo("email", userEmail)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    if (snapshot.isEmpty()) {
+                        callback.accept(false);
+                        return;
+                    }
+
+                    String userId = snapshot.getDocuments().get(0).getId();
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("active", active);
+
+                    firebaseFirestore.collection(USERS)
+                            .document(userId)
+                            .update(updates)
+                            .addOnSuccessListener(v -> callback.accept(true))
+                            .addOnFailureListener(e -> callback.accept(false));
+                })
+                .addOnFailureListener(e -> callback.accept(false));
     }
 
 }

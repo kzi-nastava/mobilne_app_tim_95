@@ -45,10 +45,10 @@ public class UserService {
                                 }
                                 UserRole _role = UserRole.valueOf(role);
 
-                                // Set driverActive to true if user is a DRIVER
+                                // Set active to true if user is a DRIVER
                                 if (_role == UserRole.DRIVER) {
                                     Map<String, Object> updates = new HashMap<>();
-                                    updates.put("driverActive", true);
+                                    updates.put("active", true);
                                     firebaseFirestore.collection("users")
                                             .document(uid)
                                             .update(updates)
@@ -180,9 +180,9 @@ public class UserService {
     }
 
     public void logOut(String uid, AuthCallback callback) {
-        // Set driverActive to false when logging out
+        // Set active to false when logging out
         Map<String, Object> updates = new HashMap<>();
-        updates.put("driverActive", false);
+        updates.put("active", false);
 
         firebaseFirestore.collection("users")
                 .document(uid)
