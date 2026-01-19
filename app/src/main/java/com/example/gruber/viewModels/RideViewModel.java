@@ -259,8 +259,7 @@ public class RideViewModel extends ViewModel {
             linkedPassengers.postValue(passengers);
         }
     }
-    //TODO: Algoritam izbora vozca
-    //TODO: Fragment za narucivanje za odredjeno vrijeme u sl. 5 sati
+
     //TODO: Notifikacije o privatanju voznje
     //TODO: Pocetak voznje kod vozaca
     public void bookRide(String creatorUserEmail, Consumer<Boolean> onComplete) {
@@ -290,13 +289,11 @@ public class RideViewModel extends ViewModel {
                         onComplete.accept(false);
                         return;
                     }
-                    double distanceKm = route.getRoad().mLength;
-                    rideService.getVehicleTypeByType(finalVehicleTypeValue, vt -> {
-                        if (vt == null) {
+                    rideService.calculateRidePrice(route, finalVehicleTypeValue, price -> {
+                        if (price <= 0) {
                             onComplete.accept(false);
                             return;
                         }
-                        int price = vt.getPrice() + (int) (distanceKm * 120);
                         bookingRide.priceDin = price;
                         prepareAndSaveRide(bookingRide, creatorUserEmail, finalVehicleTypeValue, onComplete);
                     });
@@ -343,7 +340,7 @@ public class RideViewModel extends ViewModel {
             bookingRide.setPassengerEmails(passengers);
         }
 
-        rideService.getFirstDriver(driver -> {
+        rideService.getDriver(driver -> {
             if (driver != null) {
                 bookingRide.driverEmail = driver.getEmail();
                 rideService.addRide(bookingRide, new PriceCallback() {

@@ -118,4 +118,10 @@
     <string name="schedule_in_hours">Ride in %1$d hour(s) and %2$d minute(s)</string>
     <string name="schedule_in_minutes">Ride in %1$d minute(s)</string>
 
+    <!--    RIDE BOOKING ERROR MESSAGES    -->
+    <string name="booking_success">Ride booked! Looking for drivers...</string>
+    <string name="booking_error_no_drivers">No active drivers available. Please try again later.</string>
+    <string name="booking_error_user_not_logged">User not logged in</string>
+    <string name="booking_error_no_drivers_with_hours">All drivers have exceeded their daily working hours.</string>
+
 </resources>
