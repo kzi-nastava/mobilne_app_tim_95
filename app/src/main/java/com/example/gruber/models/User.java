@@ -3,9 +3,7 @@ package com.example.gruber.models;
 
 import com.example.gruber.models.enums.UserRole;
 
-/*
-* PLACEHODLER MODEL CLASS FOR PROFILE ACTIVITY
-* TODO: Use as base class and remove driver only fields*/
+
 public class User {
 
     private String firstName;

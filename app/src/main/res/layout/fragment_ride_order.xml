@@ -123,15 +123,30 @@
         app:dividerColor="@color/color_secondary_variant"
         />
 
-    <androidx.fragment.app.FragmentContainerView
+    <!-- TabLayout -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="@id/d_fragment_divider"
+        app:layout_constraintTop_toBottomOf="@id/d_fragment_divider"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tabMode="fixed"
+        app:tabGravity="fill"
+        app:tabTextColor="?attr/colorOnSurface"
+        app:tabSelectedTextColor="?attr/colorPrimary"
+        app:indicatorColor="?attr/colorPrimary"
+        />
+
+    <!-- ViewPager2 -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/tab_layout"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-<!--            FRAGMENT FOR REGISTERED USER STUFF ONLY     -->
-    </androidx.fragment.app.FragmentContainerView>
-
+        app:layout_constraintEnd_toEndOf="parent"
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
