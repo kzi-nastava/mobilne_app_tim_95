@@ -45,6 +45,7 @@ public class ProfileFragment extends Fragment {
         TextView txtActiveHours = view.findViewById(R.id.txtActiveHours);
         TextView txtVehicle = view.findViewById(R.id.txtVehicle);
         TextView txtRegistration = view.findViewById(R.id.txtVehicleRegistration);
+        TextView txtBlockedMessage = view.findViewById(R.id.txtBlockedMessage);
 
         // Check role from SessionManager first
         UserRole userRole = sessionManager.getUserRole();
@@ -69,6 +70,30 @@ public class ProfileFragment extends Fragment {
                 email -> txtEmail.setText(email != null ? email : ""));
         accountViewModel.getPhone().observe(getViewLifecycleOwner(),
                 phone -> txtPhone.setText(phone != null ? phone : ""));
+
+        accountViewModel.getBlocked().observe(getViewLifecycleOwner(), blocked -> {
+            if (blocked != null && blocked && userRole == UserRole.DRIVER) {
+                if (txtBlockedMessage != null) {
+                    txtBlockedMessage.setVisibility(View.VISIBLE);
+                    driverSection.setVisibility(View.GONE);
+                    
+                    String reason = accountViewModel.getBlockReason().getValue();
+                    if (reason != null && !reason.isEmpty()) {
+                        txtBlockedMessage.setText(getString(R.string.driver_blocked_message) + "\nReason: " + reason);
+                    }
+                }
+            } else if (userRole == UserRole.DRIVER) {
+                txtBlockedMessage.setVisibility(View.GONE);
+            }
+        });
+
+        accountViewModel.getBlockReason().observe(getViewLifecycleOwner(), reason -> {
+            if (userRole == UserRole.DRIVER && txtBlockedMessage != null && txtBlockedMessage.getVisibility() == View.VISIBLE) {
+                if (reason != null && !reason.isEmpty()) {
+                    txtBlockedMessage.setText(getString(R.string.driver_blocked_message) + "\nReason: " + reason);
+                }
+            }
+        });
 
         AtomicBoolean vehicleObserversRegistered = new AtomicBoolean(false);
 
