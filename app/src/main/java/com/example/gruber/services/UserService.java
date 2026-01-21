@@ -96,6 +96,7 @@ public class UserService {
                     String vehicleModel = snapshot.getString("vehicleModel");
                     String vehiclePlate = snapshot.getString("vehiclePlate");
                     Integer activeHours = snapshot.getLong("activeHoursLast24h").intValue();
+                    Boolean blocked = snapshot.getBoolean("blocked");
 
                     if (email != null)
                         accountViewModel.setEmail(email);
@@ -109,6 +110,22 @@ public class UserService {
                         accountViewModel.setImage(image);
                     if (role != null)
                         accountViewModel.setRole(UserRole.valueOf(role));
+                    if (blocked != null)
+                        accountViewModel.setBlocked(blocked);
+
+                    if (blocked != null && blocked && email != null) {
+                        firebaseFirestore.collection("blockNotes")
+                                .document(email)
+                                .get()
+                                .addOnSuccessListener(noteDoc -> {
+                                    if (noteDoc.exists()) {
+                                        String reason = noteDoc.getString("reason");
+                                        if (reason != null) {
+                                            accountViewModel.setBlockReason(reason);
+                                        }
+                                    }
+                                });
+                    }
 
                     if (accountViewModel instanceof DriverViewModel) {
                         DriverViewModel driverViewModel = (DriverViewModel) accountViewModel;

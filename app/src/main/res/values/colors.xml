@@ -60,4 +60,8 @@
     <color name="ride_completed">#A5FFA5</color>   <!-- greenish -->
     <color name="ride_cancelled">#FF8484</color>   <!-- reddish -->
     <color name="ride_active">#ADD8E6</color>      <!-- bluish -->
+    
+    <!-- USER BLOCK COLORS -->
+    <color name="blocked_user_bg">#FFCDD2</color>  <!-- light red -->
+    <color name="normal_user_bg">#FFFFFF</color>   <!-- white -->
 </resources>

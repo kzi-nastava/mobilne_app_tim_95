@@ -23,6 +23,7 @@ import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.MapService;
 import com.example.gruber.services.RideService;
 import com.example.gruber.viewModels.RideViewModel;
+import com.example.gruber.viewModels.AccountViewModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -80,10 +81,14 @@ public class HomeMapFragment extends Fragment {
         FirebaseAuth auth = FirebaseAuth.getInstance();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+        AccountViewModel accountViewModel = new ViewModelProvider(requireActivity()).get(AccountViewModel.class);
+
         if (role != null) {
             switch (role) {
                 case GUEST:
                     fabSupportContainer.setVisibility(View.GONE);
+                    btnBookRide.setVisibility(View.VISIBLE);
+                    btnBookRide.setEnabled(true);
                     break;
                 case DRIVER:
                     btnBookRide.setVisibility(View.GONE);
@@ -92,16 +97,7 @@ public class HomeMapFragment extends Fragment {
                     loadDriverPendingRides(btnStartRide);
                     break;
                 case USER:
-                    if (auth.getCurrentUser() != null) {
-                        String uid = auth.getCurrentUser().getUid();
-                        db.collection("users")
-                                .document(uid)
-                                .addSnapshotListener((snap, err) -> {
-                                    if (err != null || snap == null || !snap.exists()) return;
-                                    Boolean active = snap.getBoolean("active");
-                                    ui.post(() -> btnBookRide.setEnabled(active == null || !active));
-                                });
-                    }
+                    setupUserRoleUI(btnBookRide, auth, db, accountViewModel);
                     break;
                 case ADMIN:
                     fabSupportContainer.setVisibility(View.GONE);
@@ -131,15 +127,27 @@ public class HomeMapFragment extends Fragment {
             unreadDot.setVisibility(View.GONE);
         }
 
-        // ----- Click Listeners -----
+
         fabSupport.setOnClickListener(v -> {
             NavHostFragment.findNavController(this)
                     .navigate(R.id.action_homeMapFragment_to_supportChatFragment);
         });
 
         btnBookRide.setOnClickListener(v -> {
-            new RideOrderDialogFragment()
-                    .show(getParentFragmentManager(), "BookRideDilalog");
+            Boolean blocked = accountViewModel.getBlocked().getValue();
+            if (blocked != null && blocked) {
+                String reason = accountViewModel.getBlockReason().getValue();
+                String message;
+                if (reason != null && !reason.trim().isEmpty()) {
+                    message = getString(R.string.user_blocked_message_with_reason, reason.trim());
+                } else {
+                    message = getString(R.string.user_blocked_message);
+                }
+                Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+            } else {
+                new RideOrderDialogFragment()
+                        .show(getParentFragmentManager(), "BookRideDilalog");
+            }
         });
 
         btnStartRide.setOnClickListener(v -> startPendingRide(btnStartRide));
@@ -188,6 +196,46 @@ public class HomeMapFragment extends Fragment {
                 btnStartRide.setEnabled(!rides.isEmpty());
             });
         });
+    }
+
+    private void setupUserRoleUI(View btnBookRide, FirebaseAuth auth, FirebaseFirestore db, AccountViewModel accountViewModel) {
+        if (auth.getCurrentUser() == null) return;
+
+        String uid = auth.getCurrentUser().getUid();
+        db.collection("users")
+                .document(uid)
+                .addSnapshotListener((snap, err) -> {
+                    if (err != null || snap == null || !snap.exists()) return;
+
+                    Boolean active = snap.getBoolean("active");
+                    Boolean blocked = snap.getBoolean("blocked");
+                    boolean isBlocked = blocked != null && blocked;
+
+                    ui.post(() -> {
+                        btnBookRide.setEnabled(active == null || !active);
+
+                        if (isBlocked) {
+                            accountViewModel.setBlocked(true);
+                            loadBlockReason(snap.getString("email"), db, accountViewModel);
+                        }
+                    });
+                });
+    }
+
+    private void loadBlockReason(String userEmail, FirebaseFirestore db, AccountViewModel accountViewModel) {
+        if (userEmail == null) return;
+
+        db.collection("blockNotes")
+                .document(userEmail)
+                .get()
+                .addOnSuccessListener(noteDoc -> {
+                    if (noteDoc.exists()) {
+                        String reason = noteDoc.getString("reason");
+                        if (reason != null) {
+                            accountViewModel.setBlockReason(reason);
+                        }
+                    }
+                });
     }
 
     private void startPendingRide(View btnStartRide) {

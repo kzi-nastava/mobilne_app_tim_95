@@ -22,6 +22,8 @@ public class AccountViewModel extends ViewModel {
     protected final MutableLiveData<String> phone = new MutableLiveData<>();
     protected final MutableLiveData<Address> address = new MutableLiveData<>();
     protected final MutableLiveData<String> image = new MutableLiveData<>();
+    protected final MutableLiveData<Boolean> blocked = new MutableLiveData<>(false);
+    protected final MutableLiveData<String> blockReason = new MutableLiveData<>();
 
     @Inject
     public AccountViewModel(UserService userService) {
@@ -78,7 +80,7 @@ public class AccountViewModel extends ViewModel {
         return image;
     }
 
-    // Driver-specific methods (override in DriverViewModel)
+     // Driver-specific methods (override in DriverViewModel)
     public MutableLiveData<String> getVehicleModel() {
         return new MutableLiveData<>();
     }
@@ -101,6 +103,22 @@ public class AccountViewModel extends ViewModel {
 
     public void setActiveHours(Integer activeHours) {
         // Override in DriverViewModel
+    }
+
+    public MutableLiveData<Boolean> getBlocked() {
+        return blocked;
+    }
+
+    public void setBlocked(Boolean blocked) {
+        this.blocked.setValue(blocked);
+    }
+
+    public MutableLiveData<String> getBlockReason() {
+        return blockReason;
+    }
+
+    public void setBlockReason(String blockReason) {
+        this.blockReason.setValue(blockReason);
     }
 
     public User toUser() {

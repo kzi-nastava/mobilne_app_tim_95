@@ -130,4 +130,10 @@
     <string name="ride_started">Ride started</string>
     <string name="ride_start_error">Failed to start ride</string>
 
+    <!--    BLOCKING    -->
+    <string name="user_blocked_message">Your account has been blocked. Please contact support.</string>
+    <string name="user_blocked_message_with_reason">Your account has been blocked.\nReason: %1$s</string>
+    <string name="driver_blocked_message">Your driver account has been blocked.</string>
+    <string name="search_users">Search users...</string>
+
 </resources>
