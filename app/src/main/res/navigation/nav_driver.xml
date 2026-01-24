@@ -43,6 +43,9 @@
             app:destination="@id/homeMapFragment"
             app:popUpTo="@id/settingsFragment"
             app:popUpToInclusive="true" />
+            <action
+                android:id="@+id/action_settingsFragment_to_reportsFragment"
+                app:destination="@id/reportsFragment" />
     </fragment>
 
     <fragment
@@ -93,5 +96,14 @@
         android:id="@+id/supportChatFragment"
         android:name="com.example.gruber.fragment.SupportChatFragment"
         android:label="Support Chat" />
+
+    <fragment
+        android:id="@+id/reportsFragment"
+        android:name="com.example.gruber.fragment.ReportsFragment"
+        android:label="Reports">
+        <action
+            android:id="@+id/action_reportsFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+    </fragment>
 
 </navigation>
