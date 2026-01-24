@@ -45,6 +45,10 @@ public class ProfileFragment extends Fragment {
         TextView txtActiveHours = view.findViewById(R.id.txtActiveHours);
         TextView txtVehicle = view.findViewById(R.id.txtVehicle);
         TextView txtRegistration = view.findViewById(R.id.txtVehicleRegistration);
+        TextView txtVehicleType = view.findViewById(R.id.txtVehicleType);
+        TextView txtVehicleSeats = view.findViewById(R.id.txtVehicleSeats);
+        TextView txtAllowsBabies = view.findViewById(R.id.txtAllowsBabies);
+        TextView txtAllowsPets = view.findViewById(R.id.txtAllowsPets);
         TextView txtBlockedMessage = view.findViewById(R.id.txtBlockedMessage);
 
         // Check role from SessionManager first
@@ -64,6 +68,11 @@ public class ProfileFragment extends Fragment {
         accountViewModel.getFirstName().observe(getViewLifecycleOwner(),
                 first -> {
                     String last = accountViewModel.getLastName().getValue();
+                    txtName.setText((first != null ? first : "") + " " + (last != null ? last : ""));
+                });
+        accountViewModel.getLastName().observe(getViewLifecycleOwner(),
+                last -> {
+                    String first = accountViewModel.getFirstName().getValue();
                     txtName.setText((first != null ? first : "") + " " + (last != null ? last : ""));
                 });
         accountViewModel.getEmail().observe(getViewLifecycleOwner(),
@@ -109,6 +118,16 @@ public class ProfileFragment extends Fragment {
             if (hours != null)
                 txtActiveHours.setText(hours + "");
         };
+        Observer<String> vehicleTypeObserver = type -> {
+            if (type != null)
+                txtVehicleType.setText(type);
+        };
+        Observer<Integer> vehicleSeatsObserver = seats -> {
+            if (seats != null)
+                txtVehicleSeats.setText(String.valueOf(seats));
+        };
+        Observer<Boolean> allowsBabiesObserver = babies -> txtAllowsBabies.setText(babies != null && babies ? "Yes" : "No");
+        Observer<Boolean> allowsPetsObserver = pets -> txtAllowsPets.setText(pets != null && pets ? "Yes" : "No");
 
         accountViewModel.getRole().observe(getViewLifecycleOwner(), role -> {
             if (role != null && role == UserRole.DRIVER) {
@@ -118,13 +137,25 @@ public class ProfileFragment extends Fragment {
                 txtActiveHours.setText(hours != null ? hours + "" : "0");
                 String model = driverViewModel.getVehicleModel().getValue();
                 String plate = driverViewModel.getVehiclePlate().getValue();
+                String type = driverViewModel.getVehicleType().getValue();
+                Integer seats = driverViewModel.getNumberOfSeats().getValue();
+                Boolean babies = driverViewModel.getAllowsBabies().getValue();
+                Boolean pets = driverViewModel.getAllowsPets().getValue();
                 txtVehicle.setText(model != null ? model : "");
                 txtRegistration.setText(plate != null ? plate : "");
+                txtVehicleType.setText(type != null ? type : "");
+                txtVehicleSeats.setText(seats != null ? String.valueOf(seats) : "");
+                txtAllowsBabies.setText(babies != null && babies ? "Yes" : "No");
+                txtAllowsPets.setText(pets != null && pets ? "Yes" : "No");
 
                 if (!vehicleObserversRegistered.getAndSet(true)) {
                     driverViewModel.getVehicleModel().observe(getViewLifecycleOwner(), vehicleModelObserver);
                     driverViewModel.getVehiclePlate().observe(getViewLifecycleOwner(), vehiclePlateObserver);
                     driverViewModel.getActiveHours().observe(getViewLifecycleOwner(), activeHoursObserver);
+                    driverViewModel.getVehicleType().observe(getViewLifecycleOwner(), vehicleTypeObserver);
+                    driverViewModel.getNumberOfSeats().observe(getViewLifecycleOwner(), vehicleSeatsObserver);
+                    driverViewModel.getAllowsBabies().observe(getViewLifecycleOwner(), allowsBabiesObserver);
+                    driverViewModel.getAllowsPets().observe(getViewLifecycleOwner(), allowsPetsObserver);
                 }
             } else {
                 driverSection.setVisibility(View.GONE);
@@ -132,6 +163,13 @@ public class ProfileFragment extends Fragment {
                     accountViewModel.getVehicleModel().removeObserver(vehicleModelObserver);
                     accountViewModel.getVehiclePlate().removeObserver(vehiclePlateObserver);
                     accountViewModel.getActiveHours().removeObserver(activeHoursObserver);
+                    if (accountViewModel instanceof DriverViewModel) {
+                        DriverViewModel dv = (DriverViewModel) accountViewModel;
+                        dv.getVehicleType().removeObserver(vehicleTypeObserver);
+                        dv.getNumberOfSeats().removeObserver(vehicleSeatsObserver);
+                        dv.getAllowsBabies().removeObserver(allowsBabiesObserver);
+                        dv.getAllowsPets().removeObserver(allowsPetsObserver);
+                    }
                 }
             }
         });

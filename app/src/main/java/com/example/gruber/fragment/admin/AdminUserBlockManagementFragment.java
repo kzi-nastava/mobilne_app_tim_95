@@ -11,10 +11,12 @@ import android.widget.EditText;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.gruber.R;
 import com.example.gruber.adapter.UserBlockManagementPagerAdapter;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -23,6 +25,7 @@ public class AdminUserBlockManagementFragment extends Fragment {
     private ViewPager2 viewPager;
     private TabLayout tabLayout;
     private EditText etSearch;
+    private MaterialButton btnAddDriver;
     private UserBlockManagementPagerAdapter pagerAdapter;
 
     public AdminUserBlockManagementFragment() {
@@ -44,6 +47,7 @@ public class AdminUserBlockManagementFragment extends Fragment {
         viewPager = view.findViewById(R.id.viewPager);
         tabLayout = view.findViewById(R.id.tabLayout);
         etSearch = view.findViewById(R.id.etSearch);
+        btnAddDriver = view.findViewById(R.id.btnAddDriver);
 
         pagerAdapter = new UserBlockManagementPagerAdapter(this);
         viewPager.setAdapter(pagerAdapter);
@@ -73,6 +77,11 @@ public class AdminUserBlockManagementFragment extends Fragment {
             @Override
             public void afterTextChanged(Editable s) {}
         });
+
+        btnAddDriver.setOnClickListener(v -> {
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.action_adminUserBlockManagementFragment_to_adminDriverRegisterAccountFragment);
+        });
     }
 
     @Override
@@ -81,6 +90,7 @@ public class AdminUserBlockManagementFragment extends Fragment {
         viewPager = null;
         tabLayout = null;
         etSearch = null;
+        btnAddDriver = null;
         super.onDestroyView();
     }
 }

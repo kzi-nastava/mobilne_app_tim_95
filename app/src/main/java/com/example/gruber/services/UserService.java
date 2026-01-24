@@ -95,7 +95,8 @@ public class UserService {
                     String role = snapshot.getString("role");
                     String vehicleModel = snapshot.getString("vehicleModel");
                     String vehiclePlate = snapshot.getString("vehiclePlate");
-                    Integer activeHours = snapshot.getLong("activeHoursLast24h").intValue();
+                    Long activeHoursLong = snapshot.getLong("activeHoursLast24h");
+                    Integer activeHours = activeHoursLong != null ? activeHoursLong.intValue() : null;
                     Boolean blocked = snapshot.getBoolean("blocked");
 
                     if (email != null)
@@ -135,6 +136,30 @@ public class UserService {
                             driverViewModel.setVehiclePlate(vehiclePlate);
                         if (activeHours != null)
                             driverViewModel.setActiveHours(activeHours);
+
+                        // Fetch extended vehicle info from vehicles collection using email
+                        if (email != null) {
+                            firebaseFirestore.collection("vehicles")
+                                    .document(email)
+                                    .get()
+                                    .addOnSuccessListener(vehicleSnap -> {
+                                        if (vehicleSnap != null && vehicleSnap.exists()) {
+                                            String type = vehicleSnap.getString("type");
+                                            Long seats = vehicleSnap.getLong("numberOfSeats");
+                                            Boolean babies = vehicleSnap.getBoolean("allowsBabies");
+                                            Boolean pets = vehicleSnap.getBoolean("allowsPets");
+                                            String modelFromVehicle = vehicleSnap.getString("model");
+                                            String plateFromVehicle = vehicleSnap.getString("licensePlate");
+
+                                            if (type != null) driverViewModel.setVehicleType(type);
+                                            if (seats != null) driverViewModel.setNumberOfSeats(seats.intValue());
+                                            if (babies != null) driverViewModel.setAllowsBabies(babies);
+                                            if (pets != null) driverViewModel.setAllowsPets(pets);
+                                            if (modelFromVehicle != null) driverViewModel.setVehicleModel(modelFromVehicle);
+                                            if (plateFromVehicle != null) driverViewModel.setVehiclePlate(plateFromVehicle);
+                                        }
+                                    });
+                        }
                     }
                 })
                 .addOnFailureListener(e -> {
@@ -181,18 +206,48 @@ public class UserService {
         if (accountViewModel.getImage().getValue() != null)
             updates.put("photoUri", accountViewModel.getImage().getValue());
 
+        Map<String, Object> vehicleUpdates = null;
+        String email = accountViewModel.getEmail().getValue();
+
         if (accountViewModel instanceof DriverViewModel) {
             DriverViewModel driverViewModel = (DriverViewModel) accountViewModel;
             if (driverViewModel.getVehicleModel().getValue() != null)
                 updates.put("vehicleModel", driverViewModel.getVehicleModel().getValue());
             if (driverViewModel.getVehiclePlate().getValue() != null)
                 updates.put("vehiclePlate", driverViewModel.getVehiclePlate().getValue());
+
+            vehicleUpdates = new HashMap<>();
+            if (driverViewModel.getVehicleModel().getValue() != null)
+                vehicleUpdates.put("model", driverViewModel.getVehicleModel().getValue());
+            if (driverViewModel.getVehiclePlate().getValue() != null)
+                vehicleUpdates.put("licensePlate", driverViewModel.getVehiclePlate().getValue());
+            if (driverViewModel.getVehicleType().getValue() != null)
+                vehicleUpdates.put("type", driverViewModel.getVehicleType().getValue());
+            if (driverViewModel.getNumberOfSeats().getValue() != null)
+                vehicleUpdates.put("numberOfSeats", driverViewModel.getNumberOfSeats().getValue());
+            if (driverViewModel.getAllowsBabies().getValue() != null)
+                vehicleUpdates.put("allowsBabies", driverViewModel.getAllowsBabies().getValue());
+            if (driverViewModel.getAllowsPets().getValue() != null)
+                vehicleUpdates.put("allowsPets", driverViewModel.getAllowsPets().getValue());
         }
+
+        final Map<String, Object> finalVehicleUpdates = vehicleUpdates;
+        final String finalEmail = email;
 
         firebaseFirestore.collection("users")
                 .document(uid)
                 .update(updates)
-                .addOnSuccessListener(aVoid -> callback.onSuccess(uid, accountViewModel.getRole().getValue()))
+                .addOnSuccessListener(aVoid -> {
+                    if (finalVehicleUpdates != null && finalEmail != null) {
+                        firebaseFirestore.collection("vehicles")
+                                .document(finalEmail)
+                                .update(finalVehicleUpdates)
+                                .addOnSuccessListener(v -> callback.onSuccess(uid, accountViewModel.getRole().getValue()))
+                                .addOnFailureListener(callback::onError);
+                    } else {
+                        callback.onSuccess(uid, accountViewModel.getRole().getValue());
+                    }
+                })
                 .addOnFailureListener(callback::onError);
     }
 
@@ -207,6 +262,27 @@ public class UserService {
                 .addOnSuccessListener(v -> {
                     firebaseAuth.signOut();
                     callback.onSuccess(uid, UserRole.GUEST);
+                })
+                .addOnFailureListener(callback::onError);
+    }
+
+    public void createDriverByAdmin(String email, String password, Map<String, Object> driverData, Map<String, Object> vehicleData, AuthCallback callback) {
+        firebaseAuth.createUserWithEmailAndPassword(email, password)
+                .addOnSuccessListener(result -> {
+                    String uid = result.getUser().getUid();
+                    // Save driver user data
+                    firebaseFirestore.collection("users")
+                            .document(uid)
+                            .set(driverData)
+                            .addOnSuccessListener(v -> {
+                                // Save vehicle info with email as document ID
+                                firebaseFirestore.collection("vehicles")
+                                        .document(email)
+                                        .set(vehicleData)
+                                        .addOnSuccessListener(v2 -> callback.onSuccess(uid, UserRole.DRIVER))
+                                        .addOnFailureListener(callback::onError);
+                            })
+                            .addOnFailureListener(callback::onError);
                 })
                 .addOnFailureListener(callback::onError);
     }
