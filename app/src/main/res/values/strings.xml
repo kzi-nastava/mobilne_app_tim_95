@@ -151,4 +151,20 @@
     <string name="finish">Finish</string>
     <string name="add_driver">Add Driver</string>
 
+    <!--    REPORTS    -->
+    <string name="reports">Reports</string>
+    <string name="view_reports">View Reports</string>
+    <string name="date_range">Date Range</string>
+    <string name="from_date">From Date</string>
+    <string name="to_date">To Date</string>
+    <string name="generate_report">Generate Report</string>
+    <string name="rides_per_day">Rides per Day</string>
+    <string name="kilometers_traveled">Kilometers Traveled</string>
+    <string name="money_spent_earned">Money Spent/Earned</string>
+    <string name="cumulative_total">Cumulative Total</string>
+    <string name="average">Average</string>
+    <string name="select_user">Select User</string>
+    <string name="all_drivers">All Drivers</string>
+    <string name="all_passengers">All Passengers</string>
+
 </resources>

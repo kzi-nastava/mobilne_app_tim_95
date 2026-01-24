@@ -94,6 +94,9 @@
         android:id="@+id/adminVehiclePricingFragment"
         android:name="com.example.gruber.fragment.VehiclePricingFragment"
         android:label="Vehicle Pricing">
+        <action
+            android:id="@+id/action_adminVehiclePricingFragment_to_adminReportsFragment"
+            app:destination="@id/adminReportsFragment" />
     </fragment>
 
     <fragment
@@ -142,6 +145,11 @@
             app:popUpTo="@id/adminUserBlockManagementFragment"
             app:popUpToInclusive="true" />
     </fragment>
+
+    <fragment
+        android:id="@+id/adminReportsFragment"
+        android:name="com.example.gruber.fragment.AdminReportsFragment"
+        android:label="Admin Reports" />
 
 <!--    <fragment-->
 <!--        android:id="@+id/adminUsersFragment"-->
