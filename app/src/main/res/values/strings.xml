@@ -8,6 +8,12 @@
     <string name="confirm_password">Confirm password</string>
     <string name="first_name">First name</string>
     <string name="last_name">Last name</string>
+
+    <string-array name="vehicle_types">
+        <item>standard</item>
+        <item>luxury</item>
+        <item>combi</item>
+    </string-array>
     <string name="photo">Photo</string>
     <string name="street">Street</string>
     <string name="number">Number</string>
@@ -135,5 +141,14 @@
     <string name="user_blocked_message_with_reason">Your account has been blocked.\nReason: %1$s</string>
     <string name="driver_blocked_message">Your driver account has been blocked.</string>
     <string name="search_users">Search users...</string>
+
+    <!--    ADMIN DRIVER REGISTRATION    -->
+    <string name="vehicle_information">Vehicle Information</string>
+    <string name="license_plate">License Plate</string>
+    <string name="number_of_seats">Number of Seats</string>
+    <string name="allows_babies">Vehicle allows babies</string>
+    <string name="allows_pets">Vehicle allows pets</string>
+    <string name="finish">Finish</string>
+    <string name="add_driver">Add Driver</string>
 
 </resources>

@@ -99,7 +99,49 @@
     <fragment
         android:id="@+id/adminUserBlockManagementFragment"
         android:name="com.example.gruber.fragment.admin.AdminUserBlockManagementFragment"
-        android:label="User Management" />
+        android:label="User Management">
+        <action
+            android:id="@+id/action_adminUserBlockManagementFragment_to_adminDriverRegisterAccountFragment"
+            app:destination="@id/adminDriverRegisterAccountFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminDriverRegisterAccountFragment"
+        android:name="com.example.gruber.fragment.admin.AdminDriverRegisterAccountFragment"
+        android:label="Register Driver - Account">
+        <action
+            android:id="@+id/action_adminDriverRegisterAccountFragment_to_adminDriverRegisterNameFragment"
+            app:destination="@id/adminDriverRegisterNameFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminDriverRegisterNameFragment"
+        android:name="com.example.gruber.fragment.admin.AdminDriverRegisterNameFragment"
+        android:label="Register Driver - Personal Info">
+        <action
+            android:id="@+id/action_adminDriverRegisterNameFragment_to_adminDriverRegisterAddressFragment"
+            app:destination="@id/adminDriverRegisterAddressFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminDriverRegisterAddressFragment"
+        android:name="com.example.gruber.fragment.admin.AdminDriverRegisterAddressFragment"
+        android:label="Register Driver - Address">
+        <action
+            android:id="@+id/action_adminDriverRegisterAddressFragment_to_adminDriverRegisterVehicleFragment"
+            app:destination="@id/adminDriverRegisterVehicleFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminDriverRegisterVehicleFragment"
+        android:name="com.example.gruber.fragment.admin.AdminDriverRegisterVehicleFragment"
+        android:label="Register Driver - Vehicle Info">
+        <action
+            android:id="@+id/action_adminDriverRegisterVehicleFragment_to_adminUserBlockManagementFragment"
+            app:destination="@id/adminUserBlockManagementFragment"
+            app:popUpTo="@id/adminUserBlockManagementFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
 
 <!--    <fragment-->
 <!--        android:id="@+id/adminUsersFragment"-->

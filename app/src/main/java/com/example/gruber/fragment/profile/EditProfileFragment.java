@@ -9,6 +9,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.activity.result.ActivityResultLauncher;
@@ -61,6 +64,10 @@ public class EditProfileFragment extends Fragment {
         LinearLayout driverEditSection = view.findViewById(R.id.driverEditSection);
         EditText etVehicleModel = view.findViewById(R.id.etVehicleModel);
         EditText etVehiclePlate = view.findViewById(R.id.etVehiclePlate);
+        Spinner spinnerVehicleType = view.findViewById(R.id.spinnerVehicleType);
+        EditText etNumberOfSeats = view.findViewById(R.id.etNumberOfSeats);
+        CheckBox cbAllowsBabies = view.findViewById(R.id.cbAllowsBabies);
+        CheckBox cbAllowsPets = view.findViewById(R.id.cbAllowsPets);
         TextView txtPendingInfo = view.findViewById(R.id.txtPendingInfo);
         Button btnSave = view.findViewById(R.id.btnSave);
         Button btnCancel = view.findViewById(R.id.btnCancel);
@@ -103,10 +110,28 @@ public class EditProfileFragment extends Fragment {
                 DriverViewModel driverViewModel = (DriverViewModel) accountViewModel;
                 etVehicleModel.setText(driverViewModel.getVehicleModel().getValue());
                 etVehiclePlate.setText(driverViewModel.getVehiclePlate().getValue());
+                if (driverViewModel.getVehicleType().getValue() != null) {
+                    setSpinnerSelection(spinnerVehicleType, driverViewModel.getVehicleType().getValue());
+                }
+                if (driverViewModel.getNumberOfSeats().getValue() != null) {
+                    etNumberOfSeats.setText(String.valueOf(driverViewModel.getNumberOfSeats().getValue()));
+                }
+                if (driverViewModel.getAllowsBabies().getValue() != null) {
+                    cbAllowsBabies.setChecked(driverViewModel.getAllowsBabies().getValue());
+                }
+                if (driverViewModel.getAllowsPets().getValue() != null) {
+                    cbAllowsPets.setChecked(driverViewModel.getAllowsPets().getValue());
+                }
             } else {
                 driverEditSection.setVisibility(View.GONE);
             }
         });
+
+        // Vehicle type spinner setup
+        ArrayAdapter<CharSequence> vehicleAdapter = ArrayAdapter.createFromResource(requireContext(),
+                R.array.vehicle_types, android.R.layout.simple_spinner_item);
+        vehicleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerVehicleType.setAdapter(vehicleAdapter);
 
         btnSave.setOnClickListener(v -> {
 
@@ -118,6 +143,17 @@ public class EditProfileFragment extends Fragment {
                 DriverViewModel driverViewModel = (DriverViewModel) accountViewModel;
                 driverViewModel.setVehicleModel(etVehicleModel.getText().toString());
                 driverViewModel.setVehiclePlate(etVehiclePlate.getText().toString());
+                driverViewModel.setVehicleType(spinnerVehicleType.getSelectedItem() != null
+                        ? spinnerVehicleType.getSelectedItem().toString()
+                        : null);
+                try {
+                    String seatsText = etNumberOfSeats.getText().toString();
+                    if (!seatsText.isEmpty()) {
+                        driverViewModel.setNumberOfSeats(Integer.parseInt(seatsText));
+                    }
+                } catch (NumberFormatException ignored) {}
+                driverViewModel.setAllowsBabies(cbAllowsBabies.isChecked());
+                driverViewModel.setAllowsPets(cbAllowsPets.isChecked());
             }
 
             btnSave.setEnabled(false);
@@ -142,5 +178,16 @@ public class EditProfileFragment extends Fragment {
 
         btnCancel.setOnClickListener(v -> NavHostFragment.findNavController(EditProfileFragment.this)
                 .navigate(R.id.action_editProfileFragment_to_settingsFragment));
+    }
+
+    private void setSpinnerSelection(Spinner spinner, String value) {
+        if (spinner.getAdapter() == null || value == null) return;
+        for (int i = 0; i < spinner.getAdapter().getCount(); i++) {
+            Object item = spinner.getAdapter().getItem(i);
+            if (item != null && value.equalsIgnoreCase(item.toString())) {
+                spinner.setSelection(i);
+                break;
+            }
+        }
     }
 }

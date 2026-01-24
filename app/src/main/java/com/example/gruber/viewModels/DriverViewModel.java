@@ -12,6 +12,10 @@ public class DriverViewModel extends AccountViewModel {
     private final MutableLiveData<Integer> activeHoursLast24 = new MutableLiveData<>();
     private final MutableLiveData<String> vehicleModel = new MutableLiveData<>();
     private final MutableLiveData<String> vehiclePlate = new MutableLiveData<>();
+    private final MutableLiveData<String> vehicleType = new MutableLiveData<>();
+    private final MutableLiveData<Integer> numberOfSeats = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> allowsBabies = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> allowsPets = new MutableLiveData<>();
 
     @Inject
     public DriverViewModel(UserService userService) {
@@ -57,6 +61,40 @@ public class DriverViewModel extends AccountViewModel {
     @Override
     public void setVehiclePlate(String vehiclePlate) {
         this.vehiclePlate.setValue(vehiclePlate);
+    }
+
+    public MutableLiveData<String> getVehicleType() {
+        return vehicleType;
+    }
+
+    public void setVehicleType(String vehicleType) {
+        this.vehicleType.setValue(vehicleType);
+    }
+
+    public MutableLiveData<Integer> getNumberOfSeats() {
+        return numberOfSeats;
+    }
+
+    public void setNumberOfSeats(Integer seats) {
+        if (seats != null) {
+            this.numberOfSeats.setValue(seats);
+        }
+    }
+
+    public MutableLiveData<Boolean> getAllowsBabies() {
+        return allowsBabies;
+    }
+
+    public void setAllowsBabies(Boolean value) {
+        this.allowsBabies.setValue(value);
+    }
+
+    public MutableLiveData<Boolean> getAllowsPets() {
+        return allowsPets;
+    }
+
+    public void setAllowsPets(Boolean value) {
+        this.allowsPets.setValue(value);
     }
 
     @Override
