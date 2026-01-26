@@ -18,6 +18,7 @@ import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.callbacks.PriceCallback;
 import com.example.gruber.services.callbacks.RidesListCallback;
 import com.example.gruber.services.callbacks.RouteCallback;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 
@@ -35,6 +36,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -65,6 +67,7 @@ public class RideService {
     private static final String USER_EMAIL = "creatorUserEmail";
     private static final String USERS = "users";
     private static final String ROLE = "role";
+    private static final String STARTED_AT = "startedAt";
 
 
     @Inject
@@ -145,7 +148,7 @@ public class RideService {
         return new GeoPoint(a.getLatitude(), a.getLongitude());
     }
 
-        public void getPrice(Road road, String driveBracket, PriceCallback callback) {
+    public void getPrice(Road road, String driveBracket, PriceCallback callback) {
         firebaseFirestore.collection(VEHICLE_TYPE)
                 .whereArrayContains(TYPE, driveBracket)
                 .get()
@@ -204,16 +207,20 @@ public class RideService {
                 });
         return ridesLiveData;
     }
-    public LiveData<List<Ride>> getRidesWithStatus(RideStatus status) {
-        MutableLiveData<List<Ride>> ridesLiveData = new MutableLiveData<>();
+    public void getRidesForUserWithSearch(String userEmail, List<RideStatus> statuses, Timestamp fromInterval, Timestamp toInterval, RidesListCallback callback) {
         firebaseFirestore.collection(RIDES)
-                .whereEqualTo(STATUS, status)
+                .whereIn(STATUS, statuses)
+                .whereGreaterThanOrEqualTo(STARTED_AT, fromInterval)
+                .whereLessThanOrEqualTo(STARTED_AT, toInterval)
+                .whereEqualTo(USER_EMAIL, userEmail)
+                .orderBy(STARTED_AT)
                 .get()
                 .addOnSuccessListener(snapshot -> {
                     List<Ride> rides = snapshot.toObjects(Ride.class);
-                    ridesLiveData.setValue(rides);
-                });
-        return ridesLiveData;
+                    callback.onSuccess(rides);
+                })
+                .addOnFailureListener(callback::onError);
+
     }
     public void getRidesForUser(String userEmail, RidesListCallback callback) {
         firebaseFirestore.collection(RIDES)

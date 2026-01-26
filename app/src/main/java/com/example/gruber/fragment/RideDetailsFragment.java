@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
@@ -24,6 +25,8 @@ import com.example.gruber.models.LatLng;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.RideStatus;
+import com.example.gruber.services.MapService;
+import com.example.gruber.viewModels.RideViewModel;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.ITileSource;
@@ -51,6 +54,10 @@ import org.osmdroid.bonuspack.routing.RoadManager;
 public class RideDetailsFragment extends Fragment {
 
     private static final DateTimeFormatter DATE_TIME_FMT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+    private RideViewModel rideViewModel;
+
+    private MapService mapService;
 
     private MapView rideMap;
     private Polyline routeLine;
@@ -81,6 +88,8 @@ public class RideDetailsFragment extends Fragment {
 
         Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
         bg = Executors.newSingleThreadExecutor();
+
+        rideViewModel = new ViewModelProvider(requireActivity()).get(RideViewModel.class);
     }
 
     @Override
@@ -88,7 +97,7 @@ public class RideDetailsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         String rideId = getArguments() != null ? getArguments().getString("rideId") : null;
-        Ride ride = FakeSession.getRideById(rideId);
+        Ride ride = rideViewModel.getRideValue();
 
         TextView tvRideId = view.findViewById(R.id.tvRideId);
         TextView tvStatus = view.findViewById(R.id.tvStatus);
@@ -130,7 +139,7 @@ public class RideDetailsFragment extends Fragment {
         }
 
         // --- Header
-        tvRideId.setText("Ride #" + ride.id);
+        tvRideId.setText("Ride #");
         tvStatus.setText(ride.status != null ? ride.status.name() : "-");
 
         int statusColorRes;
@@ -195,13 +204,21 @@ public class RideDetailsFragment extends Fragment {
         tvTimes.setText(startTxt + " - " + endTxt + durationTxt);
 
         // --- Addresses
-        tvStartAddress.setText("From: " + (ride.pickupAddress != null ? ride.pickupAddress : "-"));
-        tvEndAddress.setText("To: " + (ride.dropoffAddress != null ? ride.dropoffAddress : "-"));
+        String start = ride.stopList.get(0) != null ? ride.stopList.get(0).address : "-";
+        String end;
+        int stops = ride.stopList.size();
+        if (ride.stopList.size() < 2) end = "-";
+        else end = ride.stopList.get(stops - 1).address;
+
+        tvStartAddress.setText("From: " + start);
+        tvEndAddress.setText("To: " + end);
 
         // --- Stops list
         stopsContainer.removeAllViews();
         List<Stop> sortedStops = new ArrayList<>();
         if (ride.stopList != null) sortedStops.addAll(ride.stopList);
+        sortedStops.remove(0);
+        sortedStops.remove(sortedStops.size() - 1);
         Collections.sort(sortedStops, Comparator.comparingInt(s -> s.number));
 
         if (!sortedStops.isEmpty()) {
@@ -245,13 +262,26 @@ public class RideDetailsFragment extends Fragment {
         rideMap.getController().setZoom(13.5);
     }
 
-    private void drawRideRouteOnMap(Ride ride, List<Stop> sortedStops) {
-        GeoPoint start = toGeoPoint(ride.pickupLocation);
-        GeoPoint end = toGeoPoint(ride.dropoffLocation);
+    private void drawRideRouteOnMapFromData(Ride ride) {
+        GeoPoint start = toGeoPoint(ride.stopList.get(0).location);
+        int stopListSize = ride.stopList.size();
+        GeoPoint end = toGeoPoint(ride.stopList.get(stopListSize - 1).location);
 
         if (start == null || end == null) {
             return;
         }
+
+
+    }
+
+    private void drawRideRouteOnMap(Ride ride, List<Stop> sortedStops) {
+        GeoPoint start = toGeoPoint(ride.stopList.get(0).location);
+        int stopListSize = ride.stopList.size();
+        GeoPoint end = toGeoPoint(ride.stopList.get(stopListSize - 1).location);
+
+//        if (start == null || end == null) {
+//            return;
+//        }
 
         ArrayList<GeoPoint> waypoints = new ArrayList<>();
         waypoints.add(start);
@@ -266,8 +296,7 @@ public class RideDetailsFragment extends Fragment {
         // Route line: run network call off main thread
         bg.execute(() -> {
             try {
-                RoadManager roadManager = new OSRMRoadManager(requireContext(), Configuration.getInstance().getUserAgentValue());
-                Road road = roadManager.getRoad(waypoints);
+                Road road = ride.getRoute().getRoad();
 
                 requireActivity().runOnUiThread(() -> {
                     if (!isAdded() || rideMap == null) return;
@@ -277,7 +306,8 @@ public class RideDetailsFragment extends Fragment {
                         rideMap.getOverlays().remove(routeLine);
                     }
 
-                    routeLine = RoadManager.buildRoadOverlay(road);
+//                    routeLine = RoadManager.buildRoadOverlay(road);
+                    routeLine = ride.getRoute().getPolyline();
                     // Make it BLUE (use your palette: status_active)
                     int blue = ContextCompat.getColor(requireContext(), R.color.status_cancelled);
                     routeLine.getOutlinePaint().setColor(blue);

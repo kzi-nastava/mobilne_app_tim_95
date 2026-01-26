@@ -34,8 +34,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:padding="10dp"
-                android:background="@android:drawable/editbox_background"
-                android:text="Select date"/>
+                android:background="?attr/colorSurfaceBright"
+                android:hint="Select date"/>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -50,8 +50,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:padding="10dp"
-                android:background="@android:drawable/editbox_background"
-                android:text="Select date"/>
+                android:background="?attr/colorSurfaceBright"
+                android:hint="Select date"/>
         </LinearLayout>
 
         <LinearLayout
@@ -116,5 +116,16 @@
         android:clipChildren="false"
         android:clipToPadding="false"
         tools:listitem="@layout/ride_card" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/emptyRecyclerMessage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="@string/no_rides_to_display"
+        android:gravity="center_horizontal"
+        android:paddingTop="20dp"
+        android:visibility="gone"/>
+
+
 
 </LinearLayout>

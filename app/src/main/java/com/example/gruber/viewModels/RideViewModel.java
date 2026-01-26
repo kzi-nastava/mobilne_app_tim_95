@@ -344,4 +344,8 @@ public class RideViewModel extends ViewModel {
             }
         });
     }
+
+    public void setRide(Ride ride) {
+        this.ride.setValue(ride);
+    }
 }

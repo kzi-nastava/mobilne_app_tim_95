@@ -6,6 +6,7 @@ import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -14,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.Toast;
 
 import com.example.gruber.R;
 import com.example.gruber.adapter.RideAdapter;
@@ -27,9 +29,11 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.textview.MaterialTextView;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 
 public class RideHistoryFragment extends Fragment {
@@ -38,11 +42,11 @@ public class RideHistoryFragment extends Fragment {
     private SearchViewModel searchViewModel;
     private HashMap<String, Boolean> statusSearchMap;
 
-    private MaterialButton statusBtn, sortBtn, sortOrderBtn;
+    private MaterialButton statusBtn, sortBtn, sortOrderBtn, applyBtn;
     private LinearLayout dropDownStatusContainer, dropDownSortContainer;
 
-    private SortCategory sortCategory;
-    private boolean isAscending;
+    private SortCategory sortCategory = SortCategory.DATE;
+    private boolean isAscending = false;
 
     public RideHistoryFragment() {
         // Required empty public constructor
@@ -77,7 +81,22 @@ public class RideHistoryFragment extends Fragment {
         isAscending = false;
         setUpSortOrderBtn();
 
-        setUpRidesAdapter(view.findViewById(R.id.rides));
+        applyBtn = view.findViewById(R.id.btnApply);
+        applyBtn.setOnClickListener(v -> applySort());
+
+        RecyclerView recyclerView = view.findViewById(R.id.rides);
+        setUpRidesAdapter(recyclerView);
+
+        searchViewModel.getRides().observe(getViewLifecycleOwner(), rides -> {
+            if (rides.isEmpty()) {
+                recyclerView.setVisibility(View.GONE);
+                view.findViewById(R.id.emptyRecyclerMessage).setVisibility(View.VISIBLE);
+            }
+            else {
+                recyclerView.setVisibility(View.VISIBLE);
+                view.findViewById(R.id.emptyRecyclerMessage).setVisibility(View.GONE);
+            }
+        });
 
         return view;
     }
@@ -85,7 +104,8 @@ public class RideHistoryFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        dropDownStatusContainer.setVisibility(View.GONE);
+        if (dropDownStatusContainer!=null) dropDownStatusContainer.setVisibility(View.GONE);
+        if (dropDownSortContainer!=null) dropDownSortContainer.setVisibility(View.GONE);
     }
 
     private void setUpStatusDropDownMenu() {
@@ -98,7 +118,9 @@ public class RideHistoryFragment extends Fragment {
             View item = statusMenuInflater.inflate(R.layout.menu_item_checkbox, dropDownStatusContainer, false);
 
             MaterialTextView textView = item.findViewById(R.id.cb_text);
-            textView.setText(status.toString());
+            var text = status.toString().substring(0, 1).toUpperCase(Locale.ROOT)
+                    + status.toString().substring(1).toLowerCase(Locale.ROOT).replace("_", " ");
+            textView.setText(text);
 
             MaterialCheckBox checkBox = item.findViewById(R.id.check_box);
             checkBox.setChecked(statusSearchMap.get(status.toString()));
@@ -133,30 +155,36 @@ public class RideHistoryFragment extends Fragment {
             View item = statusMenuInflater.inflate(R.layout.menu_item_checkbox, dropDownSortContainer, false);
 
             MaterialTextView textView = item.findViewById(R.id.cb_text);
-            textView.setText(category.toString());
+            var c = category.toString();
+            var text = c.substring(0,1).toUpperCase() + c.substring(1).toLowerCase();
+            textView.setText(text);
 
             MaterialCheckBox checkBox = item.findViewById(R.id.check_box);
             checkBox.setVisibility(View.GONE);
 
             item.setOnClickListener(click -> {
                 try {
-                    SortCategory newSortCategory = SortCategory.valueOf(textView.getText().toString());
+                    SortCategory newSortCategory = SortCategory.valueOf(textView.getText().toString().toUpperCase());
                     if (newSortCategory.equals(sortCategory)) {
-                        sortCategory = null;
+                        sortCategory = SortCategory.DATE;
+                        dropDownSortContainer.setVisibility(View.GONE);
                         sortBtn.setText("Sort by");
                     }
                     else {
                         sortCategory = newSortCategory;
-                        sortBtn.setText(sortCategory.toString());
+                        dropDownSortContainer.setVisibility(View.GONE);
+                        sortBtn.setText(textView.getText().toString());
                     }
+
                 } catch (Exception e) {
-                    sortCategory = null;
+                    sortCategory = SortCategory.DATE;
                     sortBtn.setText("Sort by");
                 }
 
             });
 
             dropDownSortContainer.addView(item);
+
 
         }
 
@@ -183,13 +211,33 @@ public class RideHistoryFragment extends Fragment {
 
     private void setUpRidesAdapter(RecyclerView recyclerView) {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        UsersRideAdapter adapter = new UsersRideAdapter();
+        UsersRideAdapter adapter = new UsersRideAdapter(ride -> {
+            rideViewModel.setRide(ride);
+            NavHostFragment.findNavController(RideHistoryFragment.this).navigate(R.id.action_usersRidesHistory_to_rideDetailsFragment);
+        });
         recyclerView.setAdapter(adapter);
 
         searchViewModel.getRides().observe(getViewLifecycleOwner(), adapter::submitRides);
         searchViewModel.getRidesForUser();
 
 
+    }
+
+    private void applySort() {
+        //getStatuses for search
+        List<RideStatus> statuses = new ArrayList<>();
+        for (String statusKey : statusSearchMap.keySet()) {
+            if (Boolean.TRUE.equals(statusSearchMap.get(statusKey))) statuses.add(RideStatus.valueOf(statusKey));
+        }
+        if (statuses.isEmpty()) statuses = List.of(RideStatus.values());
+
+        //getInterval for search
+        //fix the input date mechanism
+        LocalDateTime from = LocalDateTime.now().minusMonths(2);
+        LocalDateTime to = LocalDateTime.now();
+        //getSort type
+        //call VM function
+        searchViewModel.sortRidesForUser(sortCategory, isAscending, statuses, from, to);
     }
 
 }

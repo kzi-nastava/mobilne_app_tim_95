@@ -29,7 +29,7 @@ public class UserService {
     }
 
     //
-    public boolean logIn(Login login, AuthCallback callback) {
+    public void logIn(Login login, AuthCallback callback) {
         firebaseAuth.signInWithEmailAndPassword(login.email, login.password)
                 .addOnSuccessListener(result -> {
                             var fbUser = result.getUser();
@@ -56,7 +56,6 @@ public class UserService {
                 })
                 .addOnFailureListener(callback::onError);
 
-        return false;
     }
 
     public void register(LoginViewModel loginViewModel, AccountViewModel accountViewModel, AuthCallback callback) {

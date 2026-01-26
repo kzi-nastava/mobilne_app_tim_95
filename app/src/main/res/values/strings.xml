@@ -52,6 +52,11 @@
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
 
+    <!--  USER'S RIDES OVERVIEW  -->
+    <string name="driver">Driver : </string>
+    <string name="price">Price : </string>
+    <string name="no_rides_to_display">No rides to display…</string>
+
     <!--   NAVIGATION  -->
     <string name="home">Home</string>
     <string name="ride_history">Ride history</string>
