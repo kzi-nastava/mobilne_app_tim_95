@@ -37,6 +37,7 @@ public class RideViewModel extends ViewModel {
     private final MutableLiveData<String> vehicleType = new MutableLiveData<>("Standard");
     private final MutableLiveData<Boolean> hasBabies = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> hasPets = new MutableLiveData<>(false);
+    private final MutableLiveData<java.util.Date> scheduledTime = new MutableLiveData<>(null); // null means "now"
 
     @Inject
     public RideViewModel(RideService rideService) {
@@ -176,6 +177,7 @@ public class RideViewModel extends ViewModel {
         vehicleType.postValue("Standard");
         hasBabies.postValue(false);
         hasPets.postValue(false);
+        scheduledTime.postValue(null); // Reset to "now"
     }
 
     public LiveData<Boolean> getShowRouteTrigger() {
@@ -218,6 +220,14 @@ public class RideViewModel extends ViewModel {
         this.hasPets.postValue(hasPets);
     }
 
+    public LiveData<java.util.Date> getScheduledTime() {
+        return scheduledTime;
+    }
+
+    public void setScheduledTime(java.util.Date time) {
+        scheduledTime.postValue(time);
+    }
+
     public void addIntermediateStop(Stop stop) {
         List<Stop> stops = intermediateStops.getValue();
         if (stops != null) {
@@ -249,8 +259,7 @@ public class RideViewModel extends ViewModel {
             linkedPassengers.postValue(passengers);
         }
     }
-    //TODO: Algoritam izbora vozca
-    //TODO: Fragment za narucivanje za odredjeno vrijeme u sl. 5 sati
+
     //TODO: Notifikacije o privatanju voznje
     //TODO: Pocetak voznje kod vozaca
     public void bookRide(String creatorUserEmail, Consumer<Boolean> onComplete) {
@@ -280,13 +289,11 @@ public class RideViewModel extends ViewModel {
                         onComplete.accept(false);
                         return;
                     }
-                    double distanceKm = route.getRoad().mLength;
-                    rideService.getVehicleTypeByType(finalVehicleTypeValue, vt -> {
-                        if (vt == null) {
+                    rideService.calculateRidePrice(route, finalVehicleTypeValue, price -> {
+                        if (price <= 0) {
                             onComplete.accept(false);
                             return;
                         }
-                        int price = vt.getPrice() + (int) (distanceKm * 120);
                         bookingRide.priceDin = price;
                         prepareAndSaveRide(bookingRide, creatorUserEmail, finalVehicleTypeValue, onComplete);
                     });
@@ -315,6 +322,14 @@ public class RideViewModel extends ViewModel {
         bookingRide.hasBabies = hasBabies.getValue() != null ? hasBabies.getValue() : false;
         bookingRide.hasPets = hasPets.getValue() != null ? hasPets.getValue() : false;
 
+        // Set scheduled time (null means "now")
+        java.util.Date scheduledTimeValue = scheduledTime.getValue();
+        if (scheduledTimeValue != null) {
+            bookingRide.scheduledFor = new com.google.firebase.Timestamp(scheduledTimeValue);
+        } else {
+            bookingRide.scheduledFor = null; // Book for current time
+        }
+
         List<Stop> stops = intermediateStops.getValue();
         if (stops != null && !stops.isEmpty()) {
             bookingRide.addStops(bookingRide.getStart(), stops, bookingRide.getEnd());
@@ -325,7 +340,7 @@ public class RideViewModel extends ViewModel {
             bookingRide.setPassengerEmails(passengers);
         }
 
-        rideService.getFirstDriver(driver -> {
+        rideService.getDriver(driver -> {
             if (driver != null) {
                 bookingRide.driverEmail = driver.getEmail();
                 rideService.addRide(bookingRide, new PriceCallback() {

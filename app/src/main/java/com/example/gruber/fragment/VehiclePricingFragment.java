@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
 import com.google.android.gms.tasks.Task;
@@ -74,6 +75,11 @@ public class VehiclePricingFragment extends Fragment {
         bindRow(standard);
         bindRow(luxury);
         bindRow(van);
+
+        Button btnAdminReports = view.findViewById(R.id.btnAdminReports);
+        btnAdminReports.setOnClickListener(v ->
+            NavHostFragment.findNavController(this)
+                .navigate(R.id.action_adminVehiclePricingFragment_to_adminReportsFragment));
 
         loadPrices();
     }

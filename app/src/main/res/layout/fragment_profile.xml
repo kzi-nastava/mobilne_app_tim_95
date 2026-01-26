@@ -67,12 +67,24 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp" />
 
+        <!-- BLOCKED MESSAGE FOR DRIVER -->
+        <TextView
+            android:id="@+id/txtBlockedMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/driver_blocked_message"
+            android:textColor="#D32F2F"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
         <!-- DRIVER SECTION -->
         <LinearLayout
             android:id="@+id/driverSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="26dp"
+            android:layout_marginBottom="24dp"
             android:orientation="vertical"
             android:visibility="gone">
 
@@ -116,6 +128,58 @@
 
             <TextView
                 android:id="@+id/txtVehicleRegistration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/vehicle_type"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/txtVehicleType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/number_of_seats"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/txtVehicleSeats"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/allows_babies"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/txtAllowsBabies"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/allows_pets"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/txtAllowsPets"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"/>

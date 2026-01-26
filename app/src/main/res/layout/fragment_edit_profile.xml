@@ -92,6 +92,39 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/vehicle_registration" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/vehicle_type"
+                android:textStyle="bold" />
+
+            <Spinner
+                android:id="@+id/spinnerVehicleType"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <EditText
+                android:id="@+id/etNumberOfSeats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/number_of_seats"
+                android:inputType="number" />
+
+            <CheckBox
+                android:id="@+id/cbAllowsBabies"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/allows_babies"
+                android:layout_marginTop="8dp" />
+
+            <CheckBox
+                android:id="@+id/cbAllowsPets"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/allows_pets"
+                android:layout_marginTop="4dp" />
         </LinearLayout>
 
         <TextView
