@@ -65,6 +65,31 @@
         android:layout_height="1dp"
         android:background="?android:attr/listDivider"/>
 
+    <!-- Menu Item: Reports -->
+    <LinearLayout
+        android:id="@+id/menuReports"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:clickable="true"
+        android:focusable="true"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/reports"
+            android:textSize="16sp"/>
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider"/>
+
     <!-- Menu Item: Return to Profile -->
     <LinearLayout
         android:id="@+id/menuReturnProfile"

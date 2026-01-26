@@ -8,6 +8,12 @@
     <string name="confirm_password">Confirm password</string>
     <string name="first_name">First name</string>
     <string name="last_name">Last name</string>
+
+    <string-array name="vehicle_types">
+        <item>standard</item>
+        <item>luxury</item>
+        <item>combi</item>
+    </string-array>
     <string name="photo">Photo</string>
     <string name="street">Street</string>
     <string name="number">Number</string>
@@ -103,5 +109,62 @@
     <string name="confirm_ride">Confirm and book ride</string>
     <string name="additional_options">Additional options</string>
     <string name="options">Options</string>
+
+    <!--    RIDE SCHEDULING    -->
+    <string name="schedule">Schedule</string>
+    <string name="ride_scheduling">Ride Scheduling</string>
+    <string name="schedule_description">You can book a ride now or schedule it within the next 5 hours</string>
+    <string name="schedule_now">Now</string>
+    <string name="schedule_later">Scheduled time</string>
+    <string name="schedule_datetime">Date and time</string>
+    <string name="schedule_time">Time</string>
+    <string name="schedule_info">Select time within the next 5 hours</string>
+    <string name="schedule_error_past">Time cannot be in the past</string>
+    <string name="schedule_error_limit">Ride can be scheduled maximum 5 hours in advance</string>
+    <string name="schedule_in_hours">Ride in %1$d hour(s) and %2$d minute(s)</string>
+    <string name="schedule_in_minutes">Ride in %1$d minute(s)</string>
+
+    <!--    RIDE BOOKING ERROR MESSAGES    -->
+    <string name="booking_success">Ride booked! Looking for drivers...</string>
+    <string name="booking_error_no_drivers">No active drivers available. Please try again later.</string>
+    <string name="booking_error_user_not_logged">User not logged in</string>
+    <string name="booking_error_no_drivers_with_hours">All drivers have exceeded their daily working hours.</string>
+
+    <!--    RIDE START/TRACKING    -->
+    <string name="start_ride">Start Ride</string>
+    <string name="no_pending_rides">No rides to start</string>
+    <string name="ride_started">Ride started</string>
+    <string name="ride_start_error">Failed to start ride</string>
+
+    <!--    BLOCKING    -->
+    <string name="user_blocked_message">Your account has been blocked. Please contact support.</string>
+    <string name="user_blocked_message_with_reason">Your account has been blocked.\nReason: %1$s</string>
+    <string name="driver_blocked_message">Your driver account has been blocked.</string>
+    <string name="search_users">Search users...</string>
+
+    <!--    ADMIN DRIVER REGISTRATION    -->
+    <string name="vehicle_information">Vehicle Information</string>
+    <string name="license_plate">License Plate</string>
+    <string name="number_of_seats">Number of Seats</string>
+    <string name="allows_babies">Vehicle allows babies</string>
+    <string name="allows_pets">Vehicle allows pets</string>
+    <string name="finish">Finish</string>
+    <string name="add_driver">Add Driver</string>
+
+    <!--    REPORTS    -->
+    <string name="reports">Reports</string>
+    <string name="view_reports">View Reports</string>
+    <string name="date_range">Date Range</string>
+    <string name="from_date">From Date</string>
+    <string name="to_date">To Date</string>
+    <string name="generate_report">Generate Report</string>
+    <string name="rides_per_day">Rides per Day</string>
+    <string name="kilometers_traveled">Kilometers Traveled</string>
+    <string name="money_spent_earned">Money Spent/Earned</string>
+    <string name="cumulative_total">Cumulative Total</string>
+    <string name="average">Average</string>
+    <string name="select_user">Select User</string>
+    <string name="all_drivers">All Drivers</string>
+    <string name="all_passengers">All Passengers</string>
 
 </resources>

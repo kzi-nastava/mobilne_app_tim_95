@@ -60,5 +60,6 @@ dependencies {
     implementation ("com.google.firebase:firebase-storage")
     implementation (libs.hilt.android)
     annotationProcessor(libs.hilt.compiler)
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
 }

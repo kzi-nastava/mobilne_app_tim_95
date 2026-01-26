@@ -8,6 +8,10 @@
         android:title="Support"
         android:icon="@drawable/messages_question" />
     <item
+        android:id="@+id/adminUserBlockManagementFragment"
+        android:title="Users"
+        android:icon="@drawable/user"/>
+    <item
         android:id="@+id/adminVehiclePricingFragment"
         android:title="Prices"
         android:icon="@drawable/usd_circle"/>

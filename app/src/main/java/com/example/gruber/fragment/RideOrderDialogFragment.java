@@ -218,23 +218,24 @@ public class RideOrderDialogFragment extends DialogFragment {
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
             switch (position) {
                 case 0:
-                    tab.setText("Stops");
+                    tab.setText(R.string.stops);
                     break;
                 case 1:
-                    tab.setText("Passengers");
+                    tab.setText(R.string.passengers);
                     break;
                 case 2:
-                    tab.setText("Options");
+                    tab.setText(R.string.options);
+                    break;
+                case 3:
+                    tab.setText(R.string.schedule);
                     break;
             }
         }).attach();
     }
 
     private void bookRide() {
-        // Uzmi email trenutnog korisnika
         String userEmail = loginViewModel.getEmail();
 
-        // Osiguraj da start/end budu postavljeni i ako korisnik nije kliknuo sugestiju
         String startText = startAutoCompleteTV.getText() != null ? startAutoCompleteTV.getText().toString().trim() : "";
         String endText = endAutoCompleteTv.getText() != null ? endAutoCompleteTv.getText().toString().trim() : "";
 
@@ -255,16 +256,16 @@ public class RideOrderDialogFragment extends DialogFragment {
         if (userEmail != null && !userEmail.isEmpty()) {
             rideViewModel.bookRide(userEmail, success -> {
                 if (success) {
-                    Toast.makeText(getContext(), "Ride booked! Looking for drivers...", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), R.string.booking_success, Toast.LENGTH_SHORT).show();
                     dismiss();
                     navigateToRideTracking();
                 } else {
-                    Toast.makeText(getContext(), "Failed to book ride. No drivers available.", Toast.LENGTH_SHORT)
+                    Toast.makeText(getContext(), R.string.booking_error_no_drivers, Toast.LENGTH_SHORT)
                             .show();
                 }
             });
         } else {
-            Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), R.string.booking_error_user_not_logged, Toast.LENGTH_SHORT).show();
         }
     }
 
