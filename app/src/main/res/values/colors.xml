@@ -23,8 +23,10 @@
 
     <!-- STATUS COLORS -->
     <color name="status_completed">#2E7D32</color>
-    <color name="status_cancelled">#C62828</color>
+    <color name="status_cancelled">#DA8080</color>
     <color name="status_active">#1565C0</color>
+    <color name="status_pending">#F1E23B</color>
+    <color name="status_panic_triggered">#B40000</color>
 
     <!-- ===================== -->
     <!-- DARK MODE COLORS -->

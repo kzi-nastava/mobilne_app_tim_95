@@ -29,49 +29,56 @@ public class UserService {
     }
 
     //
-    public boolean logIn(Login login, AuthCallback callback) {
+    public void logIn(Login login, AuthCallback callback) {
         firebaseAuth.signInWithEmailAndPassword(login.email, login.password)
                 .addOnSuccessListener(result -> {
-                    String uid = result.getUser().getUid();
-                    firebaseFirestore
-                            .collection("users")
-                            .document(uid)
-                            .get()
-                            .addOnSuccessListener(snapshot -> {
-                                String role = snapshot.getString("role");
-                                if (role == null) {
-                                    callback.onError(new Exception("Database data inconsistent. Mising role value."));
-                                    return;
-                                }
-                                UserRole _role = UserRole.valueOf(role);
+                            var fbUser = result.getUser();
+                            if (fbUser != null && !fbUser.isEmailVerified()) {
+                                callback.onError(new Exception("Email unverified."));
+//                                return;
+                            }
 
-                                // Set active to true if user is a DRIVER
-                                if (_role == UserRole.DRIVER) {
-                                    Map<String, Object> updates = new HashMap<>();
-                                    updates.put("active", true);
-                                    firebaseFirestore.collection("users")
-                                            .document(uid)
-                                            .update(updates)
-                                            .addOnSuccessListener(v -> callback.onSuccess(result.getUser().getUid(), _role))
-                                            .addOnFailureListener(callback::onError);
-                                } else {
-                                    callback.onSuccess(result.getUser().getUid(), _role);
-                                }
+                            String uid = result.getUser().getUid();
+                            firebaseFirestore
+                                    .collection("users")
+                                    .document(uid)
+                                    .get()
+                                    .addOnSuccessListener(snapshot -> {
+                                       String role = snapshot.getString("role");
+                                       if (role == null) {
+                                           callback.onError(new Exception("Database data inconsistent. Mising role value."));
+                                           return;
+                                       }
+                                       UserRole _role = UserRole.valueOf(role);
+
+                                        // Set active to true if user is a DRIVER
+                                        if (_role == UserRole.DRIVER) {
+                                            Map<String, Object> updates = new HashMap<>();
+                                            updates.put("active", true);
+                                            firebaseFirestore.collection("users")
+                                                    .document(uid)
+                                                    .update(updates)
+                                                    .addOnSuccessListener(v -> callback.onSuccess(result.getUser().getUid(), _role))
+                                                    .addOnFailureListener(callback::onError);
+                                        } else {
+                                            callback.onSuccess(result.getUser().getUid(), _role);
+                                        }
                             });
                 })
                 .addOnFailureListener(callback::onError);
 
-        return false;
     }
 
     public void register(LoginViewModel loginViewModel, AccountViewModel accountViewModel, AuthCallback callback) {
         firebaseAuth.createUserWithEmailAndPassword(loginViewModel.getEmail(), loginViewModel.getPassword())
                 .addOnSuccessListener(result -> {
                     String uid = result.getUser().getUid();
+                    var fbUser = result.getUser();
                     firebaseFirestore.collection("users")
                             .document(uid)
                             .set(accountViewModel.toUser())
                             .addOnSuccessListener(snapshot -> {
+                                fbUser.sendEmailVerification();
                                 callback.onSuccess(uid, accountViewModel.getRole().getValue());
                             });
                 })

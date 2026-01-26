@@ -260,11 +260,17 @@ public class Ride {
     }
     @Exclude
     public LocalDateTime getFinishedAtLocalDateTime() {
-        return finishedAt.toDate()
-                .toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDateTime();
+        try {
+            return finishedAt.toDate()
+                    .toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
+        } catch (NullPointerException exception) {
+            return null;
+        }
+
     }
+
 
     public void setFinishedAt(Timestamp finishedAt) {
         this.finishedAt = finishedAt;

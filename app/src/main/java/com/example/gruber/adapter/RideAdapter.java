@@ -52,7 +52,7 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.VH> {
             super(itemView);
             rideCard = itemView.findViewById(R.id.rideCard);
             dateOfRide = itemView.findViewById(R.id.dateOfRide);
-            textPassengerEmail = itemView.findViewById(R.id.textPassengerEmail);
+            textPassengerEmail = itemView.findViewById(R.id.textDriverEmail);
             textStatus = itemView.findViewById(R.id.textStatus);
             statusDot = itemView.findViewById(R.id.statusDot);
         }
