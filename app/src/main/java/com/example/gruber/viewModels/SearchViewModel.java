@@ -78,20 +78,20 @@ public class SearchViewModel extends ViewModel {
                 //sort the rides
                 switch (sortCategory) {
                     case PRICE:
-                        if (isAscending) _rides.sort(Comparator.comparing(Ride::getPriceDin));
-                        else _rides.sort(Comparator.comparing(Ride::getPriceDin).reversed());
+                        if (isAscending) _rides.sort(Comparator.comparing(Ride::getPriceDin).reversed());
+                        else _rides.sort(Comparator.comparing(Ride::getPriceDin));
                         break;
                     case DURATION:
-                        if (isAscending) _rides.sort(Comparator.comparingDouble((Ride ride) -> ride.getRoute().getRoad().mDuration));
-                        else _rides.sort(Comparator.comparingDouble((Ride ride) -> ride.getRoute().getRoad().mDuration).reversed());
+                        if (isAscending) _rides.sort(Comparator.comparingDouble((Ride ride) -> ride.getRoute().getRoad().mDuration).reversed());
+                        else _rides.sort(Comparator.comparingDouble((Ride ride) -> ride.getRoute().getRoad().mDuration));
                         break;
                     case RANGE:
-                        if (isAscending) _rides.sort(Comparator.comparing((Ride ride) -> ride.getRoute().getRoad().mLength));
-                        else _rides.sort(Comparator.comparingDouble((Ride ride) -> ride.getRoute().getRoad().mLength).reversed());
+                        if (isAscending) _rides.sort(Comparator.comparing((Ride ride) -> ride.getRoute().getRoad().mLength).reversed());
+                        else _rides.sort(Comparator.comparingDouble((Ride ride) -> ride.getRoute().getRoad().mLength));
                         break;
                     case DATE:
-                        if (isAscending) _rides.sort(Comparator.comparing(Ride::getStartedAtLocalDateTime));
-                        else _rides.sort(Comparator.comparing(Ride::getStartedAtLocalDateTime).reversed());
+                        if (isAscending) _rides.sort(Comparator.comparing(Ride::getStartedAtLocalDateTime).reversed());
+                        else _rides.sort(Comparator.comparing(Ride::getStartedAtLocalDateTime));
                         break;
                 }
                 //set the rides to MutableLiveData

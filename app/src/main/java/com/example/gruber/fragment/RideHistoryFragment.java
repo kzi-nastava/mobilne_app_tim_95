@@ -46,7 +46,7 @@ public class RideHistoryFragment extends Fragment {
     private LinearLayout dropDownStatusContainer, dropDownSortContainer;
 
     private SortCategory sortCategory = SortCategory.DATE;
-    private boolean isAscending = false;
+    private boolean isAscending = true;
 
     public RideHistoryFragment() {
         // Required empty public constructor
