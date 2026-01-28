@@ -20,6 +20,7 @@ import com.example.gruber.R;
 import com.example.gruber.SessionManager;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.enums.UserRole;
+import com.example.gruber.services.DriverTrackingService;
 import com.example.gruber.services.MapService;
 import com.example.gruber.services.RideService;
 import com.example.gruber.viewModels.RideViewModel;
@@ -159,6 +160,15 @@ public class HomeMapFragment extends Fragment {
         mapService.attachMap(map);
         mapService.initHomeMapDefaults();
         locationPermissionLauncher.launch(new String[]{Manifest.permission.ACCESS_FINE_LOCATION});
+        mapService.runOnFirstFix(location -> {
+            DriverTrackingService tracking =
+                    new DriverTrackingService(sessionManager.getUserID());
+
+            tracking.createOrUpdateInitial(
+                    location,
+                    DriverTrackingService.DriverStatus.AVAILABLE
+            );
+        });
         mapService.startVehicleSimulation(R.drawable.ic_car_busy, R.drawable.ic_car_free);
     }
 

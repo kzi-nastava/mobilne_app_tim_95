@@ -28,14 +28,23 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 
 import com.example.gruber.R;
+import com.example.gruber.models.DriverLocation;
 import com.example.gruber.models.Vehicle;   // adjust if your Vehicle model is elsewhere
 import com.example.gruber.models.Ride;      // adjust
 import com.example.gruber.models.Route;     // adjust
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.osmdroid.bonuspack.routing.OSRMRoadManager;
 import org.osmdroid.bonuspack.routing.Road;
@@ -51,6 +60,10 @@ public class MapService {
 
     // Location
     private MyLocationNewOverlay myLocationOverlay;
+
+    private final Map<String, Marker> liveDriverMarkers = new HashMap<>();
+    private DatabaseReference driversRef =
+            FirebaseDatabase.getInstance().getReference("drivers");
 
     // Vehicles
     private final List<Vehicle> vehicles = new ArrayList<>();
@@ -161,6 +174,66 @@ public class MapService {
     }
 
     // -------------------- Vehicles simulation --------------------
+    public void startDriversListener(
+            @DrawableRes int iconFree,
+            @DrawableRes int iconBusy
+    ) {
+        driversRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (map == null) return;
+
+                for (DataSnapshot d : snapshot.getChildren()) {
+                    String uid = d.getKey();
+                    DriverLocation loc = d.getValue(DriverLocation.class);
+                    if (loc == null) continue;
+
+                    if ("OFFLINE".equals(loc.status)) {
+                        removeDriver(uid);
+                        continue;
+                    }
+
+                    GeoPoint p = new GeoPoint(loc.lat, loc.lon);
+                    boolean busy = !loc.status.equals("AVAILABLE");
+
+                    drawOrUpdateDriver(uid, p, busy, iconFree, iconBusy);
+                }
+                map.invalidate();
+            }
+
+            @Override public void onCancelled(@NonNull DatabaseError error) {}
+        });
+    }
+    private void drawOrUpdateDriver(String uid,
+                                    GeoPoint pos,
+                                    boolean busy,
+                                    @DrawableRes int freeIcon,
+                                    @DrawableRes int busyIcon) {
+
+        Marker m = liveDriverMarkers.get(uid);
+
+        if (m == null) {
+            m = new Marker(map);
+            m.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
+            map.getOverlays().add(m);
+            liveDriverMarkers.put(uid, m);
+        }
+
+        m.setPosition(pos);
+        m.setIcon(getScaledBitmapDrawable(
+                busy ? busyIcon : freeIcon,
+                26
+        ));
+    }
+
+    private void removeDriver(String uid) {
+        Marker m = liveDriverMarkers.remove(uid);
+        if (m != null && map != null) {
+            map.getOverlays().remove(m);
+        }
+    }
+
+
     public void startVehicleSimulation(@DrawableRes int iconBusy,
                                        @DrawableRes int iconFree) {
         if (map == null) return;
@@ -186,6 +259,18 @@ public class MapService {
 
         startMovementLoop(iconBusy, iconFree);
     }
+
+    public void runOnFirstFix(Consumer<GeoPoint> cb) {
+        if (myLocationOverlay == null) return;
+
+        myLocationOverlay.runOnFirstFix(() -> {
+            GeoPoint me = myLocationOverlay.getMyLocation();
+            if (me != null) {
+                ui.post(() -> cb.accept(me));
+            }
+        });
+    }
+
 
     public void stopVehicleSimulation() {
         stopMovementLoop();
