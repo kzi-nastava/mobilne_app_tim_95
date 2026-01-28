@@ -15,6 +15,7 @@ import com.example.gruber.R;
 import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.callbacks.AuthCallback;
 import com.example.gruber.viewModels.LoginViewModel;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
@@ -82,6 +83,13 @@ public class LoginFragment extends Fragment {
             }
             @Override
             public void onError(Throwable error) {
+                if (error.getMessage().equals("Email unverified.")) {
+                    new MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("Email unverified.")
+                            .setMessage("Please verify your email address, check your verification email inbox.")
+                            .setNeutralButton("Ok", ((dialog, which) -> dialog.dismiss()))
+                            .show();
+                }
                 tilEmail.setError("Email or password are incorrect");
                 tilPassword.setError(" ");
             }

@@ -23,8 +23,10 @@
 
     <!-- STATUS COLORS -->
     <color name="status_completed">#2E7D32</color>
-    <color name="status_cancelled">#C62828</color>
+    <color name="status_cancelled">#DA8080</color>
     <color name="status_active">#1565C0</color>
+    <color name="status_pending">#F1E23B</color>
+    <color name="status_panic_triggered">#B40000</color>
 
     <!-- ===================== -->
     <!-- DARK MODE COLORS -->
@@ -60,4 +62,8 @@
     <color name="ride_completed">#A5FFA5</color>   <!-- greenish -->
     <color name="ride_cancelled">#FF8484</color>   <!-- reddish -->
     <color name="ride_active">#ADD8E6</color>      <!-- bluish -->
+    
+    <!-- USER BLOCK COLORS -->
+    <color name="blocked_user_bg">#FFCDD2</color>  <!-- light red -->
+    <color name="normal_user_bg">#FFFFFF</color>   <!-- white -->
 </resources>

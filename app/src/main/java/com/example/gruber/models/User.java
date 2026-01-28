@@ -3,9 +3,7 @@ package com.example.gruber.models;
 
 import com.example.gruber.models.enums.UserRole;
 
-/*
-* PLACEHODLER MODEL CLASS FOR PROFILE ACTIVITY
-* TODO: Use as base class and remove driver only fields*/
+
 public class User {
 
     private String firstName;
@@ -19,6 +17,8 @@ public class User {
     private int activeHoursLast24h;
     private String vehicleModel;
     private String vehiclePlate;
+    private boolean active; // Indicates if driver is currently logged in/active/ the passanger is in a active ride
+    private boolean blocked;
 
     public User() {}
 
@@ -61,6 +61,8 @@ public class User {
     public int getActiveHoursLast24h() { return activeHoursLast24h; }
     public String getVehicleModel() { return vehicleModel; }
     public String getVehiclePlate() { return vehiclePlate; }
+    public boolean isActive() { return active; }
+    public boolean isBlocked() { return blocked; }
 
     // SETTERS
     public void setFirstName(String firstName) { this.firstName = firstName; }
@@ -72,4 +74,11 @@ public class User {
     public void setActiveHoursLast24h(int activeHoursLast24h) { this.activeHoursLast24h = activeHoursLast24h; }
     public void setVehicleModel(String vehicleModel) { this.vehicleModel = vehicleModel; }
     public void setVehiclePlate(String vehiclePlate) { this.vehiclePlate = vehiclePlate; }
+    public void setActive(boolean active) { this.active = active && !this.blocked; }
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
+        if (blocked) {
+            this.active = false;
+        }
+    }
 }

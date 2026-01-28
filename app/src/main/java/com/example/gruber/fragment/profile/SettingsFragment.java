@@ -43,6 +43,10 @@ public class SettingsFragment extends Fragment {
                 .setOnClickListener(v -> NavHostFragment.findNavController(SettingsFragment.this)
                         .navigate(R.id.action_settingsFragment_to_changePasswordFragment));
 
+            view.findViewById(R.id.menuReports)
+                .setOnClickListener(v -> NavHostFragment.findNavController(SettingsFragment.this)
+                    .navigate(R.id.action_settingsFragment_to_reportsFragment));
+
         view.findViewById(R.id.menuReturnProfile)
                 .setOnClickListener(v -> NavHostFragment.findNavController(SettingsFragment.this)
                         .navigate(R.id.action_settingsFragment_to_profileFragment));

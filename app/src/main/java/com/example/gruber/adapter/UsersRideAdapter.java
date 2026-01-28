@@ -6,11 +6,14 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gruber.R;
 import com.example.gruber.models.Ride;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -26,8 +29,8 @@ public class UsersRideAdapter
         void onItemClick(Ride item);
     }
 
-    public UsersRideAdapter(List<Ride> items, OnItemClickListener listener) {
-        this.items = items;
+    public UsersRideAdapter(OnItemClickListener listener) {
+        this.items = new ArrayList<>();
         this.listener = listener;
     }
 
@@ -40,7 +43,7 @@ public class UsersRideAdapter
     public ViewHolder onCreateViewHolder(
             @NonNull ViewGroup parent, int viewType) {
 
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.ride_card, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.users_ride_card, parent, false);
 
         return new ViewHolder(view);
     }
@@ -63,8 +66,9 @@ public class UsersRideAdapter
     }
 
     public void submitRides(List<Ride> newRides) {
+        items.clear();
         if (newRides != null) {
-            items.clear();
+//            items.clear();
             items.addAll(newRides);
         }
         notifyDataSetChanged();
@@ -73,26 +77,71 @@ public class UsersRideAdapter
 
     static class ViewHolder extends RecyclerView.ViewHolder {
 
-        TextView tvDateOfRide, tvDriverEmail, tvStatus;
+        TextView tvFromToText, tvDateOfRide, tvDriverEmail, tvStatus, tvPrice;
+        View statusDot;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
+            tvFromToText = itemView.findViewById(R.id.fromToText);
             tvDateOfRide = itemView.findViewById(R.id.dateOfRide);
-            tvDriverEmail = itemView.findViewById(R.id.textPassengerEmail);
+            tvDriverEmail = itemView.findViewById(R.id.textDriverEmail);
             tvStatus = itemView.findViewById(R.id.textStatus);
-
+            statusDot = itemView.findViewById(R.id.statusDot);
+            tvPrice = itemView.findViewById(R.id.textPrice);
         }
 
         void bind(Ride item, OnItemClickListener listener) {
 
-            String dateText = item.getStartedAtLocalDateTime().format(DateTimeFormatter.ofPattern("dd-MM-yy"));
-            dateText = dateText + " - " + item.getFinishedAtLocalDateTime().format(DateTimeFormatter.ofPattern("dd-MM-yy"));
+            var stopList = item.stopList;
+            String fromToText = stopList.get(0).address + " to " + stopList.get(stopList.size() - 1).address;
+            tvFromToText.setText(fromToText);
+
+            String dateText = getStringFromDateTime(item.getStartedAtLocalDateTime());
+            dateText = dateText + " - " + getStringFromDateTime(item.getFinishedAtLocalDateTime());
             tvDateOfRide.setText(dateText);
 
             tvDriverEmail.setText(item.getDriverEmail());
             tvStatus.setText(item.getStatus().toString());
 
-//            itemView.setOnClickListener(v -> listener.onItemClick(item));
+            switch (item.status) {
+                case PENDING:
+                    statusDot.setBackgroundTintList(ContextCompat.getColorStateList(itemView.getContext(), R.color.status_pending));
+                    tvPrice.setText(String.valueOf(item.getPriceDin()));
+                    break;
+                case ACTIVE:
+                    statusDot.setBackgroundTintList(ContextCompat.getColorStateList(itemView.getContext(), R.color.status_active));
+                    tvPrice.setText(String.valueOf(item.getPriceDin()));
+                    break;
+                case COMPLETED:
+                    statusDot.setBackgroundTintList(ContextCompat.getColorStateList(itemView.getContext(), R.color.status_completed));
+                    tvPrice.setText(String.format(Integer.toString(item.getPriceDin()), ".2d"));
+                    break;
+                case CANCELLED:
+                    statusDot.setBackgroundTintList(ContextCompat.getColorStateList(itemView.getContext(), R.color.status_cancelled));
+                    break;
+                case PANIC_TRIGGERED:
+                    statusDot.setBackgroundTintList(ContextCompat.getColorStateList(itemView.getContext(), R.color.status_panic_triggered));
+                    break;
+            }
+
+            itemView.setOnClickListener(ride -> listener.onItemClick(item));
         }
+    }
+
+    public static String getStringFromDateTime(@Nullable LocalDateTime localDateTime) {
+        if (localDateTime == null) {
+            return "";
+        }
+        String hour = localDateTime.format(DateTimeFormatter.ofPattern("hh:mm"));
+        String day;
+        if (localDateTime.toLocalDate().equals(LocalDate.now())) {
+            day = "Today";
+        } else if (localDateTime.toLocalDate().equals(LocalDate.now().minusDays(1))) {
+            day = "Yesterday";
+        }
+        else {
+            day = localDateTime.format(DateTimeFormatter.ofPattern("dd.MM.yy"));
+        }
+        return hour + ", " + day;
     }
 }

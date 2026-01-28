@@ -4,6 +4,7 @@ import android.util.EventLogTags;
 
 public enum RideStatus {
     PENDING,
+    SCHEDULED,
     ACTIVE,
     COMPLETED,
     CANCELLED,
