@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
@@ -23,10 +24,13 @@ import com.example.gruber.models.Ride;
 import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.DriverTrackingService;
 import com.example.gruber.services.MapService;
+import com.example.gruber.services.RideCoordinator;
 import com.example.gruber.services.RideService;
 import com.example.gruber.viewModels.RideViewModel;
 import com.example.gruber.viewModels.AccountViewModel;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.osmdroid.views.MapView;
@@ -40,6 +44,9 @@ public class HomeMapFragment extends Fragment {
     private MapService mapService;
     private RideViewModel rideViewModel;
     private View unreadDot;
+    private RideCoordinator rideCoordinator;
+    private NavController navController;
+    private boolean navigatedToRide = false;
     private ExecutorService bg;
     private final Handler ui = new Handler(Looper.getMainLooper());
 
@@ -96,6 +103,23 @@ public class HomeMapFragment extends Fragment {
 
         SessionManager sessionManager = new SessionManager(requireContext());
         UserRole role = sessionManager.getUserRole();
+        String myUid = sessionManager.getUserID();
+
+// ---- Ride coordinator ----
+        rideCoordinator = new RideCoordinator(myUid);
+        rideCoordinator.getActiveRide().observe(
+                getViewLifecycleOwner(),
+                rideId -> {
+                    if (rideId != null && !navigatedToRide) {
+                        navigatedToRide = true;
+
+                        Log.d("RIDE_COORD", "Active ride detected: " + rideId);
+
+                        NavHostFragment.findNavController(this)
+                                .navigate(R.id.action_homeMapFragment_to_rideTrackingFragment);
+                    }
+                }
+        );
 
         // Shared auth/db for status checks and support bubble
         FirebaseAuth auth = FirebaseAuth.getInstance();
@@ -189,6 +213,10 @@ public class HomeMapFragment extends Fragment {
     public void onPause() {
         if (mapService != null) mapService.onPause();
         super.onPause();
+        if (rideCoordinator != null) {
+            Log.d("RIDE_COORD", "Stopping ride coordinator");
+            rideCoordinator.stop();
+        }
     }
 
     @Override
@@ -204,6 +232,17 @@ public class HomeMapFragment extends Fragment {
     public void onDestroy() {
         if (bg != null) bg.shutdownNow();
         super.onDestroy();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        navigatedToRide = false; // allow navigation again
+        if (rideCoordinator != null) {
+            Log.d("RIDE_COORD", "Starting ride coordinator");
+            rideCoordinator.start();
+        }
     }
 
     private void loadDriverPendingRides(View btnStartRide) {

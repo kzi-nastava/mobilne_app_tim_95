@@ -11,6 +11,9 @@
         <action
             android:id="@+id/action_homeMapFragment_to_supportChatFragment"
             app:destination="@id/supportChatFragment" />
+        <action
+            android:id="@+id/action_homeMapFragment_to_rideTrackingFragment"
+            app:destination="@id/rideTrackingFragment"/>
     </fragment>
 
     <fragment
