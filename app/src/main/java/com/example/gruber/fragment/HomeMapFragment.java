@@ -3,6 +3,7 @@ package com.example.gruber.fragment;
 import android.Manifest;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.os.Handler;
 import android.os.Looper;
@@ -49,6 +50,24 @@ public class HomeMapFragment extends Fragment {
                         Boolean fine = result.get(Manifest.permission.ACCESS_FINE_LOCATION);
                         if (fine != null && fine && mapService != null) {
                             mapService.enableMyLocation(R.drawable.person_simple);
+                            SessionManager sessionManager = new SessionManager(requireContext());
+                            UserRole role = sessionManager.getUserRole();
+
+                            if (role == UserRole.DRIVER) {
+                                mapService.runOnFirstFix(location -> {
+                                    Log.d("QWERTASD", "First GPS fix: " + location);
+
+                                    DriverTrackingService tracking =
+                                            new DriverTrackingService(sessionManager.getUserID());
+
+                                    tracking.createOrUpdateInitial(
+                                            location,
+                                            DriverTrackingService.DriverStatus.AVAILABLE
+                                    );
+
+                                    Log.d("QWERTASD", "Driver written to Firebase");
+                                });
+                            }
                         }
                     }
             );
@@ -160,16 +179,10 @@ public class HomeMapFragment extends Fragment {
         mapService.attachMap(map);
         mapService.initHomeMapDefaults();
         locationPermissionLauncher.launch(new String[]{Manifest.permission.ACCESS_FINE_LOCATION});
-        mapService.runOnFirstFix(location -> {
-            DriverTrackingService tracking =
-                    new DriverTrackingService(sessionManager.getUserID());
-
-            tracking.createOrUpdateInitial(
-                    location,
-                    DriverTrackingService.DriverStatus.AVAILABLE
-            );
-        });
+        mapService.setCurrentUser(sessionManager.getUserID());
         mapService.startVehicleSimulation(R.drawable.ic_car_busy, R.drawable.ic_car_free);
+        mapService.startDriversListener(R.drawable.ic_car_free, R.drawable.ic_car_busy);
+
     }
 
     @Override

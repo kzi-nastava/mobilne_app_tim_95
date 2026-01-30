@@ -21,7 +21,7 @@ public class DriverTrackingService {
     private long lastUpdate = 0;
 
     public DriverTrackingService(@NonNull String driverUid) {
-        this.driverRef = FirebaseDatabase.getInstance()
+        this.driverRef = FirebaseDatabase.getInstance("https://gruber-c7d3a-default-rtdb.europe-west1.firebasedatabase.app")
                 .getReference("drivers")
                 .child(driverUid);
     }

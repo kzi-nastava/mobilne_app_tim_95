@@ -1,5 +1,7 @@
 package com.example.gruber.viewModels;
 
+import android.util.Log;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -9,6 +11,7 @@ import com.example.gruber.app.AppModule;
 import com.example.gruber.models.Login;
 import com.example.gruber.models.User;
 import com.example.gruber.models.enums.UserRole;
+import com.example.gruber.services.DriverTrackingService;
 import com.example.gruber.services.UserService;
 import com.example.gruber.services.callbacks.AuthCallback;
 
@@ -34,6 +37,7 @@ public class LoginViewModel extends ViewModel {
         userService.logIn(new Login(email.getValue(), password.getValue()), new AuthCallback() {
             @Override
             public void onSuccess(String userId, UserRole _role) {
+                Log.d("QWERTASD", "Logged in uid=" + userId + " role=" + _role);
                 sessionManager.setUserID(email.getValue(), userId, _role);
                 role.postValue(_role);
             }
@@ -67,6 +71,10 @@ public class LoginViewModel extends ViewModel {
     public void logOut() {
         String uid = sessionManager.getUserID();
         if (uid != null) {
+            if (sessionManager.getUserRole() == UserRole.DRIVER) {
+                DriverTrackingService tracking = new DriverTrackingService(uid);
+                tracking.updateStatus(DriverTrackingService.DriverStatus.OFFLINE);
+            }
             userService.logOut(uid, new AuthCallback() {
                 @Override
                 public void onSuccess(String userId, UserRole _role) {
