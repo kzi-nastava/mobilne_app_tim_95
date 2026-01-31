@@ -72,7 +72,8 @@ public class LoginViewModel extends ViewModel {
         String uid = sessionManager.getUserID();
         if (uid != null) {
             if (sessionManager.getUserRole() == UserRole.DRIVER) {
-                DriverTrackingService tracking = new DriverTrackingService(uid);
+                String driverEmail = sessionManager.getUserEmail();
+                DriverTrackingService tracking = new DriverTrackingService(driverEmail);
                 tracking.updateStatus(DriverTrackingService.DriverStatus.OFFLINE);
             }
             userService.logOut(uid, new AuthCallback() {

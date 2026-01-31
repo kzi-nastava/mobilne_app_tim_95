@@ -65,7 +65,7 @@ public class HomeMapFragment extends Fragment {
                                     Log.d("QWERTASD", "First GPS fix: " + location);
 
                                     DriverTrackingService tracking =
-                                            new DriverTrackingService(sessionManager.getUserID());
+                                            new DriverTrackingService(sessionManager.getUserEmail());
 
                                     tracking.createOrUpdateInitial(
                                             location,
