@@ -1,5 +1,6 @@
 package com.example.gruber.viewModels;
 
+import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -10,6 +11,8 @@ import com.example.gruber.models.Stop;
 import com.example.gruber.services.RideService;
 import com.example.gruber.services.callbacks.RouteCallback;
 import com.example.gruber.services.callbacks.PriceCallback;
+
+import org.osmdroid.util.GeoPoint;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -340,7 +343,31 @@ public class RideViewModel extends ViewModel {
             bookingRide.setPassengerEmails(passengers);
         }
 
-        rideService.getDriver(driver -> {
+        // Convert Stop to GeoPoint for driver location calculation
+        Stop startStop = bookingRide.getStart();
+        if (startStop == null) {
+            onComplete.accept(false);
+            return;
+        }
+
+        if (!startStop.hasLocation()) {
+            rideService.geocodeStop(startStop, geocoded -> {
+                GeoPoint rideStartPoint = null;
+                if (geocoded != null && geocoded.hasLocation()) {
+                    rideStartPoint = new GeoPoint(geocoded.getLocation().lat, geocoded.getLocation().lon);
+                }
+                fetchDriverAndCreateRide(rideStartPoint, bookingRide, onComplete);
+            });
+        } else {
+            GeoPoint rideStartPoint = new GeoPoint(startStop.getLocation().lat, startStop.getLocation().lon);
+            fetchDriverAndCreateRide(rideStartPoint, bookingRide, onComplete);
+        }
+    }
+
+    private void fetchDriverAndCreateRide(@Nullable GeoPoint rideStartPoint,
+                                          Ride bookingRide,
+                                          Consumer<Boolean> onComplete) {
+        rideService.getDriver(rideStartPoint, driver -> {
             if (driver != null) {
                 bookingRide.driverEmail = driver.getEmail();
                 rideService.addRide(bookingRide, new PriceCallback() {

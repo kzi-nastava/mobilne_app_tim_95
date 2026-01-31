@@ -20,10 +20,19 @@ public class DriverTrackingService {
     private final DatabaseReference driverRef;
     private long lastUpdate = 0;
 
-    public DriverTrackingService(@NonNull String driverUid) {
+    public DriverTrackingService(@NonNull String driverEmail) {
+        // Encode email for Firebase path (replace dots and special chars)
+        String encodedEmail = encodeEmailForFirebase(driverEmail);
         this.driverRef = FirebaseDatabase.getInstance("https://gruber-c7d3a-default-rtdb.europe-west1.firebasedatabase.app")
                 .getReference("drivers")
-                .child(driverUid);
+                .child(encodedEmail);
+    }
+
+    /**
+     * Encode email address for use as Firebase path (dots not allowed)
+     */
+    private static String encodeEmailForFirebase(@NonNull String email) {
+        return email.replace(".", "_").replace("#", "_").replace("$", "_").replace("[", "_").replace("]", "_");
     }
 
     /* ---------------- CREATE / SPAWN ---------------- */
