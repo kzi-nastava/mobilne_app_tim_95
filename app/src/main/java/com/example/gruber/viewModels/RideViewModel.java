@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.Route;
 import com.example.gruber.models.Stop;
+import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.services.RideService;
 import com.example.gruber.services.callbacks.RouteCallback;
 import com.example.gruber.services.callbacks.PriceCallback;
@@ -264,7 +265,6 @@ public class RideViewModel extends ViewModel {
     }
 
     //TODO: Notifikacije o privatanju voznje
-    //TODO: Pocetak voznje kod vozaca
     public void bookRide(String creatorUserEmail, Consumer<Boolean> onComplete) {
         Ride bookingRide = ride.getValue();
 
@@ -343,31 +343,26 @@ public class RideViewModel extends ViewModel {
             bookingRide.setPassengerEmails(passengers);
         }
 
-        // Convert Stop to GeoPoint for driver location calculation
+        // Resolve start/end to GeoPoints for driver selection
         Stop startStop = bookingRide.getStart();
-        if (startStop == null) {
+        Stop endStop = bookingRide.getEnd();
+        if (startStop == null || endStop == null) {
             onComplete.accept(false);
             return;
         }
 
-        if (!startStop.hasLocation()) {
-            rideService.geocodeStop(startStop, geocoded -> {
-                GeoPoint rideStartPoint = null;
-                if (geocoded != null && geocoded.hasLocation()) {
-                    rideStartPoint = new GeoPoint(geocoded.getLocation().lat, geocoded.getLocation().lon);
-                }
-                fetchDriverAndCreateRide(rideStartPoint, bookingRide, onComplete);
+        resolveStopToGeoPoint(startStop, rideStartPoint -> {
+            resolveStopToGeoPoint(endStop, rideEndPoint -> {
+                fetchDriverAndCreateRide(rideStartPoint, rideEndPoint, bookingRide, onComplete);
             });
-        } else {
-            GeoPoint rideStartPoint = new GeoPoint(startStop.getLocation().lat, startStop.getLocation().lon);
-            fetchDriverAndCreateRide(rideStartPoint, bookingRide, onComplete);
-        }
+        });
     }
 
     private void fetchDriverAndCreateRide(@Nullable GeoPoint rideStartPoint,
+                                          @Nullable GeoPoint rideEndPoint,
                                           Ride bookingRide,
                                           Consumer<Boolean> onComplete) {
-        rideService.getDriver(rideStartPoint, driver -> {
+        rideService.getDriver(bookingRide, rideStartPoint, rideEndPoint, driver -> {
             if (driver != null) {
                 bookingRide.driverEmail = driver.getEmail();
                 rideService.addRide(bookingRide, new PriceCallback() {
@@ -382,7 +377,29 @@ public class RideViewModel extends ViewModel {
                     }
                 });
             } else {
-                onComplete.accept(false);
+                bookingRide.status = RideStatus.CANCELLED;
+                bookingRide.setCancelledBy("SYSTEM_NO_DRIVERS");
+                bookingRide.driverEmail = "";
+                bookingRide.priceDin = 0;
+                rideService.saveCancelledRide(bookingRide, success -> onComplete.accept(false));
+            }
+        });
+    }
+
+    private void resolveStopToGeoPoint(Stop stop, Consumer<GeoPoint> callback) {
+        if (stop == null) {
+            callback.accept(null);
+            return;
+        }
+        if (stop.hasLocation()) {
+            callback.accept(new GeoPoint(stop.getLocation().lat, stop.getLocation().lon));
+            return;
+        }
+        rideService.geocodeStop(stop, geocoded -> {
+            if (geocoded != null && geocoded.hasLocation()) {
+                callback.accept(new GeoPoint(geocoded.getLocation().lat, geocoded.getLocation().lon));
+            } else {
+                callback.accept(null);
             }
         });
     }
