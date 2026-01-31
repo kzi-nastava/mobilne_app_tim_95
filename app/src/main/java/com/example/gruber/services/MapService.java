@@ -16,6 +16,8 @@ import androidx.annotation.Nullable;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import android.preference.PreferenceManager;
+import android.util.Log;
+
 import org.osmdroid.tileprovider.tilesource.ITileSource;
 import org.osmdroid.tileprovider.tilesource.XYTileSource;
 import org.osmdroid.util.BoundingBox;
@@ -29,9 +31,11 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
@@ -57,13 +61,14 @@ public class MapService {
     private final Handler ui;
     private MapView map;
     private RoadManager roadManager;
+    private String myUid;
 
     // Location
     private MyLocationNewOverlay myLocationOverlay;
 
     private final Map<String, Marker> liveDriverMarkers = new HashMap<>();
     private DatabaseReference driversRef =
-            FirebaseDatabase.getInstance().getReference("drivers");
+            FirebaseDatabase.getInstance("https://gruber-c7d3a-default-rtdb.europe-west1.firebasedatabase.app").getReference("drivers");
 
     // Vehicles
     private final List<Vehicle> vehicles = new ArrayList<>();
@@ -100,6 +105,9 @@ public class MapService {
     }
 
     // -------------------- Attach / init --------------------
+    public void setCurrentUser(String uid) {
+        this.myUid = uid;
+    }
 
     public void attachMap(@NonNull MapView mapView) {
         this.map = mapView;
@@ -174,17 +182,74 @@ public class MapService {
     }
 
     // -------------------- Vehicles simulation --------------------
-    public void startDriversListener(
-            @DrawableRes int iconFree,
-            @DrawableRes int iconBusy
-    ) {
-        driversRef.addValueEventListener(new ValueEventListener() {
+    public void startDriversListener(@DrawableRes int iconFree, @DrawableRes int iconBusy) {
+        Log.d("MAP_SERVICE", "Starting drivers listener, myUid=" + myUid);
+
+        // First, read current drivers once
+        driversRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (map == null) return;
+                Log.d("MAP_SERVICE", "Single value event triggered, snapshot children=" + snapshot.getChildrenCount());
+
+                if (map == null) {
+                    Log.d("MAP_SERVICE", "Map is null, returning");
+                    return;
+                }
 
                 for (DataSnapshot d : snapshot.getChildren()) {
                     String uid = d.getKey();
+                    Log.d("MAP_SERVICE", "Driver UID=" + uid);
+
+                    if (uid.equals(myUid)) {
+                        Log.d("MAP_SERVICE", "Skipping self UID=" + uid);
+                        continue;
+                    }
+
+                    DriverLocation loc = d.getValue(DriverLocation.class);
+                    if (loc == null) {
+                        Log.d("MAP_SERVICE", "DriverLocation is null for UID=" + uid);
+                        continue;
+                    }
+
+                    Log.d("MAP_SERVICE", "DriverLocation lat=" + loc.lat + " lon=" + loc.lon + " status=" + loc.status);
+
+                    if ("OFFLINE".equals(loc.status)) {
+                        Log.d("MAP_SERVICE", "Driver is offline, removing UID=" + uid);
+                        removeDriver(uid);
+                        continue;
+                    }
+
+                    GeoPoint p = new GeoPoint(loc.lat, loc.lon);
+                    boolean busy = !loc.status.equals("AVAILABLE");
+
+                    Log.d("MAP_SERVICE", "Drawing/updating driver UID=" + uid + " busy=" + busy);
+                    drawOrUpdateDriver(uid, p, busy, iconFree, iconBusy);
+                }
+
+                map.invalidate();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.d("MAP_SERVICE", "Single value event cancelled: " + error.getMessage());
+            }
+        });
+
+        // Then, keep listening for updates
+        driversRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Log.d("MAP_SERVICE", "Value event listener triggered, children=" + snapshot.getChildrenCount());
+
+                if (map == null) {
+                    Log.d("MAP_SERVICE", "Map is null, returning");
+                    return;
+                }
+
+                for (DataSnapshot d : snapshot.getChildren()) {
+                    String uid = d.getKey();
+                    if (uid.equals(myUid)) continue;
+
                     DriverLocation loc = d.getValue(DriverLocation.class);
                     if (loc == null) continue;
 
@@ -198,17 +263,25 @@ public class MapService {
 
                     drawOrUpdateDriver(uid, p, busy, iconFree, iconBusy);
                 }
+
                 map.invalidate();
             }
 
-            @Override public void onCancelled(@NonNull DatabaseError error) {}
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.d("MAP_SERVICE", "Value event listener cancelled: " + error.getMessage());
+            }
         });
     }
+
+
     private void drawOrUpdateDriver(String uid,
                                     GeoPoint pos,
                                     boolean busy,
                                     @DrawableRes int freeIcon,
                                     @DrawableRes int busyIcon) {
+
+        if (map == null) return;
 
         Marker m = liveDriverMarkers.get(uid);
 
@@ -222,9 +295,12 @@ public class MapService {
         m.setPosition(pos);
         m.setIcon(getScaledBitmapDrawable(
                 busy ? busyIcon : freeIcon,
-                26
+                26 // slightly bigger so it’s easier to see
         ));
+
+        map.invalidate();
     }
+
 
     private void removeDriver(String uid) {
         Marker m = liveDriverMarkers.remove(uid);

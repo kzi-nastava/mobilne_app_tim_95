@@ -4,14 +4,14 @@ public class DriverLocation {
     public double lat;
     public double lon;
     public String status;
-    public long ts;
+    public long timestamp;
 
     public DriverLocation() {}
 
-    public DriverLocation(double lat, double lon, String status, long ts) {
+    public DriverLocation(double lat, double lon, String status, long timestamp) {
         this.lat = lat;
         this.lon = lon;
         this.status = status;
-        this.ts = ts;
+        this.timestamp = timestamp;
     }
 }
