@@ -1,5 +1,7 @@
 package com.example.gruber.viewModels;
 
+import android.graphics.Bitmap;
+
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
@@ -21,7 +23,7 @@ public class AccountViewModel extends ViewModel {
     protected final MutableLiveData<String> lastName = new MutableLiveData<>();
     protected final MutableLiveData<String> phone = new MutableLiveData<>();
     protected final MutableLiveData<Address> address = new MutableLiveData<>();
-    protected final MutableLiveData<String> image = new MutableLiveData<>();
+    protected final MutableLiveData<Bitmap> image = new MutableLiveData<>();
     protected final MutableLiveData<Boolean> blocked = new MutableLiveData<>(false);
     protected final MutableLiveData<String> blockReason = new MutableLiveData<>();
 
@@ -51,8 +53,14 @@ public class AccountViewModel extends ViewModel {
     }
 
     public void setImage(String imageURI) {
-        this.image.setValue(imageURI);
+//        this.image.setValue(imageURI);
+        return;
     }
+
+    public void setImage(Bitmap image) {
+        this.image.setValue(image);
+    }
+
     public MutableLiveData<String> getEmail() {
         return email;
     }
@@ -77,7 +85,8 @@ public class AccountViewModel extends ViewModel {
         return address;
     }
     public MutableLiveData<String> getImage() {
-        return image;
+
+        return new MutableLiveData<>("image");
     }
 
      // Driver-specific methods (override in DriverViewModel)
@@ -128,7 +137,7 @@ public class AccountViewModel extends ViewModel {
                 email.getValue(),
                 phone.getValue(),
                 role.getValue(),
-                image.getValue()
+                image.getValue().toString()
         );
     }
 
@@ -138,6 +147,6 @@ public class AccountViewModel extends ViewModel {
         email.setValue("");
         phone.setValue("");
         role.setValue(UserRole.GUEST);
-        image.setValue("");
+        image.setValue(null);
     }
 }

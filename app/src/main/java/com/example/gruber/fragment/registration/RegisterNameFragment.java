@@ -1,5 +1,6 @@
 package com.example.gruber.fragment.registration;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -9,6 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.provider.MediaStore;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +20,7 @@ import static androidx.navigation.fragment.NavHostFragment.findNavController;
 
 import com.example.gruber.R;
 import com.example.gruber.viewModels.AccountViewModel;
+import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
@@ -31,6 +34,7 @@ public class RegisterNameFragment extends Fragment {
     private TextInputLayout tilLastName;
     private TextInputEditText etPhone;
     private TextInputLayout tilPhone;
+    private ShapeableImageView imageView;
 
     private ActivityResultLauncher<String> pickImageLauncher;
 
@@ -47,6 +51,7 @@ public class RegisterNameFragment extends Fragment {
                 new ActivityResultContracts.GetContent(),
                 uri -> {
                     if (uri != null) {
+
                         accountViewModel.setImage(uri.toString());
                         // If you have an ImageView, you can set it here too.
                         // ivProfilePhoto.setImageURI(uri);
@@ -107,6 +112,12 @@ public class RegisterNameFragment extends Fragment {
     private void onAddImageClicked() {
         // Launch system picker for images
         pickImageLauncher.launch("image/*");
+//        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+//        intent.setType("image/*");
+//        start
+
+        // Scale selected image
+
 
     }
 
