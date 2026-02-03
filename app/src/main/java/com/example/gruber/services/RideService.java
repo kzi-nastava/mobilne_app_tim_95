@@ -4,20 +4,17 @@ import android.content.Context;
 import android.location.Address;
 import android.location.Geocoder;
 import android.util.Log;
-
 import androidx.annotation.NonNull;
-
 import com.example.gruber.models.DriverLocation;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-
 import com.example.gruber.models.Route;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.Stop;
 import com.example.gruber.models.User;
+import com.example.gruber.models.VehicleInfo;
 import com.example.gruber.models.VehicleType;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.models.enums.UserRole;
@@ -28,14 +25,12 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.osmdroid.bonuspack.routing.OSRMRoadManager;
 import org.osmdroid.bonuspack.routing.Road;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.overlay.Polyline;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,10 +47,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
-
 import javax.inject.Inject;
-
 import dagger.hilt.android.qualifiers.ApplicationContext;
 
 public class RideService {
@@ -63,6 +55,7 @@ public class RideService {
     private final OSRMRoadManager roadManager;
     private final Geocoder geocoder;
     private final FirebaseFirestore firebaseFirestore;
+    private final DatabaseReference driversRef;
     private final Executor executor = Executors.newSingleThreadExecutor();
     private static final String NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
     private static final String PHOTON_URL = "https://photon.komoot.io/api/";
@@ -74,14 +67,15 @@ public class RideService {
     private static final String USERS = "users";
     private static final String ROLE = "role";
     private static final String STARTED_AT = "startedAt";
-
+    private static final String RTDB_URL = "https://gruber-c7d3a-default-rtdb.europe-west1.firebasedatabase.app";
+    private static final String DRIVERS_PATH = "drivers";
 
     @Inject
     public RideService(@ApplicationContext Context context, FirebaseFirestore firebaseFirestore) {
         this.roadManager = new OSRMRoadManager(context, "GrUber");
         this.geocoder = new Geocoder(context);
         this.firebaseFirestore = firebaseFirestore;
-
+        this.driversRef = FirebaseDatabase.getInstance(RTDB_URL).getReference(DRIVERS_PATH);
     }
 
     public void getRoute(String start, String end, RouteCallback callback) throws IOException {
@@ -99,36 +93,30 @@ public class RideService {
             }
         });
 
-//        Road road = calculateRoad(waypoints);
-//        Polyline line = OSRMRoadManager.buildRoadOverlay(road);
-//        Route(road, line);
     }
 
-    // Metoda za rutu sa intermediate stops
-    public void getRouteWithStops(String start, List<Stop> intermediateStops, String end, RouteCallback callback) throws IOException {
+    public void getRouteWithStops(String start, List<Stop> intermediateStops, String end, RouteCallback callback)
+            throws IOException {
         ArrayList<GeoPoint> waypoints = new ArrayList<GeoPoint>();
-        
-        // Dodaj start point
+
         GeoPoint startPoint = getGeoPoint(start);
         waypoints.add(startPoint);
-        
-        // Dodaj sve intermediate stops
+
         if (intermediateStops != null && !intermediateStops.isEmpty()) {
             for (Stop stop : intermediateStops) {
                 if (stop.hasLocation()) {
                     waypoints.add(new GeoPoint(stop.getLocation().lat, stop.getLocation().lon));
                 } else {
-                    // Ako stop nema koordinate, geocode-uj ga
                     GeoPoint stopPoint = getGeoPoint(stop.getAddress());
                     waypoints.add(stopPoint);
                 }
             }
         }
-        
+
         // Dodaj end point
         GeoPoint endPoint = getGeoPoint(end);
         waypoints.add(endPoint);
-        
+
         executor.execute(() -> {
             Road road = roadManager.getRoad(waypoints);
             if (road != null && road.mLength > 0) {
@@ -154,7 +142,7 @@ public class RideService {
         return new GeoPoint(a.getLatitude(), a.getLongitude());
     }
 
-        public void getPrice(Road road, String driveBracket, PriceCallback callback) {
+    public void getPrice(Road road, String driveBracket, PriceCallback callback) {
         firebaseFirestore.collection(VEHICLE_TYPE)
                 .whereArrayContains(TYPE, driveBracket)
                 .get()
@@ -166,15 +154,12 @@ public class RideService {
                 .addOnFailureListener(callback::onError);
     }
 
-    
-    // Geocode Stop object if it doesn't have coordinates
     public void geocodeStop(Stop stop, Consumer<Stop> callback) {
         if (stop.hasLocation()) {
-            // Already has coordinates
             callback.accept(stop);
             return;
         }
-        
+
         executor.execute(() -> {
             try {
                 GeoPoint geoPoint = getGeoPoint(stop.getAddress());
@@ -195,23 +180,58 @@ public class RideService {
                 .document(rideID)
                 .set(statusMap, SetOptions.merge());
     }
+
     public void addRide(Ride ride, PriceCallback callback) {
-        // If scheduled for later, set status to SCHEDULED, otherwise PENDING
         if (ride.scheduledFor != null) {
             ride.status = RideStatus.SCHEDULED;
         } else {
             ride.status = RideStatus.PENDING;
         }
 
+        if (ride.stopList != null && !ride.stopList.isEmpty()) {
+            final int totalStops = ride.stopList.size();
+            final int[] geocodedCount = {0};
+            final List<Stop> geocodedStops = new ArrayList<>();
+            
+            for (Stop stop : ride.stopList) {
+                geocodeStop(stop, geocodedStop -> {
+                    geocodedStops.add(geocodedStop);
+                    geocodedCount[0]++;
+                    
+                    if (geocodedCount[0] == totalStops) {
+                        ride.stopList = geocodedStops;
+                        saveRideToFirebase(ride, callback);
+                    }
+                });
+            }
+        } else {
+            saveRideToFirebase(ride, callback);
+        }
+    }
+
+    private void saveRideToFirebase(Ride ride, PriceCallback callback) {
         firebaseFirestore.collection(RIDES)
                 .add(ride)
                 .addOnSuccessListener(result -> {
-                    ride.id = result.getId(); // Set the ID from Firebase
+                    ride.id = result.getId();
                     callback.onSuccess(ride.priceDin);
                 })
                 .addOnFailureListener(result -> callback.onError(new Exception("Failed writing ride to database.")));
     }
-    
+
+    public void saveCancelledRide(Ride ride, Consumer<Boolean> callback) {
+        if (ride == null) {
+            callback.accept(false);
+            return;
+        }
+
+        ride.status = RideStatus.CANCELLED;
+        firebaseFirestore.collection(RIDES)
+                .add(ride)
+                .addOnSuccessListener(result -> callback.accept(true))
+                .addOnFailureListener(e -> callback.accept(false));
+    }
+
     public LiveData<List<Ride>> getRides() {
         MutableLiveData<List<Ride>> ridesLiveData = new MutableLiveData<>();
         firebaseFirestore.collection(RIDES).get()
@@ -221,7 +241,9 @@ public class RideService {
                 });
         return ridesLiveData;
     }
-    public void getRidesForUserWithSearch(String userEmail, List<RideStatus> statuses, Timestamp fromInterval, Timestamp toInterval, RidesListCallback callback) {
+
+    public void getRidesForUserWithSearch(String userEmail, List<RideStatus> statuses, Timestamp fromInterval,
+            Timestamp toInterval, RidesListCallback callback) {
         firebaseFirestore.collection(RIDES)
                 .whereIn(STATUS, statuses)
                 .whereGreaterThanOrEqualTo(STARTED_AT, fromInterval)
@@ -236,6 +258,7 @@ public class RideService {
                 .addOnFailureListener(callback::onError);
 
     }
+
     public void getRidesForUser(String userEmail, RidesListCallback callback) {
         firebaseFirestore.collection(RIDES)
                 .whereEqualTo(USER_EMAIL, userEmail)
@@ -247,7 +270,7 @@ public class RideService {
                 .addOnFailureListener(e -> callback.onSuccess(Collections.emptyList()));
     }
 
-    public void searchAddress(String query, Consumer<List<Stop>> onResult ) {
+    public void searchAddress(String query, Consumer<List<Stop>> onResult) {
         executor.execute(() -> {
             try {
                 String url = PHOTON_URL + "?q="
@@ -267,14 +290,14 @@ public class RideService {
 
                 List<Stop> results = new ArrayList<>();
 
-                for (int i = 0; i < features.length(); i++ ) {
+                for (int i = 0; i < features.length(); i++) {
 
                     JSONObject feature = features.getJSONObject(i);
 
                     JSONObject properties = feature.getJSONObject("properties");
 
-//                    if (!properties.getString("country").equals("Србија")) continue;
-                    if (!properties.getString("countrycode").equals("RS")) continue;
+                    if (!properties.getString("countrycode").equals("RS"))
+                        continue;
 
                     JSONObject geometry = feature.getJSONObject("geometry");
                     JSONArray coordinates = geometry.getJSONArray("coordinates");
@@ -287,119 +310,287 @@ public class RideService {
                     String country = properties.optString("country", "Unknown country");
                     String address = name + ", " + city + ", " + country;
 
-                    results.add(new Stop(address,lat,lng));
+                    results.add(new Stop(address, lat, lng));
                 }
                 onResult.accept(results);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 onResult.accept(Collections.emptyList());
             }
         });
     }
 
-    public void getDriver(GeoPoint rideStart, Consumer<User> callback) {
-        // Return null if ride start location is not available
+    public void getDriver(Ride ride, GeoPoint rideStart, GeoPoint rideEnd, Consumer<User> callback) {
         if (rideStart == null) {
             callback.accept(null);
             return;
         }
 
+        driversRef.get().addOnSuccessListener(snapshot -> {
+            Map<String, DriverLocation> driverLocations = new HashMap<>();
+            List<String> availableEmails = new ArrayList<>();
+            List<String> drivingEmails = new ArrayList<>();
+
+            for (var child : snapshot.getChildren()) {
+                DriverLocation loc = child.getValue(DriverLocation.class);
+                if (loc == null || loc.status == null)
+                    continue;
+                String encodedEmail = child.getKey();
+                if (encodedEmail == null)
+                    continue;
+                driverLocations.put(encodedEmail, loc);
+
+                if ("AVAILABLE".equals(loc.status)) {
+                    availableEmails.add(encodedEmail);
+                } else if ("DRIVING".equals(loc.status)) {
+                    drivingEmails.add(encodedEmail);
+                }
+            }
+
+            if (availableEmails.isEmpty() && drivingEmails.isEmpty()) {
+                callback.accept(null);
+                return;
+            }
+
+            List<String> allCandidateEmails = new ArrayList<>();
+            allCandidateEmails.addAll(availableEmails);
+            allCandidateEmails.addAll(drivingEmails);
+
+            filterDriversByActiveHours(allCandidateEmails, filteredEmails -> {
+                if (filteredEmails.isEmpty()) {
+                    callback.accept(null);
+                    return;
+                }
+
+                availableEmails.retainAll(filteredEmails);
+                drivingEmails.retainAll(filteredEmails);
+
+                loadVehiclesForDrivers(filteredEmails, vehicleMap -> {
+                    List<String> availableFiltered = new ArrayList<>();
+                    for (String encodedEmail : availableEmails) {
+                        VehicleInfo vehicle = vehicleMap.get(encodedEmail);
+                        if (vehicle != null && vehicleMatchesRide(ride, vehicle)) {
+                            availableFiltered.add(encodedEmail);
+                        }
+                    }
+
+                    if (!availableFiltered.isEmpty()) {
+                        String bestEncoded = selectClosestByLocation(availableFiltered, driverLocations, rideStart);
+                        if (bestEncoded != null) {
+                            String driverEmail = decodeEmailFromFirebase(bestEncoded);
+                            fetchUserByEmail(driverEmail, callback);
+                            return;
+                        }
+                    }
+
+                    List<String> drivingFiltered = new ArrayList<>();
+                    for (String encodedEmail : drivingEmails) {
+                        VehicleInfo vehicle = vehicleMap.get(encodedEmail);
+                        if (vehicle != null && vehicleMatchesRide(ride, vehicle)) {
+                            drivingFiltered.add(encodedEmail);
+                        }
+                    }
+
+                    if (!drivingFiltered.isEmpty()) {
+                        firebaseFirestore.collection(RIDES)
+                                .whereEqualTo(STATUS, RideStatus.ACTIVE)
+                                .get()
+                                .addOnSuccessListener(ridesSnapshot -> {
+                                    List<Ride> activeRides = ridesSnapshot.toObjects(Ride.class);
+                                    String bestEncoded = selectClosestDrivingDriver(drivingFiltered, activeRides,
+                                            rideStart);
+                                    if (bestEncoded != null) {
+                                        String driverEmail = decodeEmailFromFirebase(bestEncoded);
+                                        fetchUserByEmail(driverEmail, callback);
+                                    } else {
+                                        callback.accept(null);
+                                    }
+                                })
+                                .addOnFailureListener(e -> callback.accept(null));
+                    } else {
+                        callback.accept(null);
+                    }
+                });
+            });
+        }).addOnFailureListener(e -> callback.accept(null));
+    }
+
+    private void selectBestBusyDriverByRealtime(List<User> busyDrivers,
+            GeoPoint rideStart,
+            Consumer<User> callback) {
+        selectClosestFreeDriverByRealtime(busyDrivers, rideStart, callback);
+    }
+
+    private void loadVehiclesForDrivers(List<String> encodedEmails,
+            Consumer<Map<String, VehicleInfo>> callback) {
+        Map<String, VehicleInfo> result = new HashMap<>();
+        if (encodedEmails == null || encodedEmails.isEmpty()) {
+            callback.accept(result);
+            return;
+        }
+
+        final int total = encodedEmails.size();
+        final int[] processed = { 0 };
+
+        for (String encoded : encodedEmails) {
+            String email = decodeEmailFromFirebase(encoded);
+            firebaseFirestore.collection("vehicles")
+                    .document(email)
+                    .get()
+                    .addOnSuccessListener(snapshot -> {
+                        processed[0]++;
+                        if (snapshot.exists()) {
+                            VehicleInfo vehicle = snapshot.toObject(VehicleInfo.class);
+                            if (vehicle != null) {
+                                result.put(encoded, vehicle);
+                            }
+                        }
+                        if (processed[0] == total) {
+                            callback.accept(result);
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        processed[0]++;
+                        if (processed[0] == total) {
+                            callback.accept(result);
+                        }
+                    });
+        }
+    }
+
+    private boolean vehicleMatchesRide(Ride ride, VehicleInfo vehicle) {
+        if (ride == null || vehicle == null)
+            return false;
+
+        String rideType = ride.getVehicleType();
+        String vehicleType = vehicle.getType();
+        if (rideType != null && vehicleType != null) {
+            if (!vehicleType.equalsIgnoreCase(rideType)) {
+                return false;
+            }
+        }
+
+        if (ride.hasBabies && !vehicle.isAllowsBabies())
+            return false;
+        if (ride.hasPets && !vehicle.isAllowsPets())
+            return false;
+
+        int passengers = (ride.passengerEmails != null ? ride.passengerEmails.size() : 0) + 1;
+        if (vehicle.getNumberOfSeats() > 0 && passengers > vehicle.getNumberOfSeats())
+            return false;
+
+        return true;
+    }
+
+    private String selectClosestByLocation(List<String> encodedEmails,
+            Map<String, DriverLocation> driverLocations,
+            GeoPoint rideStart) {
+        String best = null;
+        double bestDist = Double.MAX_VALUE;
+
+        for (String encoded : encodedEmails) {
+            DriverLocation loc = driverLocations.get(encoded);
+            if (loc == null)
+                continue;
+            double dist = calculateHaversineDistance(loc.lat, loc.lon,
+                    rideStart.getLatitude(), rideStart.getLongitude());
+            if (dist < bestDist) {
+                bestDist = dist;
+                best = encoded;
+            }
+        }
+        return best;
+    }
+
+    private String selectClosestDrivingDriver(List<String> drivingEncoded,
+            List<Ride> activeRides,
+            GeoPoint rideStart) {
+        String best = null;
+        double bestDist = Double.MAX_VALUE;
+
+        for (String encoded : drivingEncoded) {
+            String email = decodeEmailFromFirebase(encoded);
+            Ride currentRide = activeRides.stream()
+                    .filter(r -> email.equals(r.driverEmail))
+                    .findFirst()
+                    .orElse(null);
+            if (currentRide == null)
+                continue;
+            Stop end = currentRide.getEnd();
+            if (end == null || !end.hasLocation())
+                continue;
+            GeoPoint endPoint = new GeoPoint(end.getLocation().lat, end.getLocation().lon);
+            double dist = calculateHaversineDistance(endPoint.getLatitude(), endPoint.getLongitude(),
+                    rideStart.getLatitude(), rideStart.getLongitude());
+            if (dist < bestDist) {
+                bestDist = dist;
+                best = encoded;
+            }
+        }
+        return best;
+    }
+
+    private void fetchUserByEmail(String email, Consumer<User> callback) {
         firebaseFirestore.collection(USERS)
-                .whereEqualTo(ROLE, UserRole.DRIVER)
-                .whereEqualTo("active", true)
+                .whereEqualTo("email", email)
+                .limit(1)
                 .get()
                 .addOnSuccessListener(snapshot -> {
-                    List<User> allDrivers = snapshot.toObjects(User.class);
-                    if (allDrivers.isEmpty()) {
+                    if (snapshot.isEmpty()) {
                         callback.accept(null);
                         return;
                     }
-
-                    List<User> availableDrivers = allDrivers.stream()
-                            .filter(d -> {
-                                boolean passes = d.getActiveHoursLast24h() >= 0 && d.getActiveHoursLast24h() < 24;
-                                return passes;
-                            })
-                            .collect(Collectors.toList());
-
-                    if (availableDrivers.isEmpty()) {
-                        callback.accept(null);
-                        return;
-                    }
-
-                    firebaseFirestore.collection(RIDES)
-                            .whereIn(STATUS,
-                                List.of(RideStatus.PENDING, RideStatus.ACTIVE, RideStatus.SCHEDULED))
-                            .get()
-                            .addOnSuccessListener(ridesSnapshot -> {
-                                List<Ride> activeRides = ridesSnapshot.toObjects(Ride.class);
-                                List<User> busyDrivers = new ArrayList<>();
-                                List<User> freeDrivers = new ArrayList<>();
-
-                                for (User driver : availableDrivers) {
-                                    boolean isBusy = activeRides.stream()
-                                            .anyMatch(r -> r.driverEmail.equals(driver.getEmail()));
-
-                                    if (isBusy) {
-                                        busyDrivers.add(driver);
-                                    } else {
-                                        freeDrivers.add(driver);
-                                    }
-                                }
-                                if (!freeDrivers.isEmpty()) {
-                                    selectClosestFreeDriverByRealtime(freeDrivers, rideStart, callback);
-                                } else if (!busyDrivers.isEmpty()) {
-                                    User bestDriver = selectBestBusyDriver(busyDrivers, activeRides);
-                                    callback.accept(bestDriver);
-                                } else {
-                                    callback.accept(null);
-                                }
-                            })
-                            .addOnFailureListener(e -> callback.accept(null));
+                    User user = snapshot.getDocuments().get(0).toObject(User.class);
+                    callback.accept(user);
                 })
                 .addOnFailureListener(e -> callback.accept(null));
     }
 
-    private User selectBestBusyDriver(List<User> busyDrivers, List<Ride> activeRides) {
-        User bestDriver = null;
-        double bestScore = Double.MAX_VALUE;
+    private String decodeEmailFromFirebase(@NonNull String encodedEmail) {
+        return encodedEmail.replace("_", ".");
+    }
 
-        for (User driver : busyDrivers) {
-            Ride currentRide = activeRides.stream()
-                    .filter(r -> r.driverEmail.equals(driver.getEmail()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (currentRide == null) continue;
-
-            // Simulate distance to ride start
-            double distanceToStart = getSimulatedDistance(driver);
-
-            // Simulate remaining time on current ride (10 minutes = 600000 ms)
-            long remainingTime = 600000;
-
-            // Score: prefer closer drivers and those finishing soon
-            double score = (distanceToStart * 0.7) + (remainingTime * 0.3);
-
-            if (score < bestScore) {
-                bestScore = score;
-                bestDriver = driver;
-            }
+    private void filterDriversByActiveHours(List<String> encodedEmails,
+            Consumer<List<String>> callback) {
+        List<String> result = new ArrayList<>();
+        if (encodedEmails == null || encodedEmails.isEmpty()) {
+            callback.accept(result);
+            return;
         }
 
-        return bestDriver;
-    }
+        final int total = encodedEmails.size();
+        final int[] processed = { 0 };
 
-    /**
-     * Encode email for Firebase path (dots and special chars not allowed)
-     */
+        for (String encoded : encodedEmails) {
+            String email = decodeEmailFromFirebase(encoded);
+            firebaseFirestore.collection(USERS)
+                    .whereEqualTo("email", email)
+                    .limit(1)
+                    .get()
+                    .addOnSuccessListener(snapshot -> {
+                        processed[0]++;
+                        if (!snapshot.isEmpty()) {
+                            User user = snapshot.getDocuments().get(0).toObject(User.class);
+                            if (user != null && user.getActiveHoursLast24h() <= 8) {
+                                result.add(encoded);
+                            }
+                        }
+                        if (processed[0] == total) {
+                            callback.accept(result);
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        processed[0]++;
+                        if (processed[0] == total) {
+                            callback.accept(result);
+                        }
+                    });
+        }
+    }
     private static String encodeEmailForFirebase(@NonNull String email) {
-        return email.replace(".", "_").replace("#", "_").replace("$", "_").replace("[", "_").replace("]", "_");
+        return email.replace(".", "_").replace("#", "_").replace("$", "_")
+                .replace("[", "_").replace("]", "_");
     }
 
-    /**
-     * Calculate Haversine distance between two GPS points in kilometers
-     */
     private double calculateHaversineDistance(double lat1, double lon1, double lat2, double lon2) {
         final double R = 6371; // Earth's radius in km
         double dLat = Math.toRadians(lat2 - lat1);
@@ -411,25 +602,18 @@ public class RideService {
         return R * c;
     }
 
-    /**
-     * Select the closest free driver using RTDB live locations.
-     */
     private void selectClosestFreeDriverByRealtime(List<User> freeDrivers,
-                                                   GeoPoint rideStart,
-                                                   Consumer<User> callback) {
+            GeoPoint rideStart,
+            Consumer<User> callback) {
         if (rideStart == null || freeDrivers == null || freeDrivers.isEmpty()) {
             callback.accept(null);
             return;
         }
 
-        final DatabaseReference driversRef = FirebaseDatabase.getInstance(
-                "https://gruber-c7d3a-default-rtdb.europe-west1.firebasedatabase.app")
-                .getReference("drivers");
-
-        final double[] bestDistance = {Double.MAX_VALUE};
-        final User[] bestDriver = {null};
+        final double[] bestDistance = { Double.MAX_VALUE };
+        final User[] bestDriver = { null };
         final int total = freeDrivers.size();
-        final int[] processed = {0};
+        final int[] processed = { 0 };
 
         for (User driver : freeDrivers) {
             String encodedEmail = encodeEmailForFirebase(driver.getEmail());
@@ -461,23 +645,14 @@ public class RideService {
         }
     }
 
-    /**
-     * Get distance from driver's real RTDB location to ride start point
-     */
     private double getDriverDistance(User driver, GeoPoint rideStart) {
-        final double[] distance = {Double.MAX_VALUE};
-        
-        // Return MAX_VALUE if ride start is not available
+        final double[] distance = { Double.MAX_VALUE };
+
         if (rideStart == null || driver == null) {
             return distance[0];
         }
-        
-        final DatabaseReference driversRef = FirebaseDatabase.getInstance(
-                "https://gruber-c7d3a-default-rtdb.europe-west1.firebasedatabase.app")
-                .getReference("drivers");
 
         try {
-            // Encode email for Firebase path (dots not allowed)
             String encodedEmail = encodeEmailForFirebase(driver.getEmail());
             driversRef.child(encodedEmail).get().addOnSuccessListener(snapshot -> {
                 if (snapshot.exists()) {
@@ -495,7 +670,6 @@ public class RideService {
         return distance[0];
     }
 
-    // Dobavi VehicleType iz Firebase-a po tipu
     public void getVehicleTypeByType(String type, Consumer<VehicleType> callback) {
         firebaseFirestore.collection(VEHICLE_TYPE)
                 .whereEqualTo(TYPE, type)
@@ -512,7 +686,6 @@ public class RideService {
                 .addOnFailureListener(e -> callback.accept(null));
     }
 
-    // Izračunaj cijenu vožnje: price (iz baze) + (kilometri * 120)
     public void calculateRidePrice(Route route, String vehicleTypeStr, Consumer<Integer> callback) {
         if (route == null || route.getRoad() == null) {
             callback.accept(0);
@@ -525,7 +698,7 @@ public class RideService {
                 return;
             }
             double kilometers = route.getRoad().mLength;
-            int price = vehicleType.getPrice() + (int)(kilometers * 120);
+            int price = vehicleType.getPrice() + (int) (kilometers * 120);
             callback.accept(price);
         });
     }
@@ -546,9 +719,12 @@ public class RideService {
 
                     List<Ride> ridesToStart = allRides.stream()
                             .filter(r -> {
-                                if (r.status == null) return false;
-                                if (r.status == RideStatus.PENDING) return true;
-                                if (r.status == RideStatus.SCHEDULED && r.scheduledFor == null) return true;
+                                if (r.status == null)
+                                    return false;
+                                if (r.status == RideStatus.PENDING)
+                                    return true;
+                                if (r.status == RideStatus.SCHEDULED && r.scheduledFor == null)
+                                    return true;
                                 if (r.status == RideStatus.SCHEDULED && r.scheduledFor != null) {
                                     return r.scheduledFor.getSeconds() <= System.currentTimeMillis() / 1000;
                                 }
@@ -596,8 +772,8 @@ public class RideService {
                                             return;
                                         }
 
-                                        int[] updateCount = {0};
-                                        int[] successCount = {0};
+                                        int[] updateCount = { 0 };
+                                        int[] successCount = { 0 };
 
                                         for (String passengerEmail : ride.passengerEmails) {
                                             updateCount[0]++;
@@ -605,7 +781,8 @@ public class RideService {
                                                 if (success) {
                                                     successCount[0]++;
                                                 }
-                                                if (successCount[0] + (updateCount[0] - successCount[0]) == updateCount[0]) {
+                                                if (successCount[0]
+                                                        + (updateCount[0] - successCount[0]) == updateCount[0]) {
                                                     callback.accept(successCount[0] == updateCount[0]);
                                                 }
                                             });
