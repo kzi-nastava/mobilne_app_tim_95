@@ -13,8 +13,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:title="@string/book_a_ride"
-        app:titleCentered="true"
+        app:title=""
+        app:titleCentered="false"
         app:navigationIcon="@drawable/ic_previous"
         app:menu="@menu/toolbar_ride_est"
         app:navigationIconTint="?attr/colorOnSurface"
@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/tb_ride_estimate"
         app:dividerThickness="2dp"
-        app:dividerColor="@color/color_secondary_variant"
+        app:dividerColor="@color/color_primary"
         />
 
     <TextView
@@ -60,11 +60,11 @@
             android:id="@+id/et_start_street"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            style="@style/TextAppearance.Material3.BodyMedium"
             android:singleLine="true"
             android:scrollHorizontally="true"
             android:inputType="text"
             />
+<!--            style="@style/TextAppearance.Material3.BodyMedium"-->
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.divider.MaterialDivider
@@ -73,7 +73,7 @@
         app:layout_constraintTop_toBottomOf="@id/til_start_street"
         app:dividerThickness="1dp"
         android:layout_marginTop="10dp"
-        app:dividerColor="@color/color_secondary_variant"
+        app:dividerColor="@color/color_primary"
         />
 
     <TextView
@@ -120,7 +120,7 @@
         app:layout_constraintTop_toBottomOf="@id/til_destination_street"
         app:dividerThickness="1dp"
         android:layout_marginTop="10dp"
-        app:dividerColor="@color/color_secondary_variant"
+        app:dividerColor="@color/color_primary"
         />
 
     <!-- TabLayout -->

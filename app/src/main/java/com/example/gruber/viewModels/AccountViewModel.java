@@ -30,6 +30,7 @@ public class AccountViewModel extends ViewModel {
     @Inject
     public AccountViewModel(UserService userService) {
         this.userService = userService;
+        this.address.setValue(new Address());
     }
 
 
@@ -137,7 +138,7 @@ public class AccountViewModel extends ViewModel {
                 email.getValue(),
                 phone.getValue(),
                 role.getValue(),
-                image.getValue().toString()
+                "uri/to/photo"
         );
     }
 

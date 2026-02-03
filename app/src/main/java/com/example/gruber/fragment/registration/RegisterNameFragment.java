@@ -72,8 +72,13 @@ public class RegisterNameFragment extends Fragment {
         tilPhone = view.findViewById(R.id.til_reg_phone);
 
         etFirstName = view.findViewById(R.id.et_reg_first_name);
+        etFirstName.setText(accountViewModel.getFirstName().getValue());
+
         etLastName = view.findViewById(R.id.et_reg_last_name);
+        etLastName.setText(accountViewModel.getLastName().getValue());
+
         etPhone = view.findViewById(R.id.et_reg_phone);
+        etPhone.setText(accountViewModel.getPhone().getValue());
 
         view.findViewById(R.id.btn_reg_add_image).setOnClickListener(v -> onAddImageClicked());
         view.findViewById(R.id.btn_reg_previous_name).setOnClickListener(v -> onPreviousClicked());
@@ -103,9 +108,11 @@ public class RegisterNameFragment extends Fragment {
         // Back within nav graph
         String firstName = etFirstName.getText() != null ? etFirstName.getText().toString() : "";
         String lastName = etLastName.getText() != null ? etLastName.getText().toString() : "";
+        String phone = etPhone.getText() != null ? etPhone.getText().toString() : "";
 
         accountViewModel.setFirstName(firstName);
         accountViewModel.setLastName(lastName);
+        accountViewModel.setPhone(phone);
         findNavController(this).navigateUp();
     }
 

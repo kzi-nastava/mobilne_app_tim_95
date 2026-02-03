@@ -150,6 +150,7 @@ public class RideService {
 
     public GeoPoint getGeoPoint(String address) throws IOException {
         List<Address> results = geocoder.getFromLocationName(address, 1);
+        if (results == null || results.isEmpty()) throw new IOException("No such location");
         Address a = results.get(0);
         return new GeoPoint(a.getLatitude(), a.getLongitude());
     }
@@ -639,6 +640,12 @@ public class RideService {
                             .addOnFailureListener(e -> callback.accept(false));
                 })
                 .addOnFailureListener(e -> callback.accept(false));
+    }
+
+
+    //
+    private double getSimulatedDistance(User driver) {
+        return 10.0;
     }
 
 }
