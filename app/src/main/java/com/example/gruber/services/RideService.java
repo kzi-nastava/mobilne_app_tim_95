@@ -188,6 +188,28 @@ public class RideService {
             ride.status = RideStatus.PENDING;
         }
 
+        if (ride.stopList != null && !ride.stopList.isEmpty()) {
+            final int totalStops = ride.stopList.size();
+            final int[] geocodedCount = {0};
+            final List<Stop> geocodedStops = new ArrayList<>();
+            
+            for (Stop stop : ride.stopList) {
+                geocodeStop(stop, geocodedStop -> {
+                    geocodedStops.add(geocodedStop);
+                    geocodedCount[0]++;
+                    
+                    if (geocodedCount[0] == totalStops) {
+                        ride.stopList = geocodedStops;
+                        saveRideToFirebase(ride, callback);
+                    }
+                });
+            }
+        } else {
+            saveRideToFirebase(ride, callback);
+        }
+    }
+
+    private void saveRideToFirebase(Ride ride, PriceCallback callback) {
         firebaseFirestore.collection(RIDES)
                 .add(ride)
                 .addOnSuccessListener(result -> {
@@ -564,7 +586,6 @@ public class RideService {
                     });
         }
     }
-
     private static String encodeEmailForFirebase(@NonNull String email) {
         return email.replace(".", "_").replace("#", "_").replace("$", "_")
                 .replace("[", "_").replace("]", "_");
