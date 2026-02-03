@@ -5,6 +5,12 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
+import com.example.gruber.models.DriverLocation;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
@@ -291,21 +297,29 @@ public class RideService {
         });
     }
 
-    public void getDriver(Consumer<User> callback) {
+    public void getDriver(GeoPoint rideStart, Consumer<User> callback) {
+        // Return null if ride start location is not available
+        if (rideStart == null) {
+            callback.accept(null);
+            return;
+        }
+
         firebaseFirestore.collection(USERS)
                 .whereEqualTo(ROLE, UserRole.DRIVER)
                 .whereEqualTo("active", true)
                 .get()
                 .addOnSuccessListener(snapshot -> {
                     List<User> allDrivers = snapshot.toObjects(User.class);
-
                     if (allDrivers.isEmpty()) {
                         callback.accept(null);
                         return;
                     }
 
                     List<User> availableDrivers = allDrivers.stream()
-                            .filter(d -> d.getActiveHoursLast24h() > 0 && d.getActiveHoursLast24h() < 8)
+                            .filter(d -> {
+                                boolean passes = d.getActiveHoursLast24h() >= 0 && d.getActiveHoursLast24h() < 24;
+                                return passes;
+                            })
                             .collect(Collectors.toList());
 
                     if (availableDrivers.isEmpty()) {
@@ -333,17 +347,7 @@ public class RideService {
                                     }
                                 }
                                 if (!freeDrivers.isEmpty()) {
-                                    User closestDriver = freeDrivers.get(0);
-                                    double closestDistance = getSimulatedDistance(closestDriver);
-
-                                    for (User driver : freeDrivers) {
-                                        double distance = getSimulatedDistance(driver);
-                                        if (distance < closestDistance) {
-                                            closestDriver = driver;
-                                            closestDistance = distance;
-                                        }
-                                    }
-                                    callback.accept(closestDriver);
+                                    selectClosestFreeDriverByRealtime(freeDrivers, rideStart, callback);
                                 } else if (!busyDrivers.isEmpty()) {
                                     User bestDriver = selectBestBusyDriver(busyDrivers, activeRides);
                                     callback.accept(bestDriver);
@@ -386,11 +390,109 @@ public class RideService {
         return bestDriver;
     }
 
-    // Simulated distance calculation (placeholder)
-    // TODO: Replace with actual GPS location when available
-    private double getSimulatedDistance(User driver) {
-        long seed = driver.getEmail().hashCode();
-        return 0.5 + ((seed % 45) / 10.0);
+    /**
+     * Encode email for Firebase path (dots and special chars not allowed)
+     */
+    private static String encodeEmailForFirebase(@NonNull String email) {
+        return email.replace(".", "_").replace("#", "_").replace("$", "_").replace("[", "_").replace("]", "_");
+    }
+
+    /**
+     * Calculate Haversine distance between two GPS points in kilometers
+     */
+    private double calculateHaversineDistance(double lat1, double lon1, double lat2, double lon2) {
+        final double R = 6371; // Earth's radius in km
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    /**
+     * Select the closest free driver using RTDB live locations.
+     */
+    private void selectClosestFreeDriverByRealtime(List<User> freeDrivers,
+                                                   GeoPoint rideStart,
+                                                   Consumer<User> callback) {
+        if (rideStart == null || freeDrivers == null || freeDrivers.isEmpty()) {
+            callback.accept(null);
+            return;
+        }
+
+        final DatabaseReference driversRef = FirebaseDatabase.getInstance(
+                "https://gruber-c7d3a-default-rtdb.europe-west1.firebasedatabase.app")
+                .getReference("drivers");
+
+        final double[] bestDistance = {Double.MAX_VALUE};
+        final User[] bestDriver = {null};
+        final int total = freeDrivers.size();
+        final int[] processed = {0};
+
+        for (User driver : freeDrivers) {
+            String encodedEmail = encodeEmailForFirebase(driver.getEmail());
+            driversRef.child(encodedEmail).get()
+                    .addOnSuccessListener(snapshot -> {
+                        processed[0]++;
+                        if (snapshot.exists()) {
+                            DriverLocation driverLoc = snapshot.getValue(DriverLocation.class);
+                            if (driverLoc != null) {
+                                double distance = calculateHaversineDistance(
+                                        driverLoc.lat, driverLoc.lon,
+                                        rideStart.getLatitude(), rideStart.getLongitude());
+                                if (distance < bestDistance[0]) {
+                                    bestDistance[0] = distance;
+                                    bestDriver[0] = driver;
+                                }
+                            }
+                        }
+                        if (processed[0] == total) {
+                            callback.accept(bestDriver[0]);
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        processed[0]++;
+                        if (processed[0] == total) {
+                            callback.accept(bestDriver[0]);
+                        }
+                    });
+        }
+    }
+
+    /**
+     * Get distance from driver's real RTDB location to ride start point
+     */
+    private double getDriverDistance(User driver, GeoPoint rideStart) {
+        final double[] distance = {Double.MAX_VALUE};
+        
+        // Return MAX_VALUE if ride start is not available
+        if (rideStart == null || driver == null) {
+            return distance[0];
+        }
+        
+        final DatabaseReference driversRef = FirebaseDatabase.getInstance(
+                "https://gruber-c7d3a-default-rtdb.europe-west1.firebasedatabase.app")
+                .getReference("drivers");
+
+        try {
+            // Encode email for Firebase path (dots not allowed)
+            String encodedEmail = encodeEmailForFirebase(driver.getEmail());
+            driversRef.child(encodedEmail).get().addOnSuccessListener(snapshot -> {
+                if (snapshot.exists()) {
+                    DriverLocation driverLoc = snapshot.getValue(DriverLocation.class);
+                    if (driverLoc != null && rideStart != null) {
+                        distance[0] = calculateHaversineDistance(
+                                driverLoc.lat, driverLoc.lon,
+                                rideStart.getLatitude(), rideStart.getLongitude());
+                    }
+                }
+            });
+        } catch (Exception e) {
+            Log.e("RIDE_SERVICE", "Error fetching driver location: " + e.getMessage());
+        }
+        return distance[0];
     }
 
     // Dobavi VehicleType iz Firebase-a po tipu
