@@ -10,9 +10,9 @@
     <string name="last_name">Last name</string>
 
     <string-array name="vehicle_types">
-        <item>standard</item>
-        <item>luxury</item>
-        <item>combi</item>
+        <item>Standard</item>
+        <item>Luxury</item>
+        <item>Van</item>
     </string-array>
     <string name="photo">Photo</string>
     <string name="street">Street</string>
@@ -146,6 +146,7 @@
     <string name="user_blocked_message_with_reason">Your account has been blocked.\nReason: %1$s</string>
     <string name="driver_blocked_message">Your driver account has been blocked.</string>
     <string name="search_users">Search users...</string>
+    <string name="driver_change_request_pending">Waiting for admin approval of your profile changes.</string>
 
     <!--    ADMIN DRIVER REGISTRATION    -->
     <string name="vehicle_information">Vehicle Information</string>
@@ -155,6 +156,14 @@
     <string name="allows_pets">Vehicle allows pets</string>
     <string name="finish">Finish</string>
     <string name="add_driver">Add Driver</string>
+    <string name="driver_change_requests">Requests</string>
+    <string name="no_driver_change_requests">No pending driver change requests.</string>
+    <string name="approve">Approve</string>
+    <string name="reject">Reject</string>
+    <string name="change_request_approved">Change request approved.</string>
+    <string name="change_request_rejected">Change request rejected.</string>
+    <string name="change_request_action_failed">Action failed. Please try again.</string>
+    <string name="driver_change_request_submitted">Changes submitted for admin approval.</string>
 
     <!--    REPORTS    -->
     <string name="reports">Reports</string>

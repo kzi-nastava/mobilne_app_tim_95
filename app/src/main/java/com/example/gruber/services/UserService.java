@@ -1,5 +1,7 @@
 package com.example.gruber.services;
 
+import android.util.Log;
+
 import com.example.gruber.SessionManager;
 import com.example.gruber.models.Login;
 import com.example.gruber.models.enums.UserRole;
@@ -13,6 +15,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.DocumentSnapshot;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
+
 import javax.inject.Inject;
 
 public class UserService {
@@ -32,37 +37,41 @@ public class UserService {
     public void logIn(Login login, AuthCallback callback) {
         firebaseAuth.signInWithEmailAndPassword(login.email, login.password)
                 .addOnSuccessListener(result -> {
-                            var fbUser = result.getUser();
-                            if (fbUser != null && !fbUser.isEmailVerified()) {
-                                callback.onError(new Exception("Email unverified."));
+                    var fbUser = result.getUser();
+                    if (fbUser != null && !fbUser.isEmailVerified()) {
+                        callback.onError(new Exception("Email unverified."));
 //                                return;
-                            }
+                    }
 
-                            String uid = result.getUser().getUid();
-                            firebaseFirestore
-                                    .collection("users")
-                                    .document(uid)
-                                    .get()
-                                    .addOnSuccessListener(snapshot -> {
-                                       String role = snapshot.getString("role");
-                                       if (role == null) {
-                                           callback.onError(new Exception("Database data inconsistent. Mising role value."));
-                                           return;
-                                       }
-                                       UserRole _role = UserRole.valueOf(role);
+                    String uid = result.getUser().getUid();
+                    firebaseFirestore
+                            .collection("users")
+                            .document(uid)
+                            .get()
+                            .addOnSuccessListener(snapshot -> {
+                                String role = snapshot.getString("role");
+                                if (role == null) {
+                                    callback.onError(new Exception("Database data inconsistent. Mising role value."));
+                                    return;
+                                }
+                                UserRole _role = UserRole.valueOf(role);
 
-                                        // Set active to true if user is a DRIVER
-                                        if (_role == UserRole.DRIVER) {
-                                            Map<String, Object> updates = new HashMap<>();
-                                            updates.put("active", true);
-                                            firebaseFirestore.collection("users")
-                                                    .document(uid)
-                                                    .update(updates)
-                                                    .addOnSuccessListener(v -> callback.onSuccess(result.getUser().getUid(), _role))
-                                                    .addOnFailureListener(callback::onError);
-                                        } else {
-                                            callback.onSuccess(result.getUser().getUid(), _role);
-                                        }
+                                // Set active to true if user is a DRIVER
+                                if (_role == UserRole.DRIVER) {
+                                    Map<String, Object> updates = new HashMap<>();
+                                    updates.put("active", true);
+                                    firebaseFirestore.collection("users")
+                                            .document(uid)
+                                            .update(updates)
+                                            .addOnSuccessListener(v -> callback.onSuccess(result.getUser().getUid(), _role))
+                                            .addOnFailureListener(callback::onError);
+                                } else {
+                                    callback.onSuccess(result.getUser().getUid(), _role);
+                                }
+                            })
+                            .addOnFailureListener(msg -> {
+                                Log.d("QWERTASD", Objects.requireNonNull(msg.getMessage()));
+                                callback.onError(msg);
                             });
                 })
                 .addOnFailureListener(callback::onError);
@@ -159,12 +168,24 @@ public class UserService {
                                             String plateFromVehicle = vehicleSnap.getString("licensePlate");
 
                                             if (type != null) driverViewModel.setVehicleType(type);
-                                            if (seats != null) driverViewModel.setNumberOfSeats(seats.intValue());
-                                            if (babies != null) driverViewModel.setAllowsBabies(babies);
+                                            if (seats != null)
+                                                driverViewModel.setNumberOfSeats(seats.intValue());
+                                            if (babies != null)
+                                                driverViewModel.setAllowsBabies(babies);
                                             if (pets != null) driverViewModel.setAllowsPets(pets);
-                                            if (modelFromVehicle != null) driverViewModel.setVehicleModel(modelFromVehicle);
-                                            if (plateFromVehicle != null) driverViewModel.setVehiclePlate(plateFromVehicle);
+                                            if (modelFromVehicle != null)
+                                                driverViewModel.setVehicleModel(modelFromVehicle);
+                                            if (plateFromVehicle != null)
+                                                driverViewModel.setVehiclePlate(plateFromVehicle);
                                         }
+                                    });
+
+                            // Check for pending change request
+                            firebaseFirestore.collection("driverChangeRequests")
+                                    .document(email)
+                                    .get()
+                                    .addOnSuccessListener(changeReqSnap -> {
+                                        driverViewModel.setHasPendingChangeRequest(changeReqSnap.exists());
                                     });
                         }
                     }
@@ -216,18 +237,19 @@ public class UserService {
         Map<String, Object> vehicleUpdates = null;
         String email = accountViewModel.getEmail().getValue();
 
+        // If user is a driver, create a change request instead of updating directly
         if (accountViewModel instanceof DriverViewModel) {
             DriverViewModel driverViewModel = (DriverViewModel) accountViewModel;
-            if (driverViewModel.getVehicleModel().getValue() != null)
-                updates.put("vehicleModel", driverViewModel.getVehicleModel().getValue());
-            if (driverViewModel.getVehiclePlate().getValue() != null)
-                updates.put("vehiclePlate", driverViewModel.getVehiclePlate().getValue());
 
             vehicleUpdates = new HashMap<>();
-            if (driverViewModel.getVehicleModel().getValue() != null)
+            if (driverViewModel.getVehicleModel().getValue() != null) {
+                updates.put("vehicleModel", driverViewModel.getVehicleModel().getValue());
                 vehicleUpdates.put("model", driverViewModel.getVehicleModel().getValue());
-            if (driverViewModel.getVehiclePlate().getValue() != null)
+            }
+            if (driverViewModel.getVehiclePlate().getValue() != null) {
+                updates.put("vehiclePlate", driverViewModel.getVehiclePlate().getValue());
                 vehicleUpdates.put("licensePlate", driverViewModel.getVehiclePlate().getValue());
+            }
             if (driverViewModel.getVehicleType().getValue() != null)
                 vehicleUpdates.put("type", driverViewModel.getVehicleType().getValue());
             if (driverViewModel.getNumberOfSeats().getValue() != null)
@@ -236,26 +258,122 @@ public class UserService {
                 vehicleUpdates.put("allowsBabies", driverViewModel.getAllowsBabies().getValue());
             if (driverViewModel.getAllowsPets().getValue() != null)
                 vehicleUpdates.put("allowsPets", driverViewModel.getAllowsPets().getValue());
+
+            // Create change request for driver
+            createDriverChangeRequest(uid, email, updates, vehicleUpdates, callback);
+        } else {
+            // Non-drivers: update directly
+            final Map<String, Object> finalVehicleUpdates = vehicleUpdates;
+            final String finalEmail = email;
+
+            firebaseFirestore.collection("users")
+                    .document(uid)
+                    .update(updates)
+                    .addOnSuccessListener(aVoid -> {
+                        if (finalVehicleUpdates != null && finalEmail != null) {
+                            firebaseFirestore.collection("vehicles")
+                                    .document(finalEmail)
+                                    .update(finalVehicleUpdates)
+                                    .addOnSuccessListener(v -> callback.onSuccess(uid, accountViewModel.getRole().getValue()))
+                                    .addOnFailureListener(callback::onError);
+                        } else {
+                            callback.onSuccess(uid, accountViewModel.getRole().getValue());
+                        }
+                    })
+                    .addOnFailureListener(callback::onError);
+        }
+    }
+
+    private void createDriverChangeRequest(String uid, String email, Map<String, Object> userUpdates,
+                                           Map<String, Object> vehicleUpdates, AuthCallback callback) {
+        if (email == null) {
+            callback.onError(new Exception("Driver email not found"));
+            return;
         }
 
-        final Map<String, Object> finalVehicleUpdates = vehicleUpdates;
-        final String finalEmail = email;
+        Map<String, Object> changeRequest = new HashMap<>();
+        changeRequest.put("driverEmail", email);
+        changeRequest.put("driverUid", uid);
+        changeRequest.put("userUpdates", userUpdates);
+        changeRequest.put("vehicleUpdates", vehicleUpdates);
+        changeRequest.put("requestedAt", System.currentTimeMillis());
+        changeRequest.put("status", "PENDING");
 
-        firebaseFirestore.collection("users")
-                .document(uid)
-                .update(updates)
-                .addOnSuccessListener(aVoid -> {
-                    if (finalVehicleUpdates != null && finalEmail != null) {
-                        firebaseFirestore.collection("vehicles")
-                                .document(finalEmail)
-                                .update(finalVehicleUpdates)
-                                .addOnSuccessListener(v -> callback.onSuccess(uid, accountViewModel.getRole().getValue()))
-                                .addOnFailureListener(callback::onError);
-                    } else {
-                        callback.onSuccess(uid, accountViewModel.getRole().getValue());
+        firebaseFirestore.collection("driverChangeRequests")
+                .document(email)
+                .set(changeRequest)
+                .addOnSuccessListener(aVoid -> callback.onSuccess(uid, UserRole.DRIVER))
+                .addOnFailureListener(callback::onError);
+    }
+
+    public void approveDriverChangeRequest(String driverEmail, AuthCallback callback) {
+        firebaseFirestore.collection("driverChangeRequests")
+                .document(driverEmail)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    if (!snapshot.exists()) {
+                        callback.onError(new Exception("Change request not found"));
+                        return;
                     }
+
+                    String driverUid = snapshot.getString("driverUid");
+                    Map<String, Object> userUpdates = (Map<String, Object>) snapshot.get("userUpdates");
+                    Map<String, Object> vehicleUpdates = (Map<String, Object>) snapshot.get("vehicleUpdates");
+
+                    // Update user profile
+                    firebaseFirestore.collection("users")
+                            .document(driverUid)
+                            .update(userUpdates)
+                            .addOnSuccessListener(aVoid -> {
+                                // Update vehicle info
+                                firebaseFirestore.collection("vehicles")
+                                        .document(driverEmail)
+                                        .update(vehicleUpdates)
+                                        .addOnSuccessListener(v -> {
+                                            // Delete change request
+                                            firebaseFirestore.collection("driverChangeRequests")
+                                                    .document(driverEmail)
+                                                    .delete()
+                                                    .addOnSuccessListener(v2 -> callback.onSuccess(driverUid, UserRole.DRIVER))
+                                                    .addOnFailureListener(callback::onError);
+                                        })
+                                        .addOnFailureListener(callback::onError);
+                            })
+                            .addOnFailureListener(callback::onError);
                 })
                 .addOnFailureListener(callback::onError);
+    }
+
+    public void rejectDriverChangeRequest(String driverEmail, AuthCallback callback) {
+        firebaseFirestore.collection("driverChangeRequests")
+                .document(driverEmail)
+                .delete()
+                .addOnSuccessListener(aVoid -> callback.onSuccess(driverEmail, UserRole.DRIVER))
+                .addOnFailureListener(callback::onError);
+    }
+
+    public void checkPendingChangeRequest(String driverEmail, java.util.function.Consumer<Boolean> callback) {
+        firebaseFirestore.collection("driverChangeRequests")
+                .document(driverEmail)
+                .get()
+                .addOnSuccessListener(snapshot -> callback.accept(snapshot.exists()))
+                .addOnFailureListener(e -> callback.accept(false));
+    }
+
+    public void getPendingChangeRequests(java.util.function.Consumer<java.util.List<Map<String, Object>>> callback) {
+        firebaseFirestore.collection("driverChangeRequests")
+                .whereEqualTo("status", "PENDING")
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    java.util.List<Map<String, Object>> requests = new java.util.ArrayList<>();
+                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                        Map<String, Object> request = new HashMap<>(doc.getData());
+                        request.put("documentId", doc.getId());
+                        requests.add(request);
+                    }
+                    callback.accept(requests);
+                })
+                .addOnFailureListener(e -> callback.accept(new java.util.ArrayList<>()));
     }
 
     public void logOut(String uid, AuthCallback callback) {
@@ -292,5 +410,11 @@ public class UserService {
                             .addOnFailureListener(callback::onError);
                 })
                 .addOnFailureListener(callback::onError);
+    }
+
+    public void sendPasswordResetEmail(String email, Runnable onSuccess, Consumer<String> onError) {
+        firebaseAuth.sendPasswordResetEmail(email)
+                .addOnSuccessListener(v -> onSuccess.run())
+                .addOnFailureListener(e -> onError.accept(e.getMessage()));
     }
 }

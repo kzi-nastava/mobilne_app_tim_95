@@ -166,7 +166,12 @@ public class EditProfileFragment extends Fragment {
             userService.updateUserProfile(accountViewModel, new AuthCallback() {
                 @Override
                 public void onSuccess(String userId, UserRole role) {
-                    Toast.makeText(getContext(), "Profile updated successfully.", Toast.LENGTH_SHORT).show();
+                    if (role == UserRole.DRIVER) {
+                        Toast.makeText(getContext(), R.string.driver_change_request_submitted, Toast.LENGTH_SHORT)
+                                .show();
+                    } else {
+                        Toast.makeText(getContext(), "Profile updated successfully.", Toast.LENGTH_SHORT).show();
+                    }
                     NavHostFragment.findNavController(EditProfileFragment.this).popBackStack();
                 }
 

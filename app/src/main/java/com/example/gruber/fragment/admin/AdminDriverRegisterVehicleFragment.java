@@ -123,10 +123,18 @@ public class AdminDriverRegisterVehicleFragment extends Fragment {
     }
 
     private void sendActivationEmail(String email, String firstName, String lastName, Runnable onComplete) {
-        // TODO: Implement actual email sending logic
-        // For now, just call the callback to proceed with driver creation
-        Toast.makeText(getContext(), "Activation email placeholder - implement email sending", Toast.LENGTH_SHORT).show();
-        onComplete.run();
+        UserService userService = new UserService(null, FirebaseAuth.getInstance(), FirebaseFirestore.getInstance());
+        
+        userService.sendPasswordResetEmail(email, 
+            () -> {
+                Toast.makeText(getContext(), "Password reset email sent to " + email, Toast.LENGTH_SHORT).show();
+                onComplete.run();
+            },
+            error -> {
+                Toast.makeText(getContext(), "Failed to send email: " + error, Toast.LENGTH_LONG).show();
+                onComplete.run(); // Still proceed even if email fails
+            }
+        );
     }
 
     private void createDriverInFirebase(String email, String password, String firstName, String lastName, String phone, String photoUri, Address address, VehicleInfo vehicleInfo) {

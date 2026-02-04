@@ -1,39 +1,67 @@
 package com.example.gruber.fragment;
 
-import android.app.AlertDialog;
+import android.animation.ValueAnimator;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.LayoutInflater;
+import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
+import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
+import com.example.gruber.models.LatLng;
+import com.example.gruber.models.Ride;
+import com.example.gruber.models.Stop;
+import com.example.gruber.models.enums.RideStatus;
+import com.example.gruber.services.DriverTrackingService;
+import com.example.gruber.services.RideService;
+import com.example.gruber.viewModels.RideViewModel;
+import com.google.android.material.button.MaterialButton;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 
+import org.osmdroid.bonuspack.routing.OSRMRoadManager;
+import org.osmdroid.bonuspack.routing.Road;
+import org.osmdroid.bonuspack.routing.RoadManager;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.ITileSource;
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.tileprovider.tilesource.XYTileSource;
+import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.Polyline;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 
 /**
  * Ride tracking screen:
  * - shows driver location on map
  * - shows ETA to destination (updates as driver approaches)
- * - allows passengers to submit a "driver inconsistency" report note
+ * - simulates driver movement along route
  */
+@AndroidEntryPoint
 public class RideTrackingFragment extends Fragment {
 
     public static final String ARG_RIDE_ID = "rideId";
@@ -43,18 +71,27 @@ public class RideTrackingFragment extends Fragment {
     private TextView tvEta;
     private TextView tvAddresses;
 
-    private Marker driverMarker;
-    private Marker destMarker;
+    private Polyline routeLine;
 
-    // Demo destination; in real app get from Ride dropoff (geocoded lat/lon)
-    private GeoPoint destinationPoint;
+    @Inject
+    RideService rideService;
 
-    // Replace this with your real data source (polling/websocket/firebase)
-    private final RideTrackingRepository repo = new FakeRideTrackingRepository();
-
-    private final Handler ui = new Handler(Looper.getMainLooper());
-
+    private RideViewModel rideViewModel;
     private String rideId;
+    private Marker driverMarker;
+    private DriverTrackingService driverTrackingService;
+    private ValueEventListener driverListener;
+    private GeoPoint lastDriverPoint;
+    private Ride currentRide;
+
+    private List<GeoPoint> simulatedRoute;
+    private int routeIndex = 0;
+    private boolean isSimulating = false;
+
+    private Handler simulationHandler;
+    private Runnable simulationRunnable;
+    private ValueAnimator currentAnimator;
+
 
     private static final ITileSource CARTO_POSITRON = new XYTileSource(
             "CartoPositron",
@@ -66,6 +103,7 @@ public class RideTrackingFragment extends Fragment {
                     "https://d.basemaps.cartocdn.com/light_all/"
             }
     );
+    private RoadManager roadManager;
 
     public RideTrackingFragment() {
         super(R.layout.fragment_ride_tracking);
@@ -74,13 +112,28 @@ public class RideTrackingFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // CRITICAL: Configure osmdroid before using map
+        Configuration.getInstance().load(
+                requireContext(),
+                requireContext().getSharedPreferences("osmdroid", 0)
+        );
         Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
 
-        Bundle args = getArguments();
-        rideId = (args != null) ? args.getString(ARG_RIDE_ID) : null;
-        if (rideId == null) {
-            rideId = "UNKNOWN";
-        }
+        // Set cache location
+        File basePath = new File(requireContext().getCacheDir(), "osmdroid");
+        Configuration.getInstance().setOsmdroidBasePath(basePath);
+        File tileCache = new File(basePath, "tiles");
+        Configuration.getInstance().setOsmdroidTileCache(tileCache);
+
+        rideId = getArguments() != null
+                ? getArguments().getString(ARG_RIDE_ID)
+                : null;
+
+        // Initialize road manager for route fetching
+        roadManager = new OSRMRoadManager(requireContext(), Configuration.getInstance().getUserAgentValue());
+
+        Log.d("RIDE_TRACKING", "ride ID:" + rideId);
     }
 
     @Override
@@ -94,227 +147,571 @@ public class RideTrackingFragment extends Fragment {
 
         setupMap();
 
-        view.findViewById(R.id.btn_report_driver).setOnClickListener(v -> showReportDialog());
+        rideViewModel = new ViewModelProvider(this).get(RideViewModel.class);
 
-        // Load ride info (status + addresses + destination)
-        repo.getRideDetails(rideId, ride -> {
-            tvStatus.setText(statusToUi(ride.status));
-            tvAddresses.setText(String.format(Locale.getDefault(), "%s → %s",
-                    safe(ride.pickupAddress), safe(ride.dropoffAddress)));
+        observeRide();
 
-            // TODO: you should store lat/lon in Ride or Stop; string address needs geocoding.
-            // For now, set a placeholder destination point:
-            destinationPoint = repo.getDestinationPointForRide(rideId);
+        if (rideId != null) {
+            rideViewModel.loadRideById(rideId);
+        }
 
-            ensureDestinationMarker(destinationPoint);
-            map.getController().setZoom(15.5);
-            map.getController().setCenter(destinationPoint);
-        });
+        MaterialButton btnReport = view.findViewById(R.id.btn_report_driver);
 
-        // Subscribe to driver location updates
-        repo.observeDriverLocation(rideId, driverPoint -> {
-            if (!isAdded() || map == null) return;
-
-            ensureDriverMarker(driverPoint);
-
-            // Update ETA (simple approximate; replace with real routing ETA if you have it)
-            updateEta(driverPoint, destinationPoint);
+        btnReport.setOnClickListener(v -> {
+            openReportDialog();
         });
     }
+
+    private void openReportDialog() {
+        ReportDialogFragment dialog = new ReportDialogFragment(note -> {
+
+            rideService.submitReport(note, rideId, ret -> {
+                if(ret){
+                    Log.d("REPORT", "User note: " + note);
+
+                    // Example placeholder:
+                    Toast.makeText(requireContext(),
+                            "Report submitted!", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    Toast.makeText(requireContext(),
+                            "There was an error while submitting the report!", Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+        dialog.show(getParentFragmentManager(), "ReportDialog");
+    }
+
 
     private void setupMap() {
         map.setTileSource(CARTO_POSITRON);
         map.setMultiTouchControls(true);
         map.getController().setZoom(14.0);
+        map.getController().setCenter(new GeoPoint(45.2671, 19.8335));
+        // Enable hardware acceleration
+        map.setLayerType(View.LAYER_TYPE_HARDWARE, null);
     }
 
-    private void ensureDriverMarker(GeoPoint driverPoint) {
+    private void observeRide() {
+        rideViewModel.getRide().observe(getViewLifecycleOwner(), ride -> {
+            if (ride == null) {
+                Log.e("RIDE_TRACKING", "Ride is null");
+                return;
+            }
+
+            if (currentRide != null && ride.status != currentRide.status && driverMarker != null) {
+                buildRouteForStatus(ride.status, lastDriverPoint);
+            }
+
+            currentRide = ride;
+            Log.d("RIDE_TRACKING", "Ride loaded - Status: " + ride.status);
+            Log.d("RIDE_TRACKING", "Driver email: " + ride.driverEmail);
+
+            tvStatus.setText(String.valueOf(ride.status));
+
+            // Update addresses display
+            updateAddressesDisplay(ride);
+
+            // Fetch and draw route
+            fetchAndDrawRoute(ride);
+
+            // Start tracking driver if available
+            if (ride.driverEmail != null && !ride.driverEmail.isEmpty() && driverTrackingService == null) {
+                Log.d("RIDE_TRACKING", "Starting driver tracking");
+                startDriverTracking(ride);
+            }
+
+            if (ride.status == RideStatus.COMPLETED) {
+                openLeaveReviewFragment(ride);
+            }
+        });
+    }
+
+    private void openLeaveReviewFragment(Ride ride) {
+        Bundle args = new Bundle();
+        args.putString("rideId", ride.id);
+
+        NavHostFragment.findNavController(this)
+                .navigate(R.id.leaveReviewFragment, args);
+    }
+
+
+    private void updateAddressesDisplay(Ride ride) {
+        if (ride.getStopList() == null || ride.getStopList().isEmpty()) {
+            tvAddresses.setText("No route information");
+            return;
+        }
+
+        List<Stop> stops = ride.getStopList();
+        String startAddr = stops.get(0).getAddress();
+        String endAddr = stops.get(stops.size() - 1).getAddress();
+
+        tvAddresses.setText(String.format("From: %s\nTo: %s", startAddr, endAddr));
+    }
+
+    private void fetchAndDrawRoute(Ride ride) {
+        if (ride.getStopList() == null || ride.getStopList().size() < 2) {
+            Log.e("RIDE_TRACKING", "Not enough stops");
+            return;
+        }
+
+        List<Stop> stops = ride.getStopList();
+
+        // Build waypoints list
+        ArrayList<GeoPoint> waypoints = new ArrayList<>();
+        for (Stop stop : stops) {
+            if (stop.hasLocation()) {
+                waypoints.add(toGeoPoint(stop.getLocation()));
+            }
+        }
+
+        if (waypoints.size() < 2) {
+            Log.e("RIDE_TRACKING", "Not enough valid locations");
+            drawMarkersOnly(ride);
+            return;
+        }
+
+        // Fetch route in background
+        new Thread(() -> {
+            Road road = roadManager.getRoad(waypoints);
+
+            requireActivity().runOnUiThread(() -> {
+                if (road != null && road.mRouteHigh != null && road.mRouteHigh.size() > 0) {
+                    drawRideRouteOnMap(ride, road);
+                } else {
+                    Log.e("RIDE_TRACKING", "Failed to fetch route");
+                    drawMarkersOnly(ride);
+                }
+            });
+        }).start();
+    }
+
+    private void drawMarkersOnly(Ride ride) {
+        if (ride.getStopList() == null || ride.getStopList().isEmpty()) return;
+
+        map.getOverlays().removeIf(o -> o instanceof Marker && o != driverMarker);
+
+        List<Stop> stops = ride.getStopList();
+        GeoPoint start = toGeoPoint(stops.get(0).getLocation());
+        GeoPoint end = toGeoPoint(stops.get(stops.size() - 1).getLocation());
+
+        if (start != null) {
+            addMarker(start, "Start: " + stops.get(0).getAddress(), R.drawable.ic_pin_start);
+        }
+
+        // Intermediate stops
+        for (int i = 1; i < stops.size() - 1; i++) {
+            GeoPoint p = toGeoPoint(stops.get(i).getLocation());
+            if (p != null) {
+                addMarker(p, "Stop " + i + ": " + stops.get(i).getAddress(), R.drawable.ic_pin_stop);
+            }
+        }
+
+        if (end != null) {
+            addMarker(end, "End: " + stops.get(stops.size() - 1).getAddress(), R.drawable.ic_pin_end);
+        }
+
+        // Center map on start
+        if (start != null) {
+            map.getController().setCenter(start);
+            map.getController().setZoom(14.0);
+        }
+
+        map.invalidate();
+    }
+
+    private void startDriverTracking(Ride ride) {
+        driverTrackingService = new DriverTrackingService(ride.driverEmail);
+
+        driverListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snap) {
+                if (!snap.exists()) {
+                    Log.w("RIDE_TRACKING", "Driver location snapshot doesn't exist");
+                    return;
+                }
+
+                Double lat = snap.child("lat").getValue(Double.class);
+                Double lon = snap.child("lon").getValue(Double.class);
+
+                Log.d("RIDE_TRACKING", "Driver location update: " + lat + ", " + lon);
+
+                if (lat == null || lon == null) {
+                    Log.w("RIDE_TRACKING", "Lat or Lon is null");
+                    return;
+                }
+
+                GeoPoint current = new GeoPoint(lat, lon);
+                handleDriverPositionUpdate(current, ride.status);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("RIDE_TRACKING", "RTDB error", error.toException());
+            }
+        };
+
+        driverTrackingService.listen(driverListener);
+    }
+
+    private void handleDriverPositionUpdate(GeoPoint firebasePos, RideStatus status) {
+
         if (driverMarker == null) {
             driverMarker = new Marker(map);
-            driverMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+            driverMarker.setPosition(firebasePos);
+            driverMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
+            driverMarker.setIcon(getScaledDrawable(R.drawable.ic_car_free, 28));
             driverMarker.setTitle("Driver");
+
             map.getOverlays().add(driverMarker);
+            map.invalidate();
+
+            lastDriverPoint = firebasePos;
+
+            buildRouteForStatus(status, firebasePos);
         }
-        driverMarker.setPosition(driverPoint);
-        map.invalidate();
     }
 
-    private void ensureDestinationMarker(GeoPoint destPoint) {
-        if (destPoint == null || map == null) return;
 
-        if (destMarker == null) {
-            destMarker = new Marker(map);
-            destMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-            destMarker.setTitle("Destination");
-            map.getOverlays().add(destMarker);
+    private void buildRouteForStatus(RideStatus status, GeoPoint from) {
+
+        GeoPoint target = null;
+
+        if (status == RideStatus.PENDING) {
+            target = toGeoPoint(currentRide.getStart().getLocation());
+        } else if (status == RideStatus.ACTIVE) {
+            target = toGeoPoint(currentRide.getEnd().getLocation());
         }
-        destMarker.setPosition(destPoint);
-        map.invalidate();
+
+        if (target == null) return;
+
+        final GeoPoint fromFinal = from;
+        final GeoPoint targetFinal = target;
+
+        new Thread(() -> {
+            ArrayList<GeoPoint> pts = new ArrayList<>();
+            pts.add(fromFinal);
+            pts.add(targetFinal);
+
+            Road road = roadManager.getRoad(pts);
+
+            requireActivity().runOnUiThread(() -> {
+                if (road != null && road.mRouteHigh != null) {
+                    simulatedRoute = road.mRouteHigh;
+                    routeIndex = 0;
+                    startSimulation(status);
+                }
+            });
+        }).start();
+
     }
 
-    private void updateEta(@Nullable GeoPoint driver, @Nullable GeoPoint dest) {
-        if (driver == null || dest == null) {
+    private void startSimulation(RideStatus status) {
+
+        if (simulatedRoute == null || simulatedRoute.size() < 2) return;
+
+        stopSimulation(); // IMPORTANT: prevent duplicates
+
+        isSimulating = true;
+        simulationHandler = new Handler(Looper.getMainLooper());
+
+        simulationRunnable = new Runnable() {
+            @Override
+            public void run() {
+
+                if (!isAdded() || map == null) {
+                    stopSimulation();
+                    return;
+                }
+
+                if (routeIndex >= simulatedRoute.size() - 1) {
+                    stopSimulation();
+                    return;
+                }
+
+                GeoPoint from = simulatedRoute.get(routeIndex);
+                GeoPoint to = simulatedRoute.get(routeIndex + 1);
+
+                animateDriverBetween(from, to);
+
+                lastDriverPoint = to;
+                updateEtaToDestination(to);
+
+                routeIndex++;
+
+                simulationHandler.postDelayed(this, 1200);
+            }
+        };
+
+        simulationHandler.post(simulationRunnable);
+    }
+
+    private void stopSimulation() {
+
+        isSimulating = false;
+
+        if (simulationHandler != null && simulationRunnable != null) {
+            simulationHandler.removeCallbacks(simulationRunnable);
+        }
+
+        simulationRunnable = null;
+        simulationHandler = null;
+
+        if (currentAnimator != null) {
+            currentAnimator.cancel();
+            currentAnimator = null;
+        }
+    }
+
+
+
+    private void animateDriverBetween(GeoPoint from, GeoPoint to) {
+
+        if (currentAnimator != null) {
+            currentAnimator.cancel();
+        }
+
+        currentAnimator = ValueAnimator.ofFloat(0f, 1f);
+        currentAnimator.setDuration(1200);
+        currentAnimator.setInterpolator(new LinearInterpolator());
+
+        currentAnimator.addUpdateListener(v -> {
+
+            if (!isAdded() || driverMarker == null || map == null) return;
+
+            float f = (float) v.getAnimatedValue();
+
+            double lat = from.getLatitude() + (to.getLatitude() - from.getLatitude()) * f;
+            double lon = from.getLongitude() + (to.getLongitude() - from.getLongitude()) * f;
+
+            driverMarker.setPosition(new GeoPoint(lat, lon));
+            map.invalidate();
+        });
+
+        currentAnimator.start();
+    }
+
+
+    private void updateEtaToDestination(@Nullable GeoPoint driverPoint) {
+        if (driverPoint == null || currentRide == null) {
             tvEta.setText("ETA: calculating...");
             return;
         }
 
-        // Simple estimate: distance / average speed (e.g. 35 km/h = 9.72 m/s)
-        double meters = driver.distanceToAsDouble(dest);
-        double avgSpeedMps = 9.72; // tweak or compute from ride/driver speed
-        long etaSeconds = (long) Math.ceil(meters / avgSpeedMps);
+        GeoPoint target = null;
+        String targetLabel = "";
 
+        // Decide ETA target based on ride status
+        if (currentRide.status == RideStatus.PENDING) {
+            // Driver going to pick up passenger
+            if (currentRide.getStart() != null && currentRide.getStart().hasLocation()) {
+                target = toGeoPoint(currentRide.getStart().getLocation());
+                targetLabel = "pickup";
+            }
+        } else if (currentRide.status == RideStatus.ACTIVE) {
+            // Driver taking passenger to destination
+            if (currentRide.getEnd() != null && currentRide.getEnd().hasLocation()) {
+                target = toGeoPoint(currentRide.getEnd().getLocation());
+                targetLabel = "destination";
+            }
+        }
+
+        if (target == null) {
+            tvEta.setText("ETA: calculating...");
+            return;
+        }
+
+        // Distance in meters
+        double meters = driverPoint.distanceToAsDouble(target);
+
+        // Average speeds (m/s)
+        double speedMps;
+        if (currentRide.status == RideStatus.PENDING) {
+            speedMps = 12.5;   // ~30 km/h city (going to pickup)
+        } else {
+            speedMps = 12.5;  // ~40 km/h (during ride)
+        }
+
+        long etaSeconds = Math.max(1, (long) (meters / speedMps));
         long minutes = etaSeconds / 60;
         long seconds = etaSeconds % 60;
 
-        tvEta.setText(String.format(Locale.getDefault(),
-                "ETA: %d min %02d sec (%.0f m)", minutes, seconds, meters));
+        // UI
+        tvEta.setText(String.format(
+                Locale.getDefault(),
+                "ETA to %s: %d min %02d sec (%.0f m)",
+                targetLabel, minutes, seconds, meters
+        ));
     }
 
-    private void showReportDialog() {
-        View dialogView = LayoutInflater.from(requireContext())
-                .inflate(R.layout.fragment_report_dialog, null);
+    // ---------------------------------------------------------
+    // ROUTE + PINS
+    // ---------------------------------------------------------
 
-        TextInputLayout til = dialogView.findViewById(R.id.til_report_note);
-        TextInputEditText et = dialogView.findViewById(R.id.et_report_note);
+    private void drawRideRouteOnMap(Ride ride, Road road) {
+        if (!isAdded() || map == null) {
+            Log.e("RIDE_TRACKING", "Cannot draw route - fragment not added or map is null");
+            return;
+        }
 
-        new AlertDialog.Builder(requireContext())
-                .setView(dialogView)
-                .setNegativeButton("Cancel", (d, which) -> d.dismiss())
-                .setPositiveButton("Submit", null) // set later to prevent auto-dismiss on validation fail
-                .create();
+        List<Stop> allStops = ride.getStopList();
+        if (allStops == null || allStops.size() < 2) {
+            Log.e("RIDE_TRACKING", "Not enough stops");
+            return;
+        }
 
-        AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                .setView(dialogView)
-                .setNegativeButton("Cancel", (d, which) -> d.dismiss())
-                .setPositiveButton("Submit", null)
-                .show();
+        GeoPoint start = toGeoPoint(allStops.get(0).getLocation());
+        GeoPoint end = toGeoPoint(allStops.get(allStops.size() - 1).getLocation());
 
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            String note = (et.getText() != null) ? et.getText().toString().trim() : "";
+        if (start == null || end == null) {
+            Log.e("RIDE_TRACKING", "Start or end location is null");
+            return;
+        }
 
-            if (note.isEmpty()) {
-                til.setError("Please enter a note.");
-                return;
+        // Remove old overlays except driver marker
+        map.getOverlays().removeIf(o -> (o instanceof Polyline) ||
+                (o instanceof Marker && o != driverMarker));
+
+        // Draw route line
+        routeLine = OSRMRoadManager.buildRoadOverlay(road);
+        int blue = ContextCompat.getColor(requireContext(), R.color.status_active);
+        routeLine.getOutlinePaint().setColor(blue);
+        routeLine.getOutlinePaint().setStrokeWidth(8f);
+        routeLine.getOutlinePaint().setAntiAlias(true);
+
+        map.getOverlays().add(0, routeLine); // Add route at bottom
+
+        // Add markers
+        addMarker(start, "Start: " + allStops.get(0).getAddress(), R.drawable.ic_pin_start);
+
+        // Intermediate stops
+        for (int i = 1; i < allStops.size() - 1; i++) {
+            GeoPoint p = toGeoPoint(allStops.get(i).getLocation());
+            if (p != null) {
+                addMarker(p, "Stop " + (i) + ": " + allStops.get(i).getAddress(),
+                        R.drawable.ic_pin_stop);
             }
-            til.setError(null);
+        }
 
-            repo.submitDriverInconsistencyReport(rideId, note, ok -> {
-                ui.post(() -> {
-                    if (!isAdded()) return;
-                    if (ok) {
-                        Toast.makeText(requireContext(), "Report submitted.", Toast.LENGTH_SHORT).show();
-                        dialog.dismiss();
-                    } else {
-                        Toast.makeText(requireContext(), "Failed to submit report.", Toast.LENGTH_SHORT).show();
-                    }
-                });
+        addMarker(end, "End: " + allStops.get(allStops.size() - 1).getAddress(), R.drawable.ic_pin_end);
+
+        // Zoom to fit route
+        ArrayList<GeoPoint> waypoints = new ArrayList<>();
+        for (Stop stop : allStops) {
+            if (stop.hasLocation()) {
+                waypoints.add(toGeoPoint(stop.getLocation()));
+            }
+        }
+
+        BoundingBox bb = BoundingBoxUtil.fromGeoPoints(waypoints);
+        if (bb != null) {
+            map.post(() -> {
+                map.zoomToBoundingBox(bb, true, 100);
             });
-        });
+        } else {
+            map.getController().setCenter(start);
+            map.getController().setZoom(14.0);
+        }
+
+        map.invalidate();
+
+        Log.d("RIDE_TRACKING", "Route drawn successfully");
     }
 
-    private String statusToUi(Object status) {
-        return (status == null) ? "Ride" : status.toString();
+    private int dp(int dp) {
+        return (int) (dp * getResources().getDisplayMetrics().density);
     }
 
-    private String safe(String s) {
-        return (s == null || s.trim().isEmpty()) ? "-" : s;
+    private void addMarker(GeoPoint point, String title, int iconRes) {
+        Marker m = new Marker(map);
+        m.setPosition(point);
+        m.setTitle(title);
+        m.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+
+        Drawable icon = getScaledDrawable(iconRes, 32); // pins slightly bigger
+        m.setIcon(icon);
+
+        map.getOverlays().add(m);
+    }
+
+
+    private Drawable getScaledDrawable(int resId, int dpSize) {
+        Drawable d = ContextCompat.getDrawable(requireContext(), resId);
+        if (d == null) return null;
+
+        int px = dp(dpSize);
+
+        Bitmap bitmap = Bitmap.createBitmap(
+                d.getIntrinsicWidth(),
+                d.getIntrinsicHeight(),
+                Bitmap.Config.ARGB_8888
+        );
+
+        Canvas canvas = new Canvas(bitmap);
+        d.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        d.draw(canvas);
+
+        Bitmap scaled = Bitmap.createScaledBitmap(bitmap, px, px, true);
+        return new BitmapDrawable(getResources(), scaled);
+    }
+
+    // ---------------------------------------------------------
+
+    private GeoPoint toGeoPoint(LatLng location) {
+        if (location == null) return null;
+        return new GeoPoint(location.lat, location.lon);
     }
 
     @Override
     public void onResume() {
         super.onResume();
         if (map != null) map.onResume();
-        repo.start(rideId);
     }
 
     @Override
     public void onPause() {
-        repo.stop(rideId);
+
+        stopSimulation(); // CRITICAL
+
+        if (driverTrackingService != null && driverListener != null) {
+            driverTrackingService.stopListening(driverListener);
+        }
+
         if (map != null) map.onPause();
+
         super.onPause();
     }
 
-    /**
-     * Data source abstraction: plug your backend here.
-     */
-    public interface RideTrackingRepository {
-        void start(String rideId);
-        void stop(String rideId);
+    @Override
+    public void onDestroyView() {
 
-        void getRideDetails(String rideId, RideCallback cb);
-        GeoPoint getDestinationPointForRide(String rideId);
+        stopSimulation();
 
-        void observeDriverLocation(String rideId, DriverLocationCallback cb);
-        void submitDriverInconsistencyReport(String rideId, String note, SubmitCallback cb);
+        if (driverTrackingService != null && driverListener != null) {
+            driverTrackingService.stopListening(driverListener);
+        }
 
-        interface RideCallback { void onRide(RideDto ride); }
-        interface DriverLocationCallback { void onLocation(GeoPoint driverPoint); }
-        interface SubmitCallback { void onResult(boolean ok); }
+        driverMarker = null;
+        map = null;
+
+        super.onDestroyView();
     }
 
-    /**
-     * Minimal DTO just for this screen.
-     * Replace with your Ride model or mapper.
-     */
-    public static class RideDto {
-        public String pickupAddress;
-        public String dropoffAddress;
-        public Object status;
-    }
+    private static class BoundingBoxUtil {
+        static org.osmdroid.util.BoundingBox fromGeoPoints(List<GeoPoint> pts) {
+            if (pts == null || pts.isEmpty()) return null;
 
-    /**
-     * Fake repo to demonstrate UI updates without backend.
-     * Replace ASAP.
-     */
-    private static class FakeRideTrackingRepository implements RideTrackingRepository {
-        private final Handler handler = new Handler(Looper.getMainLooper());
-        private DriverLocationCallback driverCb;
+            double minLat = Double.MAX_VALUE, maxLat = -Double.MAX_VALUE;
+            double minLon = Double.MAX_VALUE, maxLon = -Double.MAX_VALUE;
 
-        private GeoPoint driver = new GeoPoint(45.2671, 19.8335); // Novi Sad-ish
-        private GeoPoint dest = new GeoPoint(45.2540, 19.8450);
-
-        private final Runnable tick = new Runnable() {
-            @Override public void run() {
-                if (driverCb != null) {
-                    // move a bit toward destination
-                    double lat = driver.getLatitude() + (dest.getLatitude() - driver.getLatitude()) * 0.03;
-                    double lon = driver.getLongitude() + (dest.getLongitude() - driver.getLongitude()) * 0.03;
-                    driver = new GeoPoint(lat, lon);
-                    driverCb.onLocation(driver);
-                    handler.postDelayed(this, 1500);
-                }
+            for (GeoPoint p : pts) {
+                minLat = Math.min(minLat, p.getLatitude());
+                maxLat = Math.max(maxLat, p.getLatitude());
+                minLon = Math.min(minLon, p.getLongitude());
+                maxLon = Math.max(maxLon, p.getLongitude());
             }
-        };
 
-        @Override public void start(String rideId) {
-            handler.removeCallbacks(tick);
-            handler.postDelayed(tick, 800);
-        }
-
-        @Override public void stop(String rideId) {
-            handler.removeCallbacks(tick);
-        }
-
-        @Override public void getRideDetails(String rideId, RideCallback cb) {
-            RideDto dto = new RideDto();
-            dto.pickupAddress = "Pickup address";
-            dto.dropoffAddress = "Dropoff address";
-            dto.status = "IN_PROGRESS";
-            cb.onRide(dto);
-        }
-
-        @Override public GeoPoint getDestinationPointForRide(String rideId) {
-            return dest;
-        }
-
-        @Override public void observeDriverLocation(String rideId, DriverLocationCallback cb) {
-            this.driverCb = cb;
-            cb.onLocation(driver);
-        }
-
-        @Override public void submitDriverInconsistencyReport(String rideId, String note, SubmitCallback cb) {
-            // simulate network
-            handler.postDelayed(() -> cb.onResult(true), 600);
+            return new org.osmdroid.util.BoundingBox(maxLat, maxLon, minLat, minLon);
         }
     }
 }

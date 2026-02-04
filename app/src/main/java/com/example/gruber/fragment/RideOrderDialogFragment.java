@@ -17,7 +17,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ProgressBar;
 import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
 import com.example.gruber.R;
 import com.example.gruber.adapter.RideOptionsViewPagerAdapter;
 import com.example.gruber.models.Stop;
@@ -254,11 +256,19 @@ public class RideOrderDialogFragment extends DialogFragment {
         }
 
         if (userEmail != null && !userEmail.isEmpty()) {
+            // Show loading dialog
+            AlertDialog loadingDialog = new AlertDialog.Builder(getContext())
+                    .setView(new ProgressBar(getContext()))
+                    .setCancelable(false)
+                    .show();
+
             rideViewModel.bookRide(userEmail, success -> {
-                if (success) {
+                loadingDialog.dismiss();
+                
+                if (success != null) {
                     Toast.makeText(getContext(), R.string.booking_success, Toast.LENGTH_SHORT).show();
                     dismiss();
-                    navigateToRideTracking();
+                    navigateToRideTracking(success);
                 } else {
                     Toast.makeText(getContext(), R.string.booking_error_no_drivers, Toast.LENGTH_SHORT)
                             .show();
@@ -269,10 +279,12 @@ public class RideOrderDialogFragment extends DialogFragment {
         }
     }
 
-    private void navigateToRideTracking() {
+    private void navigateToRideTracking(String rideId) {
         try {
             NavController navController = NavHostFragment.findNavController(RideOrderDialogFragment.this);
-            navController.navigate(R.id.rideTrackingFragment);
+            Bundle bundle = new Bundle();
+            bundle.putString("rideId", rideId);
+            navController.navigate(R.id.rideTrackingFragment, bundle);
         } catch (Exception e) {
             e.printStackTrace();
         }

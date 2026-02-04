@@ -10,6 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
@@ -57,6 +58,7 @@ public class ProfileFragment extends Fragment {
         TextView txtAllowsPets = view.findViewById(R.id.txtAllowsPets);
         TextView txtBlockedMessage = view.findViewById(R.id.txtBlockedMessage);
         ImageView imgProfile = view.findViewById(R.id.imgProfile);
+        TextView txtPendingChangeMessage = view.findViewById(R.id.txtPendingChangeMessage);
 
         // Check role from SessionManager first
         UserRole userRole = sessionManager.getUserRole();
@@ -98,7 +100,10 @@ public class ProfileFragment extends Fragment {
                 if (txtBlockedMessage != null) {
                     txtBlockedMessage.setVisibility(View.VISIBLE);
                     driverSection.setVisibility(View.GONE);
-                    
+                    if (txtPendingChangeMessage != null) {
+                        txtPendingChangeMessage.setVisibility(View.GONE);
+                    }
+
                     String reason = accountViewModel.getBlockReason().getValue();
                     if (reason != null && !reason.isEmpty()) {
                         txtBlockedMessage.setText(getString(R.string.driver_blocked_message) + "\nReason: " + reason);
@@ -169,9 +174,20 @@ public class ProfileFragment extends Fragment {
                     driverViewModel.getNumberOfSeats().observe(getViewLifecycleOwner(), vehicleSeatsObserver);
                     driverViewModel.getAllowsBabies().observe(getViewLifecycleOwner(), allowsBabiesObserver);
                     driverViewModel.getAllowsPets().observe(getViewLifecycleOwner(), allowsPetsObserver);
+                    driverViewModel.getHasPendingChangeRequest().observe(getViewLifecycleOwner(), pending -> {
+                        if (txtPendingChangeMessage != null) {
+                            boolean isBlocked = accountViewModel.getBlocked().getValue() != null
+                                    && accountViewModel.getBlocked().getValue();
+                            boolean show = pending != null && pending && !isBlocked;
+                            txtPendingChangeMessage.setVisibility(show ? View.VISIBLE : View.GONE);
+                        }
+                    });
                 }
             } else {
                 driverSection.setVisibility(View.GONE);
+                if (txtPendingChangeMessage != null) {
+                    txtPendingChangeMessage.setVisibility(View.GONE);
+                }
                 if (vehicleObserversRegistered.getAndSet(false)) {
                     accountViewModel.getVehicleModel().removeObserver(vehicleModelObserver);
                     accountViewModel.getVehiclePlate().removeObserver(vehiclePlateObserver);
