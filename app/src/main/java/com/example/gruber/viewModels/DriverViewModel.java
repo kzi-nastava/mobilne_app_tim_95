@@ -16,6 +16,7 @@ public class DriverViewModel extends AccountViewModel {
     private final MutableLiveData<Integer> numberOfSeats = new MutableLiveData<>();
     private final MutableLiveData<Boolean> allowsBabies = new MutableLiveData<>();
     private final MutableLiveData<Boolean> allowsPets = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> hasPendingChangeRequest = new MutableLiveData<>(false);
 
     @Inject
     public DriverViewModel(UserService userService) {
@@ -95,6 +96,14 @@ public class DriverViewModel extends AccountViewModel {
 
     public void setAllowsPets(Boolean value) {
         this.allowsPets.setValue(value);
+    }
+
+    public MutableLiveData<Boolean> getHasPendingChangeRequest() {
+        return hasPendingChangeRequest;
+    }
+
+    public void setHasPendingChangeRequest(Boolean value) {
+        this.hasPendingChangeRequest.setValue(value);
     }
 
     @Override

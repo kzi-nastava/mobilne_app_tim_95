@@ -32,10 +32,10 @@ public class UserBlockManagementPagerAdapter extends FragmentStateAdapter {
     public void filterUsers(String query) {
         if (query == null) query = "";
         
-        if (passengerFragment != null && passengerFragment.isAdded()) {
+        if (passengerFragment != null) {
             passengerFragment.filterUsers(query);
         }
-        if (driverFragment != null && driverFragment.isAdded()) {
+        if (driverFragment != null) {
             driverFragment.filterUsers(query);
         }
     }
