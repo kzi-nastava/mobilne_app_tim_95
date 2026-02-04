@@ -31,6 +31,18 @@
                 android:layout_height="14dp"
                 android:background="@drawable/status_dot"
                 app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/btnAddToFavorite"
+                android:layout_marginEnd="8dp" />
+
+            <ImageButton
+                android:id="@+id/btnAddToFavorite"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/add_to_favorites"
+                android:src="@drawable/ic_star_outline"
+                app:tint="?attr/colorPrimary"
+                app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
             <TextView

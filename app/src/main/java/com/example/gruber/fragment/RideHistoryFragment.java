@@ -29,6 +29,7 @@ import com.example.gruber.adapter.UsersRideAdapter;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.models.enums.SortCategory;
+import com.example.gruber.SessionManager;
 import com.example.gruber.viewModels.RideViewModel;
 import com.example.gruber.viewModels.SearchViewModel;
 import com.google.android.material.button.MaterialButton;
@@ -53,6 +54,7 @@ public class RideHistoryFragment extends Fragment {
 
     private SortCategory sortCategory = SortCategory.DATE;
     private boolean isAscending = true;
+    private SessionManager sessionManager;
 
     private SensorManager sensorManager;
     private Sensor accelerometer;
@@ -72,6 +74,7 @@ public class RideHistoryFragment extends Fragment {
 
         rideViewModel = new ViewModelProvider(requireActivity()).get(RideViewModel.class);
         searchViewModel = new ViewModelProvider(requireActivity()).get(SearchViewModel.class);
+        sessionManager = new SessionManager(requireContext());
         statusSearchMap = new HashMap<>();
         for (RideStatus status : RideStatus.values()) {
             statusSearchMap.put(status.toString(), false);
@@ -248,6 +251,22 @@ public class RideHistoryFragment extends Fragment {
         UsersRideAdapter adapter = new UsersRideAdapter(ride -> {
             rideViewModel.setRide(ride);
             NavHostFragment.findNavController(RideHistoryFragment.this).navigate(R.id.action_usersRidesHistory_to_rideDetailsFragment);
+        });
+        adapter.setOnFavoriteClickListener(ride -> {
+            if (ride == null || ride.stopList == null || ride.stopList.isEmpty()) {
+                Toast.makeText(requireContext(), R.string.no_stops_added, Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String email = sessionManager.getUserEmail();
+            String description = ride.getStartAddress() + " → " + ride.getEndAddress();
+            rideViewModel.saveFavoriteRoute(email, ride.stopList, description, success -> {
+                if (success) {
+                    Toast.makeText(requireContext(), R.string.favorite_route_saved, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(requireContext(), R.string.favorite_route_save_failed, Toast.LENGTH_SHORT).show();
+                }
+            });
         });
         recyclerView.setAdapter(adapter);
 

@@ -3,6 +3,7 @@ package com.example.gruber.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -24,9 +25,14 @@ public class UsersRideAdapter
 
     private List<Ride> items;
     private OnItemClickListener listener;
+    private OnFavoriteClickListener favoriteClickListener;
 
     public interface OnItemClickListener {
         void onItemClick(Ride item);
+    }
+
+    public interface OnFavoriteClickListener {
+        void onFavoriteClick(Ride item);
     }
 
     public UsersRideAdapter(OnItemClickListener listener) {
@@ -36,6 +42,10 @@ public class UsersRideAdapter
 
     public UsersRideAdapter() {
         items = new ArrayList<>();
+    }
+
+    public void setOnFavoriteClickListener(OnFavoriteClickListener favoriteClickListener) {
+        this.favoriteClickListener = favoriteClickListener;
     }
 
     @NonNull
@@ -53,7 +63,7 @@ public class UsersRideAdapter
             @NonNull ViewHolder holder, int position) {
 
         Ride item = items.get(position);
-        holder.bind(item, listener);
+        holder.bind(item, listener, favoriteClickListener);
     }
 
     @Override
@@ -79,6 +89,7 @@ public class UsersRideAdapter
 
         TextView tvFromToText, tvDateOfRide, tvDriverEmail, tvStatus, tvPrice;
         View statusDot;
+        ImageButton btnAddToFavorite;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -88,40 +99,60 @@ public class UsersRideAdapter
             tvStatus = itemView.findViewById(R.id.textStatus);
             statusDot = itemView.findViewById(R.id.statusDot);
             tvPrice = itemView.findViewById(R.id.textPrice);
+            btnAddToFavorite = itemView.findViewById(R.id.btnAddToFavorite);
         }
 
-        void bind(Ride item, OnItemClickListener listener) {
+        void bind(Ride item, OnItemClickListener listener, OnFavoriteClickListener favoriteClickListener) {
 
             var stopList = item.stopList;
-            String fromToText = stopList.get(0).address + " to " + stopList.get(stopList.size() - 1).address;
+            String fromToText = "";
+            if (stopList != null && !stopList.isEmpty()) {
+                String startAddress = stopList.get(0).address != null ? stopList.get(0).address : "Start";
+                String endAddress = stopList.get(stopList.size() - 1).address != null ? stopList.get(stopList.size() - 1).address : "End";
+                fromToText = startAddress + " to " + endAddress;
+            } else {
+                fromToText = "Unknown route";
+            }
             tvFromToText.setText(fromToText);
 
             String dateText = getStringFromDateTime(item.getStartedAtLocalDateTime());
-            dateText = dateText + " - " + getStringFromDateTime(item.getFinishedAtLocalDateTime());
+            String finishedDateText = getStringFromDateTime(item.getFinishedAtLocalDateTime());
+            dateText = dateText + " - " + finishedDateText;
             tvDateOfRide.setText(dateText);
 
-            tvDriverEmail.setText(item.getDriverEmail());
-            tvStatus.setText(item.getStatus().toString());
+            String driverEmail = item.getDriverEmail();
+            tvDriverEmail.setText(driverEmail != null ? driverEmail : "Unknown driver");
+            tvStatus.setText(item.getStatus() != null ? item.getStatus().toString() : "Unknown");
 
-            switch (item.status) {
-                case PENDING:
-                    statusDot.setBackgroundTintList(ContextCompat.getColorStateList(itemView.getContext(), R.color.status_pending));
-                    tvPrice.setText(String.valueOf(item.getPriceDin()));
-                    break;
-                case ACTIVE:
-                    statusDot.setBackgroundTintList(ContextCompat.getColorStateList(itemView.getContext(), R.color.status_active));
-                    tvPrice.setText(String.valueOf(item.getPriceDin()));
-                    break;
-                case COMPLETED:
-                    statusDot.setBackgroundTintList(ContextCompat.getColorStateList(itemView.getContext(), R.color.status_completed));
-                    tvPrice.setText(String.format(Integer.toString(item.getPriceDin()), ".2d"));
-                    break;
-                case CANCELLED:
-                    statusDot.setBackgroundTintList(ContextCompat.getColorStateList(itemView.getContext(), R.color.status_cancelled));
-                    break;
-                case PANIC_TRIGGERED:
-                    statusDot.setBackgroundTintList(ContextCompat.getColorStateList(itemView.getContext(), R.color.status_panic_triggered));
-                    break;
+            if (item.status != null) {
+                switch (item.status) {
+                    case PENDING:
+                        statusDot.setBackgroundTintList(ContextCompat.getColorStateList(itemView.getContext(), R.color.status_pending));
+                        tvPrice.setText(String.valueOf(item.getPriceDin()));
+                        break;
+                    case ACTIVE:
+                        statusDot.setBackgroundTintList(ContextCompat.getColorStateList(itemView.getContext(), R.color.status_active));
+                        tvPrice.setText(String.valueOf(item.getPriceDin()));
+                        break;
+                    case COMPLETED:
+                        statusDot.setBackgroundTintList(ContextCompat.getColorStateList(itemView.getContext(), R.color.status_completed));
+                        tvPrice.setText(String.format(Integer.toString(item.getPriceDin()), ".2d"));
+                        break;
+                    case CANCELLED:
+                        statusDot.setBackgroundTintList(ContextCompat.getColorStateList(itemView.getContext(), R.color.status_cancelled));
+                        break;
+                    case PANIC_TRIGGERED:
+                        statusDot.setBackgroundTintList(ContextCompat.getColorStateList(itemView.getContext(), R.color.status_panic_triggered));
+                        break;
+                }
+            }
+
+            if (btnAddToFavorite != null) {
+                btnAddToFavorite.setOnClickListener(v -> {
+                    if (favoriteClickListener != null) {
+                        favoriteClickListener.onFavoriteClick(item);
+                    }
+                });
             }
 
             itemView.setOnClickListener(ride -> listener.onItemClick(item));

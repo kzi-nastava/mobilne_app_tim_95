@@ -31,6 +31,7 @@
     <string name="profile_image">Profile image</string>
     <string name="active_hours">Active hours</string>
     <string name="settings">Settings</string>
+    <string name="favorite_routes">Favorite routes</string>
     <string name="return_profile">Return to profile</string>
     <string name="log_out">Log out</string>
 
@@ -62,6 +63,14 @@
     <string name="driver">Driver : </string>
     <string name="price">Price : </string>
     <string name="no_rides_to_display">No rides to display…</string>
+    <string name="add_to_favorites">Add to favorite routes</string>
+    <string name="remove_favorite">Remove</string>
+    <string name="order_ride">Order ride</string>
+    <string name="no_favorite_routes">No favorite routes yet.</string>
+    <string name="favorite_route_saved">Route added to favorites.</string>
+    <string name="favorite_route_save_failed">Failed to add route to favorites.</string>
+    <string name="favorite_route_removed">Route removed from favorites.</string>
+    <string name="favorite_route_remove_failed">Failed to remove route.</string>
 
     <!--   NAVIGATION  -->
     <string name="home">Home</string>
