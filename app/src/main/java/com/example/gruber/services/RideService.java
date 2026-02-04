@@ -796,6 +796,10 @@ public class RideService {
                             .document(rideId)
                             .update(rideUpdate)
                             .addOnSuccessListener(v1 -> {
+                                // Update driver status to DRIVING in realtime database
+                                DriverTrackingService driverTracking = new DriverTrackingService(ride.driverEmail);
+                                driverTracking.updateStatus(DriverTrackingService.DriverStatus.DRIVING);
+
                                 updateUserActive(ride.driverEmail, true, success1 -> {
                                     if (!success1) {
                                         callback.accept(false);
