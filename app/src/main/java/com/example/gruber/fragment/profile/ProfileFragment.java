@@ -50,6 +50,7 @@ public class ProfileFragment extends Fragment {
         TextView txtAllowsBabies = view.findViewById(R.id.txtAllowsBabies);
         TextView txtAllowsPets = view.findViewById(R.id.txtAllowsPets);
         TextView txtBlockedMessage = view.findViewById(R.id.txtBlockedMessage);
+        TextView txtPendingChangeMessage = view.findViewById(R.id.txtPendingChangeMessage);
 
         // Check role from SessionManager first
         UserRole userRole = sessionManager.getUserRole();
@@ -85,6 +86,9 @@ public class ProfileFragment extends Fragment {
                 if (txtBlockedMessage != null) {
                     txtBlockedMessage.setVisibility(View.VISIBLE);
                     driverSection.setVisibility(View.GONE);
+                    if (txtPendingChangeMessage != null) {
+                        txtPendingChangeMessage.setVisibility(View.GONE);
+                    }
                     
                     String reason = accountViewModel.getBlockReason().getValue();
                     if (reason != null && !reason.isEmpty()) {
@@ -156,9 +160,20 @@ public class ProfileFragment extends Fragment {
                     driverViewModel.getNumberOfSeats().observe(getViewLifecycleOwner(), vehicleSeatsObserver);
                     driverViewModel.getAllowsBabies().observe(getViewLifecycleOwner(), allowsBabiesObserver);
                     driverViewModel.getAllowsPets().observe(getViewLifecycleOwner(), allowsPetsObserver);
+                    driverViewModel.getHasPendingChangeRequest().observe(getViewLifecycleOwner(), pending -> {
+                        if (txtPendingChangeMessage != null) {
+                            boolean isBlocked = accountViewModel.getBlocked().getValue() != null
+                                    && accountViewModel.getBlocked().getValue();
+                            boolean show = pending != null && pending && !isBlocked;
+                            txtPendingChangeMessage.setVisibility(show ? View.VISIBLE : View.GONE);
+                        }
+                    });
                 }
             } else {
                 driverSection.setVisibility(View.GONE);
+                if (txtPendingChangeMessage != null) {
+                    txtPendingChangeMessage.setVisibility(View.GONE);
+                }
                 if (vehicleObserversRegistered.getAndSet(false)) {
                     accountViewModel.getVehicleModel().removeObserver(vehicleModelObserver);
                     accountViewModel.getVehiclePlate().removeObserver(vehiclePlateObserver);

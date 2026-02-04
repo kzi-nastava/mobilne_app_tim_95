@@ -106,7 +106,15 @@
         <action
             android:id="@+id/action_adminUserBlockManagementFragment_to_adminDriverRegisterAccountFragment"
             app:destination="@id/adminDriverRegisterAccountFragment" />
+        <action
+            android:id="@+id/action_adminUserBlockManagementFragment_to_adminDriverChangeRequestsFragment"
+            app:destination="@id/adminDriverChangeRequestsFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/adminDriverChangeRequestsFragment"
+        android:name="com.example.gruber.fragment.admin.AdminDriverChangeRequestsFragment"
+        android:label="Driver Change Requests" />
 
     <fragment
         android:id="@+id/adminDriverRegisterAccountFragment"
