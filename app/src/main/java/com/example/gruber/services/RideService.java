@@ -6,6 +6,8 @@ import android.location.Geocoder;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import com.example.gruber.models.DriverLocation;
+import com.example.gruber.services.callbacks.RideCallback;
+import com.example.gruber.services.callbacks.RideIdCallback;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import androidx.lifecycle.LiveData;
@@ -24,6 +26,7 @@ import com.example.gruber.services.callbacks.RouteCallback;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.SetOptions;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -209,12 +212,50 @@ public class RideService {
         }
     }
 
+    public void addRideAndReturnId(Ride ride, RideIdCallback callback) {
+        if (ride.scheduledFor != null) {
+            ride.status = RideStatus.SCHEDULED;
+        } else {
+            ride.status = RideStatus.PENDING;
+        }
+
+        if (ride.stopList != null && !ride.stopList.isEmpty()) {
+            final int totalStops = ride.stopList.size();
+            final int[] geocodedCount = {0};
+            final List<Stop> geocodedStops = new ArrayList<>();
+
+            for (Stop stop : ride.stopList) {
+                geocodeStop(stop, geocodedStop -> {
+                    geocodedStops.add(geocodedStop);
+                    geocodedCount[0]++;
+
+                    if (geocodedCount[0] == totalStops) {
+                        ride.stopList = geocodedStops;
+                        saveRideToFirebaseWithId(ride, callback);
+                    }
+                });
+            }
+        } else {
+            saveRideToFirebaseWithId(ride, callback);
+        }
+    }
+
     private void saveRideToFirebase(Ride ride, PriceCallback callback) {
         firebaseFirestore.collection(RIDES)
                 .add(ride)
                 .addOnSuccessListener(result -> {
                     ride.id = result.getId();
                     callback.onSuccess(ride.priceDin);
+                })
+                .addOnFailureListener(result -> callback.onError(new Exception("Failed writing ride to database.")));
+    }
+
+    private void saveRideToFirebaseWithId(Ride ride, RideIdCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .add(ride)
+                .addOnSuccessListener(result -> {
+                    ride.id = result.getId();
+                    callback.onSuccess(ride.id);
                 })
                 .addOnFailureListener(result -> callback.onError(new Exception("Failed writing ride to database.")));
     }
@@ -815,6 +856,42 @@ public class RideService {
                             .addOnSuccessListener(v -> callback.accept(true))
                             .addOnFailureListener(e -> callback.accept(false));
                 })
+                .addOnFailureListener(e -> callback.accept(false));
+    }
+
+    public ListenerRegistration listenToRide(
+            @NonNull String rideId,
+            @NonNull RideCallback callback
+    ) {
+        return firebaseFirestore
+                .collection(RIDES)
+                .document(rideId)
+                .addSnapshotListener((snapshot, error) -> {
+                    if (error != null) {
+                        callback.onError(error);
+                        return;
+                    }
+
+                    if (snapshot == null || !snapshot.exists()) {
+                        callback.onError(new Exception("Ride not found"));
+                        Log.d("QWERTASD", "NEEEMAAAAA");
+                        return;
+                    }
+
+                    Ride ride = snapshot.toObject(Ride.class);
+                    if (ride != null) {
+                        ride.id = snapshot.getId();
+                    }
+
+                    callback.onSuccess(ride);
+                });
+    }
+
+    public void submitReport(String report, String rideUid, Consumer<Boolean> callback){
+        firebaseFirestore.collection("rides")
+                .document(rideUid)
+                .update("report", report)
+                .addOnSuccessListener(v -> callback.accept(true))
                 .addOnFailureListener(e -> callback.accept(false));
     }
 

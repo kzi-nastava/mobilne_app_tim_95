@@ -1,5 +1,7 @@
 package com.example.gruber.services;
 
+import android.util.Log;
+
 import com.example.gruber.SessionManager;
 import com.example.gruber.models.Login;
 import com.example.gruber.models.enums.UserRole;
@@ -13,6 +15,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.DocumentSnapshot;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+
 import javax.inject.Inject;
 
 public class UserService {
@@ -63,7 +67,11 @@ public class UserService {
                                         } else {
                                             callback.onSuccess(result.getUser().getUid(), _role);
                                         }
-                            });
+                                    })
+                                    .addOnFailureListener(msg -> {
+                                        Log.d("QWERTASD", Objects.requireNonNull(msg.getMessage()));
+                                        callback.onError(msg);
+                                    });
                 })
                 .addOnFailureListener(callback::onError);
 
