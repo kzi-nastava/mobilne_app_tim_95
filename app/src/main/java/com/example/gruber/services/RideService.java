@@ -18,6 +18,7 @@ import com.example.gruber.models.Stop;
 import com.example.gruber.models.User;
 import com.example.gruber.models.VehicleInfo;
 import com.example.gruber.models.VehicleType;
+import com.example.gruber.models.FavoriteRoute;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.callbacks.PriceCallback;
@@ -895,6 +896,47 @@ public class RideService {
         firebaseFirestore.collection("rides")
                 .document(rideUid)
                 .update("report", report)
+                .addOnSuccessListener(v -> callback.accept(true))
+                .addOnFailureListener(e -> callback.accept(false));
+    }
+
+    public void saveFavoriteRoute(String userEmail, List<Stop> stops, String description,
+                                  Consumer<Boolean> callback) {
+        if (stops == null || stops.isEmpty()) {
+            callback.accept(false);
+            return;
+        }
+
+        FavoriteRoute favoriteRoute = new FavoriteRoute(userEmail, stops, description);
+
+        firebaseFirestore.collection("favoriteRoutes")
+                .add(favoriteRoute)
+                .addOnSuccessListener(documentRef -> callback.accept(true))
+                .addOnFailureListener(e -> callback.accept(false));
+    }
+
+    public void getFavoriteRoutes(String userEmail, Consumer<List<FavoriteRoute>> callback) {
+        firebaseFirestore.collection("favoriteRoutes")
+                .whereEqualTo("userEmail", userEmail)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<FavoriteRoute> routes = new ArrayList<>();
+                    for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                        FavoriteRoute route = doc.toObject(FavoriteRoute.class);
+                        if (route != null) {
+                            route.setRouteId(doc.getId());
+                            routes.add(route);
+                        }
+                    }
+                    callback.accept(routes);
+                })
+                .addOnFailureListener(e -> callback.accept(new ArrayList<>()));
+    }
+
+    public void deleteFavoriteRoute(String routeId, Consumer<Boolean> callback) {
+        firebaseFirestore.collection("favoriteRoutes")
+                .document(routeId)
+                .delete()
                 .addOnSuccessListener(v -> callback.accept(true))
                 .addOnFailureListener(e -> callback.accept(false));
     }
