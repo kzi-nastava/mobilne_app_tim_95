@@ -51,6 +51,8 @@ public class RideViewModel extends ViewModel {
     private final MutableLiveData<Boolean> hasPets = new MutableLiveData<>(false);
     private final MutableLiveData<java.util.Date> scheduledTime = new MutableLiveData<>(null); // null means "now"
 
+    private boolean skipResetOnce = false;
+
     @Inject
     public RideViewModel(RideService rideService) {
         this.rideService = rideService;
@@ -216,6 +218,10 @@ public class RideViewModel extends ViewModel {
 
     // Reset ride to clear old data when starting a new order
     public void resetRide() {
+        if (skipResetOnce) {
+            skipResetOnce = false;
+            return;
+        }
         Ride freshRide = new Ride();
         ride.postValue(freshRide);
         intermediateStops.postValue(new ArrayList<>());
@@ -224,6 +230,33 @@ public class RideViewModel extends ViewModel {
         hasBabies.postValue(false);
         hasPets.postValue(false);
         scheduledTime.postValue(null); // Reset to "now"
+    }
+
+    public void prefillFromStops(List<Stop> stops) {
+        if (stops == null || stops.isEmpty()) {
+            return;
+        }
+
+        Ride freshRide = new Ride();
+        Stop start = stops.get(0);
+        Stop end = stops.get(stops.size() - 1);
+
+        List<Stop> intermediates = new ArrayList<>();
+        if (stops.size() > 2) {
+            intermediates.addAll(stops.subList(1, stops.size() - 1));
+        }
+
+        freshRide.addStops(start, intermediates, end);
+        ride.postValue(freshRide);
+
+        intermediateStops.postValue(new ArrayList<>(intermediates));
+        linkedPassengers.postValue(new ArrayList<>());
+        vehicleType.postValue("Standard");
+        hasBabies.postValue(false);
+        hasPets.postValue(false);
+        scheduledTime.postValue(null);
+
+        skipResetOnce = true;
     }
 
     public LiveData<Boolean> getShowRouteTrigger() {
@@ -288,6 +321,19 @@ public class RideViewModel extends ViewModel {
             stops.remove(index);
             intermediateStops.postValue(stops);
         }
+    }
+
+    public void saveFavoriteRoute(String userEmail, List<Stop> stops, String description,
+                                  Consumer<Boolean> callback) {
+        rideService.saveFavoriteRoute(userEmail, stops, description, callback);
+    }
+
+    public void getFavoriteRoutes(String userEmail, Consumer<List<com.example.gruber.models.FavoriteRoute>> callback) {
+        rideService.getFavoriteRoutes(userEmail, callback);
+    }
+
+    public void deleteFavoriteRoute(String routeId, Consumer<Boolean> callback) {
+        rideService.deleteFavoriteRoute(routeId, callback);
     }
 
     public void addPassenger(String email) {

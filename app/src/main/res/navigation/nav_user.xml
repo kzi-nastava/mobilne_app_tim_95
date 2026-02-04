@@ -46,6 +46,9 @@
             <action
                 android:id="@+id/action_settingsFragment_to_reportsFragment"
                 app:destination="@id/reportsFragment" />
+            <action
+                android:id="@+id/action_settingsFragment_to_favoriteRoutesFragment"
+                app:destination="@id/favoriteRoutesFragment" />
     </fragment>
 
     <fragment
@@ -113,6 +116,15 @@
         android:label="Reports">
         <action
             android:id="@+id/action_reportsFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/favoriteRoutesFragment"
+        android:name="com.example.gruber.fragment.profile.FavoriteRoutesFragment"
+        android:label="Favorite Routes">
+        <action
+            android:id="@+id/action_favoriteRoutesFragment_to_settingsFragment"
             app:destination="@id/settingsFragment" />
     </fragment>
 
