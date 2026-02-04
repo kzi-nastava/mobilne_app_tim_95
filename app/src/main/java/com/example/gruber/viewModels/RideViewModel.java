@@ -309,6 +309,7 @@ public class RideViewModel extends ViewModel {
     //TODO: Notifikacije o privatanju voznje
     public void bookRide(String creatorUserEmail, Consumer<String> onComplete) {
         Ride bookingRide = ride.getValue();
+
         Stop start = bookingRide.getStart();
         Stop end = bookingRide.getEnd();
 
@@ -322,7 +323,6 @@ public class RideViewModel extends ViewModel {
         if (vehicleTypeValue == null) {
             vehicleTypeValue = "Standard";
         }
-
         final String finalVehicleTypeValue = vehicleTypeValue;
         final List<Stop> stops = intermediateStops.getValue();
         final boolean hasIntermediateStops = stops != null && !stops.isEmpty();
@@ -335,13 +335,11 @@ public class RideViewModel extends ViewModel {
                         onComplete.accept(null);
                         return;
                     }
-
                     rideService.calculateRidePrice(route, finalVehicleTypeValue, price -> {
                         if (price <= 0) {
                             onComplete.accept(null);
                             return;
                         }
-
                         bookingRide.priceDin = price;
                         prepareAndSaveRide(bookingRide, creatorUserEmail, finalVehicleTypeValue, onComplete);
                     });

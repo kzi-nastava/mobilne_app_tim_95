@@ -26,6 +26,7 @@ public class AdminUserBlockManagementFragment extends Fragment {
     private TabLayout tabLayout;
     private EditText etSearch;
     private MaterialButton btnAddDriver;
+    private MaterialButton btnDriverChangeRequests;
     private UserBlockManagementPagerAdapter pagerAdapter;
 
     public AdminUserBlockManagementFragment() {
@@ -48,9 +49,11 @@ public class AdminUserBlockManagementFragment extends Fragment {
         tabLayout = view.findViewById(R.id.tabLayout);
         etSearch = view.findViewById(R.id.etSearch);
         btnAddDriver = view.findViewById(R.id.btnAddDriver);
+        btnDriverChangeRequests = view.findViewById(R.id.btnDriverChangeRequests);
 
         pagerAdapter = new UserBlockManagementPagerAdapter(this);
         viewPager.setAdapter(pagerAdapter);
+        viewPager.setOffscreenPageLimit(2);  // Keep both fragments alive for filtering
 
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
             switch (position) {
@@ -82,6 +85,11 @@ public class AdminUserBlockManagementFragment extends Fragment {
             NavHostFragment.findNavController(this)
                     .navigate(R.id.action_adminUserBlockManagementFragment_to_adminDriverRegisterAccountFragment);
         });
+
+        btnDriverChangeRequests.setOnClickListener(v -> {
+            NavHostFragment.findNavController(this)
+                .navigate(R.id.action_adminUserBlockManagementFragment_to_adminDriverChangeRequestsFragment);
+        });
     }
 
     @Override
@@ -91,6 +99,7 @@ public class AdminUserBlockManagementFragment extends Fragment {
         tabLayout = null;
         etSearch = null;
         btnAddDriver = null;
+        btnDriverChangeRequests = null;
         super.onDestroyView();
     }
 }
