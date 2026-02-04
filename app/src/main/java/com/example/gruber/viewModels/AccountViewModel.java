@@ -1,6 +1,8 @@
 package com.example.gruber.viewModels;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
 
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -23,7 +25,7 @@ public class AccountViewModel extends ViewModel {
     protected final MutableLiveData<String> lastName = new MutableLiveData<>();
     protected final MutableLiveData<String> phone = new MutableLiveData<>();
     protected final MutableLiveData<Address> address = new MutableLiveData<>();
-    protected final MutableLiveData<Bitmap> image = new MutableLiveData<>();
+    protected final MutableLiveData<byte[]> image = new MutableLiveData<>();
     protected final MutableLiveData<Boolean> blocked = new MutableLiveData<>(false);
     protected final MutableLiveData<String> blockReason = new MutableLiveData<>();
 
@@ -53,12 +55,12 @@ public class AccountViewModel extends ViewModel {
         this.address.setValue(address);
     }
 
-    public void setImage(String imageURI) {
-//        this.image.setValue(imageURI);
-        return;
+    public void setImage(String base64String) {
+        byte[] bytes = Base64.decode(base64String, Base64.DEFAULT);
+        this.image.setValue(bytes);
     }
 
-    public void setImage(Bitmap image) {
+    public void setImage(byte[] image) {
         this.image.setValue(image);
     }
 
@@ -85,9 +87,8 @@ public class AccountViewModel extends ViewModel {
     public MutableLiveData<Address> getAddress() {
         return address;
     }
-    public MutableLiveData<String> getImage() {
-
-        return new MutableLiveData<>("image");
+    public MutableLiveData<byte[]> getImage() {
+        return image;
     }
 
      // Driver-specific methods (override in DriverViewModel)
@@ -138,7 +139,7 @@ public class AccountViewModel extends ViewModel {
                 email.getValue(),
                 phone.getValue(),
                 role.getValue(),
-                "uri/to/photo"
+                image.getValue()
         );
     }
 
@@ -150,4 +151,13 @@ public class AccountViewModel extends ViewModel {
         role.setValue(UserRole.GUEST);
         image.setValue(null);
     }
+
+    public Bitmap imageBytesToBitmap() {
+        byte[] imageBytes = this.image.getValue();
+        if (imageBytes == null || imageBytes.length == 0) {
+            return null;
+        }
+        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+    }
+
 }

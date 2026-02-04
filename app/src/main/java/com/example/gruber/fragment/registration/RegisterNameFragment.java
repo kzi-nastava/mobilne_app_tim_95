@@ -1,6 +1,9 @@
 package com.example.gruber.fragment.registration;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -15,6 +18,7 @@ import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import static androidx.navigation.fragment.NavHostFragment.findNavController;
 
@@ -23,6 +27,8 @@ import com.example.gruber.viewModels.AccountViewModel;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+
+import java.io.ByteArrayOutputStream;
 
 public class RegisterNameFragment extends Fragment {
 
@@ -49,15 +55,17 @@ public class RegisterNameFragment extends Fragment {
         // Modern image picker (replaces startActivityForResult/onActivityResult)
         pickImageLauncher = registerForActivityResult(
                 new ActivityResultContracts.GetContent(),
-                uri -> {
-                    if (uri != null) {
-
-                        accountViewModel.setImage(uri.toString());
-                        // If you have an ImageView, you can set it here too.
-                        // ivProfilePhoto.setImageURI(uri);
-                    }
-                }
+                this::processImage
         );
+        //{
+//                    if (uri != null) {
+//
+//                        accountViewModel.setImage(uri.toString());
+//                        // If you have an ImageView, you can set it here too.
+//                        // ivProfilePhoto.setImageURI(uri);
+//                    }
+//                }
+//        );
     }
 
     @Override
@@ -79,6 +87,10 @@ public class RegisterNameFragment extends Fragment {
 
         etPhone = view.findViewById(R.id.et_reg_phone);
         etPhone.setText(accountViewModel.getPhone().getValue());
+
+        imageView = view.findViewById(R.id.imageView);
+        Bitmap imageBitmap = bytesToBitmap(accountViewModel.getImage().getValue());
+        if (imageBitmap != null) imageView.setImageBitmap(imageBitmap);
 
         view.findViewById(R.id.btn_reg_add_image).setOnClickListener(v -> onAddImageClicked());
         view.findViewById(R.id.btn_reg_previous_name).setOnClickListener(v -> onPreviousClicked());
@@ -119,12 +131,6 @@ public class RegisterNameFragment extends Fragment {
     private void onAddImageClicked() {
         // Launch system picker for images
         pickImageLauncher.launch("image/*");
-//        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-//        intent.setType("image/*");
-//        start
-
-        // Scale selected image
-
 
     }
 
@@ -150,4 +156,52 @@ public class RegisterNameFragment extends Fragment {
         tilFirstName.setError(null);
         tilLastName.setError(null);
     }
+
+    private void processImage(Uri imageUri) {
+        if (imageUri != null) {
+            try {
+
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(requireContext().getContentResolver(), imageUri);
+
+                Bitmap scaledBitmap = scaleBitmap(bitmap, 200, 200);
+
+                byte[] imageBytes = bitmapToBytes(scaledBitmap);
+
+                accountViewModel.setImage(imageBytes);
+
+//                ImageView imageView = requireView().findViewById(R.id.imageView);
+                imageView.setImageBitmap(scaledBitmap);
+
+            } catch (Exception e ) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private Bitmap scaleBitmap(Bitmap bitmap, int maxWidth, int maxHeight) {
+
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+
+        float ratio = Math.min((float) maxWidth/width, (float) maxHeight/height);
+        int newWidth = Math.round(width * ratio);
+        int newHeight = Math.round(height * ratio);
+
+        return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+
+    }
+
+    private byte[] bitmapToBytes(Bitmap bitmap) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream);
+        return stream.toByteArray();
+    }
+
+    private Bitmap bytesToBitmap(byte[] bytes) {
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+    }
+
 }

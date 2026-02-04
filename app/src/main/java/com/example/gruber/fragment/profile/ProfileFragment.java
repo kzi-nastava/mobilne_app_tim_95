@@ -3,22 +3,28 @@ package com.example.gruber.fragment.profile;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.Observer;
-import java.util.concurrent.atomic.AtomicBoolean;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
+
 import com.example.gruber.R;
 import com.example.gruber.SessionManager;
 import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.UserService;
 import com.example.gruber.viewModels.AccountViewModel;
 import com.example.gruber.viewModels.DriverViewModel;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.inject.Inject;
+
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
@@ -50,6 +56,7 @@ public class ProfileFragment extends Fragment {
         TextView txtAllowsBabies = view.findViewById(R.id.txtAllowsBabies);
         TextView txtAllowsPets = view.findViewById(R.id.txtAllowsPets);
         TextView txtBlockedMessage = view.findViewById(R.id.txtBlockedMessage);
+        ImageView imgProfile = view.findViewById(R.id.imgProfile);
 
         // Check role from SessionManager first
         UserRole userRole = sessionManager.getUserRole();
@@ -79,6 +86,12 @@ public class ProfileFragment extends Fragment {
                 email -> txtEmail.setText(email != null ? email : ""));
         accountViewModel.getPhone().observe(getViewLifecycleOwner(),
                 phone -> txtPhone.setText(phone != null ? phone : ""));
+
+        accountViewModel.getImage().observe(getViewLifecycleOwner(),
+                bytes -> {
+                    if (bytes != null) imgProfile.setImageBitmap(accountViewModel.imageBytesToBitmap());
+                    else imgProfile.setImageResource(R.drawable.profile_photo);
+                });
 
         accountViewModel.getBlocked().observe(getViewLifecycleOwner(), blocked -> {
             if (blocked != null && blocked && userRole == UserRole.DRIVER) {

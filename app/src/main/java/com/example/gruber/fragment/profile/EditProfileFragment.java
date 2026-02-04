@@ -1,5 +1,7 @@
 package com.example.gruber.fragment.profile;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.net.Uri;
 import android.view.View;
@@ -76,18 +78,20 @@ public class EditProfileFragment extends Fragment {
         etLastName.setText(accountViewModel.getLastName().getValue());
         etPhone.setText(accountViewModel.getPhone().getValue());
 
-        String imageUri = accountViewModel.getImage().getValue();
-        if (imageUri != null && !imageUri.isEmpty()) {
+        byte[] imageBytes = accountViewModel.getImage().getValue();
+        if (imageBytes != null && imageBytes.length != 0) {
             try {
-                ivProfileImage.setImageURI(Uri.parse(imageUri));
+//                ivProfileImage.setImageURI(Uri.parse(imageBytes));
+                ivProfileImage.setImageBitmap(bytesToBitmap(imageBytes));
             } catch (Exception ignored) {
             }
         }
 
         accountViewModel.getImage().observe(getViewLifecycleOwner(), img -> {
-            if (img != null && !img.isEmpty()) {
+            if (img != null && img.length != 0) {
                 try {
-                    ivProfileImage.setImageURI(Uri.parse(img));
+//                    ivProfileImage.setImageURI(Uri.parse(img));
+                    ivProfileImage.setImageBitmap(bytesToBitmap(img));
                 } catch (Exception ignored) {
                 }
             }
@@ -189,5 +193,11 @@ public class EditProfileFragment extends Fragment {
                 break;
             }
         }
+    }
+    private Bitmap bytesToBitmap(byte[] bytes) {
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
     }
 }

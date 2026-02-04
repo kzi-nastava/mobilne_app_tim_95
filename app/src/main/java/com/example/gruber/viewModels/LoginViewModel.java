@@ -43,9 +43,7 @@ public class LoginViewModel extends ViewModel {
             }
 
             @Override
-            public void onError(Throwable error) {
-                callback.onError(error);
-            }
+            public void onError(Throwable error) { callback.onError(error); }
         });
         password.setValue("");
     }
