@@ -94,6 +94,15 @@
     </fragment>
 
     <fragment
+        android:id="@+id/leaveReviewFragment"
+        android:name="com.example.gruber.fragment.LeaveReviewFragment"
+        android:label="Ride Review">
+        <argument
+            android:name="rideId"
+            app:argType="string"/>
+    </fragment>
+
+    <fragment
         android:id="@+id/supportChatFragment"
         android:name="com.example.gruber.fragment.SupportChatFragment"
         android:label="Support Chat" />

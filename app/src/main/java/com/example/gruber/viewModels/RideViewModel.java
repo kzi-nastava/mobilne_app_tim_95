@@ -1,5 +1,8 @@
 package com.example.gruber.viewModels;
 
+import android.util.Log;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -10,8 +13,11 @@ import com.example.gruber.models.Route;
 import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.services.RideService;
+import com.example.gruber.services.callbacks.RideCallback;
+import com.example.gruber.services.callbacks.RideIdCallback;
 import com.example.gruber.services.callbacks.RouteCallback;
 import com.example.gruber.services.callbacks.PriceCallback;
+import com.google.firebase.firestore.ListenerRegistration;
 
 import org.osmdroid.util.GeoPoint;
 
@@ -30,6 +36,8 @@ public class RideViewModel extends ViewModel {
     private final RideService rideService;
 
     private final MutableLiveData<Ride> ride = new MutableLiveData<>();
+    private ListenerRegistration rideListener;
+
     private final MutableLiveData<List<Stop>> addressStartSuggestions = new MutableLiveData<>();
     private final MutableLiveData<List<Stop>> addressEndSuggestions = new MutableLiveData<>();
     private final MutableLiveData<Boolean> showRouteTrigger = new MutableLiveData<>();
@@ -78,6 +86,15 @@ public class RideViewModel extends ViewModel {
 
     public LiveData<List<Stop>> getAddressIntermediateSuggestions() {
         return addressIntermediateSuggestions;
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        if (rideListener != null) {
+            rideListener.remove();
+            rideListener = null;
+        }
     }
 
     public void setRideStart(Stop start) {
@@ -170,6 +187,31 @@ public class RideViewModel extends ViewModel {
 
     public Ride getRideValue() {
         return ride.getValue();
+    }
+
+    public LiveData<Ride> getRide() {
+        return ride;
+    }
+
+    public void loadRideById(@NonNull String rideId) {
+        // Remove old listener if any
+        if (rideListener != null) {
+            rideListener.remove();
+            rideListener = null;
+        }
+
+        rideListener = rideService.listenToRide(rideId, new RideCallback() {
+            @Override
+            public void onSuccess(Ride loadedRide) {
+                if (loadedRide == null) return;
+                ride.postValue(loadedRide);
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                Log.e("RideViewModel", "Failed to listen to ride", error);
+            }
+        });
     }
 
     // Reset ride to clear old data when starting a new order
@@ -265,14 +307,14 @@ public class RideViewModel extends ViewModel {
     }
 
     //TODO: Notifikacije o privatanju voznje
-    public void bookRide(String creatorUserEmail, Consumer<Boolean> onComplete) {
+    public void bookRide(String creatorUserEmail, Consumer<String> onComplete) {
         Ride bookingRide = ride.getValue();
-
         Stop start = bookingRide.getStart();
         Stop end = bookingRide.getEnd();
+
         if (start == null || end == null || start.getAddress() == null || end.getAddress() == null
                 || start.getAddress().isEmpty() || end.getAddress().isEmpty()) {
-            onComplete.accept(false);
+            onComplete.accept(null);
             return;
         }
 
@@ -280,6 +322,7 @@ public class RideViewModel extends ViewModel {
         if (vehicleTypeValue == null) {
             vehicleTypeValue = "Standard";
         }
+
         final String finalVehicleTypeValue = vehicleTypeValue;
         final List<Stop> stops = intermediateStops.getValue();
         final boolean hasIntermediateStops = stops != null && !stops.isEmpty();
@@ -289,14 +332,16 @@ public class RideViewModel extends ViewModel {
                 @Override
                 public void onSuccess(Route route) {
                     if (route == null || route.getRoad() == null || route.getRoad().mLength <= 0) {
-                        onComplete.accept(false);
+                        onComplete.accept(null);
                         return;
                     }
+
                     rideService.calculateRidePrice(route, finalVehicleTypeValue, price -> {
                         if (price <= 0) {
-                            onComplete.accept(false);
+                            onComplete.accept(null);
                             return;
                         }
+
                         bookingRide.priceDin = price;
                         prepareAndSaveRide(bookingRide, creatorUserEmail, finalVehicleTypeValue, onComplete);
                     });
@@ -304,7 +349,7 @@ public class RideViewModel extends ViewModel {
 
                 @Override
                 public void onError(Exception e) {
-                    onComplete.accept(false);
+                    onComplete.accept(null);
                 }
             };
 
@@ -314,12 +359,11 @@ public class RideViewModel extends ViewModel {
                 rideService.getRoute(start.getAddress(), end.getAddress(), routeCallback);
             }
         } catch (IOException e) {
-            onComplete.accept(false);
+            onComplete.accept(null);
         }
     }
 
-    private void prepareAndSaveRide(Ride bookingRide, String creatorUserEmail, String vehicleTypeValue,
-            Consumer<Boolean> onComplete) {
+    private void prepareAndSaveRide(Ride bookingRide, String creatorUserEmail, String vehicleTypeValue, Consumer<String> onComplete) {
         bookingRide.creatorUserEmail = creatorUserEmail;
         bookingRide.setVehicleType(vehicleTypeValue);
         bookingRide.hasBabies = hasBabies.getValue() != null ? hasBabies.getValue() : false;
@@ -346,8 +390,9 @@ public class RideViewModel extends ViewModel {
         // Resolve start/end to GeoPoints for driver selection
         Stop startStop = bookingRide.getStart();
         Stop endStop = bookingRide.getEnd();
+
         if (startStop == null || endStop == null) {
-            onComplete.accept(false);
+            onComplete.accept(null);
             return;
         }
 
@@ -358,22 +403,21 @@ public class RideViewModel extends ViewModel {
         });
     }
 
-    private void fetchDriverAndCreateRide(@Nullable GeoPoint rideStartPoint,
-                                          @Nullable GeoPoint rideEndPoint,
-                                          Ride bookingRide,
-                                          Consumer<Boolean> onComplete) {
+    private void fetchDriverAndCreateRide(@Nullable GeoPoint rideStartPoint, @Nullable GeoPoint rideEndPoint,
+                                          Ride bookingRide, Consumer<String> onComplete) {
         rideService.getDriver(bookingRide, rideStartPoint, rideEndPoint, driver -> {
             if (driver != null) {
                 bookingRide.driverEmail = driver.getEmail();
-                rideService.addRide(bookingRide, new PriceCallback() {
+
+                rideService.addRideAndReturnId(bookingRide, new RideIdCallback() {
                     @Override
-                    public void onSuccess(double price) {
-                        onComplete.accept(true);
+                    public void onSuccess(@NonNull String rideId) {
+                        onComplete.accept(rideId);
                     }
 
                     @Override
                     public void onError(Throwable error) {
-                        onComplete.accept(false);
+                        onComplete.accept(null);
                     }
                 });
             } else {
@@ -381,8 +425,18 @@ public class RideViewModel extends ViewModel {
                 bookingRide.setCancelledBy("SYSTEM_NO_DRIVERS");
                 bookingRide.driverEmail = "";
                 bookingRide.priceDin = 0;
-                rideService.saveCancelledRide(bookingRide, success -> onComplete.accept(false));
+
+                rideService.saveCancelledRide(bookingRide, success -> onComplete.accept(null));
             }
+        });
+    }
+
+    private void submitReport(String report, String rideId, Consumer<Boolean> callback){
+        rideService.submitReport(report, rideId, ss -> {
+            if(ss){
+                callback.accept(true);
+            }
+            else {callback.accept(false);}
         });
     }
 
