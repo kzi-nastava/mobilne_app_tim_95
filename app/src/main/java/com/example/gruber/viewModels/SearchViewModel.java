@@ -106,4 +106,15 @@ public class SearchViewModel extends ViewModel {
         });
 
     }
+
+    public void sortExistingRides(boolean isAscending) {
+        List<Ride> _rides = rides.getValue();
+
+        if (_rides == null ) return;
+
+        if (isAscending) _rides.sort(Comparator.comparing(Ride::getStartedAtLocalDateTime).reversed());
+        else _rides.sort(Comparator.comparing(Ride::getStartedAtLocalDateTime));
+
+        rides.setValue(_rides);
+    }
 }
