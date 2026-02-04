@@ -285,10 +285,14 @@ public class Ride {
     }
     @Exclude
     public LocalDateTime getStartedAtLocalDateTime() {
-        return startedAt.toDate()
-                .toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDateTime();
+        try {
+            return startedAt.toDate()
+                    .toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
+        } catch (NullPointerException exception) {
+            return null;
+        }
     }
 
     public void setStartedAt(Timestamp startedAt) {

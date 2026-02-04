@@ -15,6 +15,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -56,7 +57,7 @@ public class RideHistoryFragment extends Fragment {
     private SensorManager sensorManager;
     private Sensor accelerometer;
 
-    private static final float SHAKE_THRESHOLD = 12.0f;
+    private static final float SHAKE_THRESHOLD = 3.4f;
     private static final int SHAKE_SLOP_TIME_MS = 500;
     private long lastShakeTime = 0;
 
@@ -121,6 +122,7 @@ public class RideHistoryFragment extends Fragment {
         sensorManager = (SensorManager) requireContext().getSystemService(Context.SENSOR_SERVICE);
 
         if (sensorManager != null) {
+            Log.d("SHAKEYSHAKEY", "setting sensor manager");
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             sensorManager.registerListener(
                     shakeListener,
@@ -286,7 +288,10 @@ public class RideHistoryFragment extends Fragment {
             // gForce will be close to 1 when device is still
             float gForce = (float) Math.sqrt(gX * gX + gY * gY + gZ * gZ);
 
+
             if (gForce > SHAKE_THRESHOLD) {
+                Log.d("SHAKEYSHAKEY", String.valueOf(gForce));
+                Log.d("SHAKEYSHAKEY", "sensor movement recognized");
                 long now = System.currentTimeMillis();
 
                 if (lastShakeTime + SHAKE_SLOP_TIME_MS > now) {
@@ -306,7 +311,9 @@ public class RideHistoryFragment extends Fragment {
 
     private void onPhoneShaken() {
         //sort the list from searchViewModel
+        Log.d("SHAKEYSHAKEy", "Recognized shaking");
         isAscending = !isAscending;
+        sortOrderBtn.setRotation(isAscending ? 0f : 180f);
         searchViewModel.sortExistingRides(isAscending);
     }
 

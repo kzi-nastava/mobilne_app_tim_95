@@ -90,8 +90,8 @@ public class SearchViewModel extends ViewModel {
                         else _rides.sort(Comparator.comparingDouble((Ride ride) -> ride.getRoute().getRoad().mLength));
                         break;
                     case DATE:
-                        if (isAscending) _rides.sort(Comparator.comparing(Ride::getStartedAtLocalDateTime).reversed());
-                        else _rides.sort(Comparator.comparing(Ride::getStartedAtLocalDateTime));
+                        if (isAscending) _rides.sort(Comparator.comparing(Ride::getStartedAtLocalDateTime, Comparator.nullsFirst(Comparator.naturalOrder())).reversed());
+                        else _rides.sort(Comparator.comparing(Ride::getStartedAtLocalDateTime, Comparator.nullsFirst(Comparator.naturalOrder())));
                         break;
                 }
                 //set the rides to MutableLiveData
@@ -112,8 +112,14 @@ public class SearchViewModel extends ViewModel {
 
         if (_rides == null ) return;
 
-        if (isAscending) _rides.sort(Comparator.comparing(Ride::getStartedAtLocalDateTime).reversed());
-        else _rides.sort(Comparator.comparing(Ride::getStartedAtLocalDateTime));
+        if (isAscending) _rides.sort(Comparator.comparing(
+                Ride::getStartedAtLocalDateTime,
+                Comparator.nullsFirst(Comparator.naturalOrder())
+        ).reversed());
+        else _rides.sort(Comparator.comparing(
+                Ride::getStartedAtLocalDateTime,
+                Comparator.nullsLast(Comparator.naturalOrder())
+        ));
 
         rides.setValue(_rides);
     }
