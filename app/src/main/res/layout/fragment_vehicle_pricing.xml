@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <Button
+            android:id="@+id/btnAdminReports"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/view_reports"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- STANDARD -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="2dp">
+
+            <!-- VERTICAL container (important) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- TOP ROW: label + price + edit (never changes) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tvLabelStandard"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Standard"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvPriceStandard"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textSize="16sp"
+                        android:layout_marginEnd="8dp"/>
+
+                    <!-- Edit button styled like your support FAB -->
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/btnEditStandard"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:fabSize="mini"
+                        app:elevation="0dp"
+                        android:outlineProvider="none"
+                        android:contentDescription="Edit Standard price"
+                        app:srcCompat="@drawable/pencil"
+                        app:backgroundTint="@color/color_primary_variant"
+                        app:tint="@color/white"/>
+                </LinearLayout>
+
+                <!-- EDIT AREA UNDER TOP ROW -->
+                <LinearLayout
+                    android:id="@+id/standard_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="12dp"
+                    android:visibility="gone">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etStandard"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Price"
+                            android:inputType="numberDecimal"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <Button
+                        android:id="@+id/btnSaveStandard"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Save"/>
+
+                    <Button
+                        android:id="@+id/btnCancelStandard"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="Cancel"/>
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+
+        <!-- LUXURY -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="2dp">
+
+            <!-- VERTICAL container (important) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- TOP ROW: label + price + edit (never changes) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tvLabelLuxury"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Luxury"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvPriceLuxury"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textSize="16sp"
+                        android:layout_marginEnd="8dp"/>
+
+                    <!-- Edit button styled like your support FAB -->
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/btnEditLuxury"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:fabSize="mini"
+                        app:elevation="0dp"
+                        android:outlineProvider="none"
+                        android:contentDescription="Edit Standard price"
+                        app:srcCompat="@drawable/pencil"
+                        app:backgroundTint="@color/color_primary_variant"
+                        app:tint="@color/white"/>
+                </LinearLayout>
+
+                <!-- EDIT AREA UNDER TOP ROW -->
+                <LinearLayout
+                    android:id="@+id/luxury_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="12dp"
+                    android:visibility="gone">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etLuxury"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Price"
+                            android:inputType="numberDecimal"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <Button
+                        android:id="@+id/btnSaveLuxury"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Save"/>
+
+                    <Button
+                        android:id="@+id/btnCancelLuxury"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="Cancel"/>
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+
+        <!-- VAN -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="2dp">
+
+            <!-- VERTICAL container (important) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- TOP ROW: label + price + edit (never changes) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tvLabelVan"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Van"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvPriceVan"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textSize="16sp"
+                        android:layout_marginEnd="8dp"/>
+
+                    <!-- Edit button styled like your support FAB -->
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/btnEditVan"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:fabSize="mini"
+                        app:elevation="0dp"
+                        android:outlineProvider="none"
+                        android:contentDescription="Edit Standard price"
+                        app:srcCompat="@drawable/pencil"
+                        app:backgroundTint="@color/color_primary_variant"
+                        app:tint="@color/white"/>
+                </LinearLayout>
+
+                <!-- EDIT AREA UNDER TOP ROW -->
+                <LinearLayout
+                    android:id="@+id/van_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="12dp"
+                    android:visibility="gone">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etVan"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Price"
+                            android:inputType="numberDecimal"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <Button
+                        android:id="@+id/btnSaveVan"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Save"/>
+
+                    <Button
+                        android:id="@+id/btnCancelVan"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="Cancel"/>
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

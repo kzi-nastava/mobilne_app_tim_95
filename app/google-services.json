@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "714435595296",
+    "project_id": "gruber-c7d3a",
+    "storage_bucket": "gruber-c7d3a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:714435595296:android:4b208563dd41755de78045",
+        "android_client_info": {
+          "package_name": "com.example.gruber"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBehL_9Rnl0bmoYI1lJkvaYbwSCWkRuYRY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Widget.GrUber.Button.Primary"
+        parent = "Widget.Material3.Button">
+
+        <item name="android:minHeight">50dp</item>
+        <item name="android:minWidth">64dp</item>
+        <item name="android:layout_marginHorizontal">50dp</item>
+        <item name="android:layout_marginTop">10dp</item>
+    </style>
+    <style name="Widget.GrUber.Button.Secondary"
+        parent = "Widget.Material3.Button.TonalButton">
+
+        <item name="android:minHeight">50dp</item>
+        <item name="android:minWidth">64dp</item>
+        <item name="android:layout_marginHorizontal">50dp</item>
+    </style>
+    <style name="Widget.GrUber.TextInput.Default"
+        parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="android:singleLine">true</item>
+        <item name="android:scrollHorizontally">true</item>
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:layout_marginHorizontal">50dp</item>
+        <item name="android:textAppearance">@style/TextAppearance.GrUber.BodyMedium</item>
+    </style>
+    <style name="Widget.GrUber.TextInput.AutoComplete"
+        parent="Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+        <item name="android:scrollHorizontally">true</item>
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:layout_marginHorizontal">50dp</item>
+        <item name="android:textAppearance">@style/TextAppearance.GrUber.BodyMedium</item>
+    </style>
+    <style name="TextAppearance.GrUber.TextView.Title"
+        parent="TextAppearance.Material3.TitleLarge">
+
+        <item name="android:layout_marginHorizontal">50dp</item>
+        <item name="android:layout_marginTop">10dp</item>
+
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textAlignment">center</item>
+
+    </style>
+
+    <style name="TextAppearance.GrUber.BodyMedium"
+        parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textColor">@color/black</item>
+    </style>
+    <style name="ShapeAppearance.GrUber"
+        parent="ShapeAppearance.Material3.LargeComponent" />
+    <style name="ShapeAppearance.GrUber.Circle"
+        parent="ShapeAppearance.GrUber">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="Theme.GrUber.FullScreenDialog"
+        parent="Theme.Material3.DayNight.NoActionBar">
+
+        <!-- Fullscreen behavior -->
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+    </style>
+
+    <style name="ChatInputTextAppearance" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+
+</resources>

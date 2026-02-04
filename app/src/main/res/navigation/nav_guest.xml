@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@id/homeMapFragment">
+
+    <fragment
+        android:id="@+id/homeMapFragment"
+        android:name="com.example.gruber.fragment.HomeMapFragment"
+        android:label="Home" />
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.gruber.fragment.registration.LoginFragment"
+        android:label="Login">
+        <action
+            android:id="@+id/action_loginFragment_to_registerFragment"
+            app:destination="@id/registerAccountFragment" />
+        <action
+            android:id="@+id/action_loginFragment_to_homeMap"
+            app:destination="@+id/homeMapFragment"/>
+    </fragment>
+
+    <!-- Register flow steps -->
+    <fragment
+        android:id="@+id/registerAccountFragment"
+        android:name="com.example.gruber.fragment.registration.RegisterAccountFragment"
+        android:label="Register - Account">
+        <action
+            android:id="@+id/action_registerAccountFragment_to_registerNameFragment"
+            app:destination="@id/registerNameFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerNameFragment"
+        android:name="com.example.gruber.fragment.registration.RegisterNameFragment"
+        android:label="Register - Name">
+        <action
+            android:id="@+id/action_registerNameFragment_to_registerAddressFragment"
+            app:destination="@id/registerAddressFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerAddressFragment"
+        android:name="com.example.gruber.fragment.registration.RegisterAddressFragment"
+        android:label="Register - Address">
+        <!-- optional: if after register you want to go to home explicitly -->
+        <action
+            android:id="@+id/action_registerAddressFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
+        <action android:id="@+id/action_registerAddressFragment_to_registerAccountFragment"
+            app:destination="@+id/registerAccountFragment"
+            app:popUpTo="@id/registerAccountFragment"
+            app:popUpToInclusive="true"/>
+    </fragment>
+
+</navigation>

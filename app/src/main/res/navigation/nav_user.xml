@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@id/homeMapFragment">
+
+    <fragment
+        android:id="@+id/homeMapFragment"
+        android:name="com.example.gruber.fragment.HomeMapFragment"
+        android:label="Home">
+        <action
+            android:id="@+id/action_homeMapFragment_to_supportChatFragment"
+            app:destination="@id/supportChatFragment" />
+        <action
+            android:id="@+id/action_homeMapFragment_to_rideTrackingFragment"
+            app:destination="@id/rideTrackingFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.gruber.fragment.profile.ProfileFragment"
+        android:label="Profile">
+        <action
+            android:id="@+id/action_profileFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.gruber.fragment.profile.SettingsFragment"
+        android:label="Settings">
+        <action
+            android:id="@+id/action_settingsFragment_to_editProfileFragment"
+            app:destination="@id/editProfileFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_changePasswordFragment"
+            app:destination="@id/changePasswordFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_profileFragment"
+            app:destination="@id/profileFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_homeMapFragment"
+            app:destination="@id/homeMapFragment"
+            app:popUpTo="@id/settingsFragment"
+            app:popUpToInclusive="true" />
+            <action
+                android:id="@+id/action_settingsFragment_to_reportsFragment"
+                app:destination="@id/reportsFragment" />
+            <action
+                android:id="@+id/action_settingsFragment_to_favoriteRoutesFragment"
+                app:destination="@id/favoriteRoutesFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.example.gruber.fragment.profile.EditProfileFragment"
+        android:label="Profile Edit">
+        <action
+            android:id="@+id/action_editProfileFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/changePasswordFragment"
+        android:name="com.example.gruber.fragment.profile.ChangePasswordFragment"
+        android:label="Password Change">
+        <action
+            android:id="@+id/action_changePasswordFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/userRidesHistory"
+        android:name="com.example.gruber.fragment.RideHistoryFragment"
+        android:label="Ride history">
+        <action
+            android:id="@+id/action_usersRidesHistory_to_rideDetailsFragment"
+            app:destination="@id/rideDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/rideDetailsFragment"
+        android:name="com.example.gruber.fragment.RideDetailsFragment"
+        android:label="Ride details">
+        <argument
+            android:name="rideId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/rideTrackingFragment"
+        android:name="com.example.gruber.fragment.RideTrackingFragment"
+        android:label="Track ride">
+        <argument
+            android:name="rideId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/leaveReviewFragment"
+        android:name="com.example.gruber.fragment.LeaveReviewFragment"
+        android:label="Ride Review">
+        <argument
+            android:name="rideId"
+            app:argType="string"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/supportChatFragment"
+        android:name="com.example.gruber.fragment.SupportChatFragment"
+        android:label="Support Chat" />
+
+    <fragment
+        android:id="@+id/reportsFragment"
+        android:name="com.example.gruber.fragment.ReportsFragment"
+        android:label="Reports">
+        <action
+            android:id="@+id/action_reportsFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/favoriteRoutesFragment"
+        android:name="com.example.gruber.fragment.profile.FavoriteRoutesFragment"
+        android:label="Favorite Routes">
+        <action
+            android:id="@+id/action_favoriteRoutesFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+    </fragment>
+
+</navigation>

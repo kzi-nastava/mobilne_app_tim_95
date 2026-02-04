@@ -1,16 +1,26 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Theme.GrUber" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_200</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorOnPrimary">@color/black</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_200</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
-        <!-- Customize your theme here. -->
+
+    <style name="Theme.GrUber" parent="Theme.Material3.DayNight.NoActionBar">
+
+        <!-- Primary colors -->
+        <item name="colorPrimary">@color/color_primary_night</item>
+        <item name="colorPrimaryVariant">@color/color_primary_variant_night</item>
+        <item name="colorOnPrimary">@color/color_text_night</item>
+
+        <!-- Secondary colors -->
+        <item name="colorSecondary">@color/color_secondary_night</item>
+        <item name="colorSecondaryVariant">@color/color_secondary_variant_night</item>
+        <item name="colorOnSecondary">@color/color_text_night</item>
+
+        <!-- Accent -->
+        <item name="colorAccent">@color/color_accent_night</item>
+
+        <!-- Background -->
+        <item name="android:colorBackground">@color/color_background_night</item>
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor">@color/color_background_night</item>
+
     </style>
+
 </resources>
