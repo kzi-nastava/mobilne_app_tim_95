@@ -107,7 +107,7 @@ public class UserService {
                     String firstName = snapshot.getString("firstName");
                     String lastName = snapshot.getString("lastName");
                     String phone = snapshot.getString("phone");
-                    String image = snapshot.getString("photoUri");
+                    String image = snapshot.getString("photoBytes");
                     String role = snapshot.getString("role");
                     String vehicleModel = snapshot.getString("vehicleModel");
                     String vehiclePlate = snapshot.getString("vehiclePlate");

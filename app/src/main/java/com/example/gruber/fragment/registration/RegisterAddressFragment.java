@@ -55,8 +55,13 @@ public class RegisterAddressFragment extends Fragment {
         tilCity = view.findViewById(R.id.til_set_city);
 
         etStreet = view.findViewById(R.id.et_set_street);
+        etStreet.setText(accountViewModel.getAddress().getValue().getStreet());
+
         etStreetNumber = view.findViewById(R.id.et_set_street_number);
+        etStreetNumber.setText(accountViewModel.getAddress().getValue().getNumber());
+
         etCity = view.findViewById(R.id.et_set_city);
+        etCity.setText(accountViewModel.getAddress().getValue().getCity());
 
         view.findViewById(R.id.btn_address_next).setOnClickListener(v -> onNextClicked());
         view.findViewById(R.id.btn_address_previous).setOnClickListener(v -> onPreviousClicked());
@@ -83,7 +88,7 @@ public class RegisterAddressFragment extends Fragment {
             @Override
             public void onError(Throwable error) {
                 //show modal with error message
-                showInformationDialog("Registration unsuccessfull", "Your registration has not been successful. Email is already taken, please try again.");
+                showInformationDialog("Registration unsuccessful", "Your registration has not been successful. Email is already taken, please try again.");
                 findNavController(requireParentFragment()).navigate(R.id.action_registerAddressFragment_to_registerAccountFragment);
             }
         });
@@ -91,6 +96,9 @@ public class RegisterAddressFragment extends Fragment {
     }
 
     private void onPreviousClicked() {
+
+        Address address = collectAddress();
+        accountViewModel.setAddress(address);
         // Back within the nav graph
         findNavController(this).navigateUp();
     }

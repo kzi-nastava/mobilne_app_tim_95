@@ -44,14 +44,13 @@ public class RegisterAccountFragment extends Fragment {
         loginViewModel = new ViewModelProvider(requireActivity()).get(LoginViewModel.class);
 
         tilEmail = view.findViewById(R.id.til_reg_email);
-        tilPassword = view.findViewById(R.id.til_reg_password);
-
-        // TODO: FIX THESE IDS IN XML:
-        // Replace til_set_city / et_set_city with your confirm password ids (e.g. til_reg_confirm_password / et_reg_confirm_password)
-        tilConfirmPassword = view.findViewById(R.id.til_set_city);
         etEmail = view.findViewById(R.id.et_reg_email);
+
+        tilPassword = view.findViewById(R.id.til_reg_password);
         etPassword = view.findViewById(R.id.et_reg_password);
-        etConfirmPassword = view.findViewById(R.id.et_set_city);
+
+        tilConfirmPassword = view.findViewById(R.id.til_confirm_password);
+        etConfirmPassword = view.findViewById(R.id.et_confirm_password);
 
         view.findViewById(R.id.reg_button_next).setOnClickListener(v -> onNextClicked());
 

@@ -159,8 +159,8 @@ public class RideOrderDialogFragment extends DialogFragment {
                         // Inače koristi običnu metodu (samo start i end)
                         rideViewModel.setRideRoute(start, end);
                     }
-                } catch (IOException e) {
-                    Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                } catch (IOException | RuntimeException e) {
+                    Toast.makeText(requireContext(), "One of the destinations do not exist...", Toast.LENGTH_LONG).show();
                 }
                 dismiss();
                 return true;

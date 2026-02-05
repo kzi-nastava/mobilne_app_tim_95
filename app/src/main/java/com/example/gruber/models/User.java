@@ -2,6 +2,9 @@ package com.example.gruber.models;
 
 
 import com.example.gruber.models.enums.UserRole;
+import com.google.firebase.firestore.Exclude;
+
+import java.util.Base64;
 
 
 public class User {
@@ -11,7 +14,7 @@ public class User {
     private String email;
     private String phone;
     private UserRole role;
-    private String photoUri;
+    private String photoBytes;
 
     // DRIVER ONLY
     private int activeHoursLast24h;
@@ -30,26 +33,28 @@ public class User {
         this.role = role;
     }
 
-    public User(String firstName, String lastName, String email, String phone, UserRole role, String photoUri) {
+    public User(String firstName, String lastName, String email, String phone, UserRole role, byte[] photoBytes) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.phone = phone;
         this.role = role;
-        this.photoUri = photoUri;
+        this.photoBytes = Base64.getEncoder().encodeToString(photoBytes);
     }
 
-    public User(String firstName, String lastName, String email, String phone, UserRole role, String photoUri, String vehicleModel, String vehiclePlate, int activeHoursLast24h) {
+    public User(String firstName, String lastName, String email, String phone, UserRole role, byte[] photoBytes, String vehicleModel, String vehiclePlate, int activeHoursLast24h) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.phone = phone;
         this.role = role;
-        this.photoUri = photoUri;
+        this.photoBytes = Base64.getEncoder().encodeToString(photoBytes);
         this.vehicleModel = vehicleModel;
         this.vehiclePlate = vehiclePlate;
         this.activeHoursLast24h = activeHoursLast24h;
     }
+
+
 
     // GETTERS
     public String getFirstName() { return firstName; }
@@ -57,7 +62,9 @@ public class User {
     public String getEmail() { return email; }
     public String getPhone() { return phone; }
     public UserRole getRole() { return role; }
-    public String getPhotoUri() { return photoUri; }
+    public String getPhotoBytes() { return photoBytes; }
+    @Exclude
+    public byte[] getPhotoBytesDeserialized() { return Base64.getDecoder().decode(photoBytes);}
     public int getActiveHoursLast24h() { return activeHoursLast24h; }
     public String getVehicleModel() { return vehicleModel; }
     public String getVehiclePlate() { return vehiclePlate; }
@@ -70,7 +77,7 @@ public class User {
     public void setEmail(String email) { this.email = email; }
     public void setPhone(String phone) { this.phone = phone; }
     public void setRole(String role) { this.role = UserRole.valueOf(role); }
-    public void setPhotoUri(String photoUri) { this.photoUri = photoUri; }
+    public void setPhotoBytes(byte[] photoBytes) { this.photoBytes = Base64.getEncoder().encodeToString(photoBytes); }
     public void setActiveHoursLast24h(int activeHoursLast24h) { this.activeHoursLast24h = activeHoursLast24h; }
     public void setVehicleModel(String vehicleModel) { this.vehicleModel = vehicleModel; }
     public void setVehiclePlate(String vehiclePlate) { this.vehiclePlate = vehiclePlate; }

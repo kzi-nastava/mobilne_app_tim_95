@@ -1,6 +1,11 @@
 package com.example.gruber.fragment;
 
+import android.content.Context;
 import android.graphics.PorterDuff;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -10,6 +15,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,16 +45,24 @@ import java.util.Locale;
 
 public class RideHistoryFragment extends Fragment {
 
-    private RideViewModel rideViewModel;
-    private SearchViewModel searchViewModel;
-    private HashMap<String, Boolean> statusSearchMap;
+    protected RideViewModel rideViewModel;
+    protected SearchViewModel searchViewModel;
+    protected HashMap<String, Boolean> statusSearchMap;
 
-    private MaterialButton statusBtn, sortBtn, sortOrderBtn, applyBtn;
-    private LinearLayout dropDownStatusContainer, dropDownSortContainer;
+    protected MaterialButton statusBtn, sortBtn, sortOrderBtn, applyBtn;
+    protected LinearLayout dropDownStatusContainer, dropDownSortContainer;
 
-    private SortCategory sortCategory = SortCategory.DATE;
-    private boolean isAscending = true;
-    private SessionManager sessionManager;
+    protected SortCategory sortCategory = SortCategory.DATE;
+    protected boolean isAscending = true;
+    protected SessionManager sessionManager;
+
+    protected SensorManager sensorManager;
+    protected Sensor accelerometer;
+
+    protected static final float SHAKE_THRESHOLD = 3.4f;
+    protected static final int SHAKE_SLOP_TIME_MS = 500;
+    protected long lastShakeTime = 0;
+
 
     public RideHistoryFragment() {
         // Required empty public constructor
@@ -105,10 +119,29 @@ public class RideHistoryFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+
+        sensorManager = (SensorManager) requireContext().getSystemService(Context.SENSOR_SERVICE);
+
+        if (sensorManager != null) {
+            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            sensorManager.registerListener(
+                    shakeListener,
+                    accelerometer,
+                    SensorManager.SENSOR_DELAY_UI
+            );
+        }
+    }
+
+    @Override
     public void onPause() {
         super.onPause();
         if (dropDownStatusContainer!=null) dropDownStatusContainer.setVisibility(View.GONE);
         if (dropDownSortContainer!=null) dropDownSortContainer.setVisibility(View.GONE);
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(shakeListener);
+        }
     }
 
     private void setUpStatusDropDownMenu() {
@@ -257,6 +290,45 @@ public class RideHistoryFragment extends Fragment {
         //getSort type
         //call VM function
         searchViewModel.sortRidesForUser(sortCategory, isAscending, statuses, from, to);
+    }
+
+    private final SensorEventListener shakeListener = new SensorEventListener() {
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            float x = event.values[0];
+            float y = event.values[1];
+            float z = event.values[2];
+
+            float gX = x / SensorManager.GRAVITY_EARTH;
+            float gY = y / SensorManager.GRAVITY_EARTH;
+            float gZ = z / SensorManager.GRAVITY_EARTH;
+
+            // gForce will be close to 1 when device is still
+            float gForce = (float) Math.sqrt(gX * gX + gY * gY + gZ * gZ);
+
+
+            if (gForce > SHAKE_THRESHOLD) {
+                long now = System.currentTimeMillis();
+
+                if (lastShakeTime + SHAKE_SLOP_TIME_MS > now) {
+                    return;
+                }
+
+                lastShakeTime = now;
+                onPhoneShaken();
+            }
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+            // no-op
+        }
+    };
+
+    private void onPhoneShaken() {
+        isAscending = !isAscending;
+        sortOrderBtn.setRotation(isAscending ? 0f : 180f);
+        searchViewModel.sortExistingRides(isAscending);
     }
 
 }

@@ -58,6 +58,7 @@
     <!--  DRIVER'S RIDES OVERVIEW  -->
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
+    <string name="search_driver">Search driver</string>
 
     <!--  USER'S RIDES OVERVIEW  -->
     <string name="driver">Driver : </string>

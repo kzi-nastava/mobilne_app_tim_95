@@ -68,6 +68,8 @@ public class RideService {
     private static final String RIDES = "rides";
     private static final String STATUS = "status";
     private static final String USER_EMAIL = "creatorUserEmail";
+    private static final String DRIVER_EMAIL = "driverEmail";
+    private static final String FIRST_NAME = "firstName";
     private static final String USERS = "users";
     private static final String ROLE = "role";
     private static final String STARTED_AT = "startedAt";
@@ -142,6 +144,7 @@ public class RideService {
 
     public GeoPoint getGeoPoint(String address) throws IOException {
         List<Address> results = geocoder.getFromLocationName(address, 1);
+        if (results == null || results.isEmpty()) throw new IOException("No such location");
         Address a = results.get(0);
         return new GeoPoint(a.getLatitude(), a.getLongitude());
     }
@@ -196,12 +199,12 @@ public class RideService {
             final int totalStops = ride.stopList.size();
             final int[] geocodedCount = {0};
             final List<Stop> geocodedStops = new ArrayList<>();
-            
+
             for (Stop stop : ride.stopList) {
                 geocodeStop(stop, geocodedStop -> {
                     geocodedStops.add(geocodedStop);
                     geocodedCount[0]++;
-                    
+
                     if (geocodedCount[0] == totalStops) {
                         ride.stopList = geocodedStops;
                         saveRideToFirebase(ride, callback);
@@ -310,6 +313,34 @@ public class RideService {
                     callback.onSuccess(rides);
                 })
                 .addOnFailureListener(e -> callback.onSuccess(Collections.emptyList()));
+    }
+
+    public void getRidesForDriverEmail(String driverEmail, RidesListCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereEqualTo(DRIVER_EMAIL, driverEmail)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Ride> rides = snapshot.toObjects(Ride.class);
+                    callback.onSuccess(rides);
+                })
+                .addOnFailureListener(callback::onError);
+    }
+
+    public void getRidesForDriverName(String driverName, RidesListCallback callback) {
+        firebaseFirestore.collection(USERS)
+                .whereEqualTo(FIRST_NAME, driverName)
+                .whereEqualTo(ROLE, UserRole.DRIVER.toString())
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<User> drivers = snapshot.toObjects(User.class);
+                    if (drivers.isEmpty()) callback.onSuccess(Collections.emptyList());
+                    for (User driver : drivers) {
+                        // THE CALLBACK MUST APPEND THE RESULTS ON EXISTING
+                        // KEEP IN MIND THAT THERE MIGHT BE CONCURENCY
+                        getRidesForDriverEmail(driver.getEmail(), callback);
+                    }
+                })
+                .addOnFailureListener(callback::onError);
     }
 
     public void searchAddress(String query, Consumer<List<Stop>> onResult) {
@@ -939,6 +970,12 @@ public class RideService {
                 .delete()
                 .addOnSuccessListener(v -> callback.accept(true))
                 .addOnFailureListener(e -> callback.accept(false));
+    }
+
+
+    //
+    private double getSimulatedDistance(User driver) {
+        return 10.0;
     }
 
 }
