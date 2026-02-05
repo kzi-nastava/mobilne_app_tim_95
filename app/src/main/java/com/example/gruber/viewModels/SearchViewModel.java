@@ -17,9 +17,12 @@ import com.google.firebase.Timestamp;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -30,6 +33,7 @@ public class SearchViewModel extends ViewModel {
     private final RideService rideService;
     private final SessionManager sessionManager;
     private final MutableLiveData<List<Ride>> rides = new MutableLiveData<>();
+    private final Object lock = new Object();
 
     @Inject
     public SearchViewModel(RideService rideService, SessionManager sessionManager) {
@@ -105,6 +109,26 @@ public class SearchViewModel extends ViewModel {
 
         });
 
+    }
+
+    public void searchRidesForDriver(String driverName) {
+        rides.setValue(Collections.emptyList());
+        rideService.getRidesForDriverName(driverName, new RidesListCallback() {
+            @Override
+            public void onSuccess(List<Ride> _rides) {
+                synchronized (lock) {
+                    List<Ride> current = rides.getValue();
+                    current = current == null ? new ArrayList<Ride>() : new ArrayList<Ride>(current);
+                    current.addAll(_rides);
+                    rides.postValue(current);
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+
+            }
+        });
     }
 
     public void sortExistingRides(boolean isAscending) {

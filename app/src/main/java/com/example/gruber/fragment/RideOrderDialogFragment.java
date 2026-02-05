@@ -160,7 +160,7 @@ public class RideOrderDialogFragment extends DialogFragment {
                         rideViewModel.setRideRoute(start, end);
                     }
                 } catch (IOException | RuntimeException e) {
-                    Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "One of the destinations do not exist...", Toast.LENGTH_LONG).show();
                 }
                 dismiss();
                 return true;

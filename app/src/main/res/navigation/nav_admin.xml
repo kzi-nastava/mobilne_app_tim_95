@@ -64,6 +64,12 @@
         android:name="com.example.gruber.fragment.HomeMapFragment"
         android:label="Home" />
 
+    <fragment
+        android:id="@+id/adminRideHistoryFragment"
+        android:name="com.example.gruber.fragment.AdminRideHistoryFragment"
+        android:label="Ride history"/>
+
+
 <!--    <fragment-->
 <!--        android:id="@+id/adminActiveRidesFragment"-->
 <!--        android:name="com.example.gruber.fragment.admin.AdminActiveRidesFragment"-->
