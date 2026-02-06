@@ -6,6 +6,7 @@ import android.location.Geocoder;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import com.example.gruber.models.DriverLocation;
+import com.example.gruber.services.callbacks.EmptyCallback;
 import com.example.gruber.services.callbacks.RideCallback;
 import com.example.gruber.services.callbacks.RideIdCallback;
 import com.google.firebase.database.DatabaseReference;
@@ -28,6 +29,7 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -179,13 +181,16 @@ public class RideService {
         });
     }
 
-    public void setRideStatus(String rideID, RideStatus status) {
-        Map<String, Object> statusMap = new HashMap<>();
-        statusMap.put(STATUS, status);
+    public void setRideStatus(@NonNull String rideID, @NonNull RideStatus status, EmptyCallback callback) {
 
         firebaseFirestore.collection(RIDES)
                 .document(rideID)
-                .set(statusMap, SetOptions.merge());
+                .update(STATUS, status.name())
+                .addOnSuccessListener(response -> {
+                    callback.OnSuccess();
+                })
+                .addOnFailureListener(callback::OnError)
+        ;
     }
 
     public void addRide(Ride ride, PriceCallback callback) {
@@ -297,11 +302,32 @@ public class RideService {
                 .orderBy(STARTED_AT)
                 .get()
                 .addOnSuccessListener(snapshot -> {
-                    List<Ride> rides = snapshot.toObjects(Ride.class);
+
+                    List<Ride> rides = getRidesWithIDs(snapshot);
+//                    List<Ride> rides = new ArrayList<>();
+//                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+//                        Ride ride = doc.toObject(Ride.class);
+//                        if (ride != null) {
+//                            ride.id = doc.getId();
+//                            rides.add(ride);
+//                        }
+//                    }
                     callback.onSuccess(rides);
                 })
                 .addOnFailureListener(callback::onError);
 
+    }
+
+    private List<Ride> getRidesWithIDs(QuerySnapshot snapshot) {
+        List<Ride> rides = new ArrayList<>();
+        for (DocumentSnapshot doc : snapshot.getDocuments()) {
+            Ride ride = doc.toObject(Ride.class);
+            if (ride != null) {
+                ride.id = doc.getId();
+                rides.add(ride);
+            }
+        }
+        return rides;
     }
 
     public void getRidesForUser(String userEmail, RidesListCallback callback) {
@@ -309,7 +335,8 @@ public class RideService {
                 .whereEqualTo(USER_EMAIL, userEmail)
                 .get()
                 .addOnSuccessListener(snapshot -> {
-                    List<Ride> rides = snapshot.toObjects(Ride.class);
+                    List<Ride> rides = getRidesWithIDs(snapshot);
+//                    List<Ride> rides = snapshot.toObjects(Ride.class);
                     callback.onSuccess(rides);
                 })
                 .addOnFailureListener(e -> callback.onSuccess(Collections.emptyList()));
@@ -320,7 +347,8 @@ public class RideService {
                 .whereEqualTo(DRIVER_EMAIL, driverEmail)
                 .get()
                 .addOnSuccessListener(snapshot -> {
-                    List<Ride> rides = snapshot.toObjects(Ride.class);
+//                    List<Ride> rides = snapshot.toObjects(Ride.class);
+                    List<Ride> rides = getRidesWithIDs(snapshot);
                     callback.onSuccess(rides);
                 })
                 .addOnFailureListener(callback::onError);
@@ -977,5 +1005,6 @@ public class RideService {
     private double getSimulatedDistance(User driver) {
         return 10.0;
     }
+
 
 }

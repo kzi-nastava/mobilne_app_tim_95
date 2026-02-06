@@ -15,6 +15,21 @@
         <item name="android:minWidth">64dp</item>
         <item name="android:layout_marginHorizontal">50dp</item>
     </style>
+    <style name="Widget.GrUber.Button.Outlined.Red"
+        parent="Widget.Material3.Button.OutlinedButton">
+
+        <!-- Text & icon -->
+        <item name="android:textColor">@color/status_cancelled</item>
+        <item name="iconTint">@color/status_cancelled</item>
+
+        <!-- Outline -->
+        <item name="strokeColor">@color/status_cancelled</item>
+        <item name="strokeWidth">1dp</item>
+
+        <!-- Background must stay transparent -->
+        <item name="android:backgroundTint">@android:color/transparent</item>
+    </style>
+
     <style name="Widget.GrUber.TextInput.Default"
         parent="Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="android:singleLine">true</item>

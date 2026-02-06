@@ -13,6 +13,7 @@ import com.example.gruber.models.Route;
 import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.services.RideService;
+import com.example.gruber.services.callbacks.EmptyCallback;
 import com.example.gruber.services.callbacks.RideCallback;
 import com.example.gruber.services.callbacks.RideIdCallback;
 import com.example.gruber.services.callbacks.RouteCallback;
@@ -504,5 +505,24 @@ public class RideViewModel extends ViewModel {
 
     public void setRide(Ride ride) {
         this.ride.setValue(ride);
+    }
+    public void cancelRide(EmptyCallback callback) {
+        Ride _ride = ride.getValue();
+        String _rideId = _ride.id;
+        if (_rideId == null) callback.OnError(new NullPointerException("Ride id missing"));
+
+        rideService.setRideStatus(_rideId, RideStatus.CANCELLED, new EmptyCallback() {
+            @Override
+            public void OnSuccess() {
+                _ride.setStatus(RideStatus.CANCELLED);
+                ride.postValue(_ride);
+                callback.OnSuccess();
+            }
+
+            @Override
+            public void OnError(Exception e) {
+                callback.OnError(e);
+            }
+        });
     }
 }
