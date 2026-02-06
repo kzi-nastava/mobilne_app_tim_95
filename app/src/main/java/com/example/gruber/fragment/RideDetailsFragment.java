@@ -1,5 +1,6 @@
 package com.example.gruber.fragment;
 
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
@@ -26,7 +27,11 @@ import com.example.gruber.models.Ride;
 import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.services.MapService;
+import com.example.gruber.services.callbacks.EmptyCallback;
 import com.example.gruber.viewModels.RideViewModel;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.firebase.Timestamp;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.ITileSource;
@@ -44,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -101,6 +107,7 @@ public class RideDetailsFragment extends Fragment {
 
         TextView tvRideId = view.findViewById(R.id.tvRideId);
         TextView tvStatus = view.findViewById(R.id.tvStatus);
+        MaterialButton btnCancelRide = view.findViewById(R.id.btn_cancel_ride);
 
         TextView tvMainPassengerEmail = view.findViewById(R.id.tvMainPassengerEmail);
         LinearLayout otherPassengersContainer = view.findViewById(R.id.otherPassengersContainer);
@@ -142,6 +149,14 @@ public class RideDetailsFragment extends Fragment {
         tvRideId.setText("Ride #");
         tvStatus.setText(ride.status != null ? ride.status.name() : "-");
 
+        if (ride.status == RideStatus.PENDING) btnCancelRide.setVisibility(View.VISIBLE);
+        if (ride.status == RideStatus.SCHEDULED) {
+            LocalDateTime scheduledFor = ride.getScheduledForLocalDateTime();
+            if (scheduledFor.plusMinutes(10).isBefore(LocalDateTime.now()))
+                btnCancelRide.setVisibility(View.VISIBLE);
+        }
+        btnCancelRide.setOnClickListener(click -> cancelRide());
+
         int statusColorRes;
         if (ride.status == null) {
             statusColorRes = R.color.color_text;
@@ -182,18 +197,20 @@ public class RideDetailsFragment extends Fragment {
         }
 
         // Conversion because of switch from LocalDate to firebase.Timestamp
-        LocalDateTime _start = ride.startedAt.toDate()
-                .toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDateTime();
-        LocalDateTime _end = ride.finishedAt.toDate()
-                .toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDateTime();
+        LocalDateTime _start = ride.getStartedAtLocalDateTime();
+        LocalDateTime _end = ride.getFinishedAtLocalDateTime();
+//        LocalDateTime _start = ride.startedAt.toDate()
+//                .toInstant()
+//                .atZone(ZoneId.systemDefault())
+//                .toLocalDateTime();
+//        LocalDateTime _end = ride.finishedAt.toDate()
+//                .toInstant()
+//                .atZone(ZoneId.systemDefault())
+//                .toLocalDateTime();
 
         // --- Times + duration
-        String startTxt = (ride.startedAt != null) ? _start.format(DATE_TIME_FMT) : "-";
-        String endTxt = (ride.finishedAt != null) ? _end.format(DATE_TIME_FMT) : "-";
+        String startTxt = (_start != null) ? _start.format(DATE_TIME_FMT) : "-";
+        String endTxt = (_end != null) ? _end.format(DATE_TIME_FMT) : "-";
 
         String durationTxt = "";
         if (ride.startedAt != null && ride.finishedAt != null) {
@@ -413,5 +430,45 @@ public class RideDetailsFragment extends Fragment {
     private GeoPoint toGeoPoint(@Nullable LatLng p) {
         if (p == null) return null;
         return new GeoPoint(p.lat, p.lon);
+    }
+
+    private void cancelRide() {
+        EmptyCallback callback = new EmptyCallback() {
+            @Override
+            public void OnSuccess() {
+                String title = "Cancellation successful.";
+                String message = "We have canceled your ride.";
+                //change the color of status label
+                TextView tvStatus = requireActivity().findViewById(R.id.tvStatus);
+                tvStatus.setText(RideStatus.CANCELLED.toString());
+                tvStatus.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.status_cancelled));
+//                Drawable bg = tvStatus.getBackground().mutate();
+//                bg.setTint(ContextCompat.getColor(requireContext(), R.color.status_cancelled));
+//                tvStatus.setBackground(bg);
+                showDialog(title, message);
+            }
+
+            @Override
+            public void OnError(Exception e) {
+                String title = "Cancellation unsuccessful";
+                String message = e.getMessage();
+                showDialog(title, message);
+            }
+            private void showDialog(String title, String message) {
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(title)
+                        .setMessage(message)
+                        .setNeutralButton("Ok", ((dialog, which) -> dialog.dismiss()))
+                        .show();
+            }
+        };
+        Ride _ride = rideViewModel.getRideValue();
+        if (_ride.status == RideStatus.SCHEDULED) {
+            if (_ride.getScheduledForLocalDateTime().plusMinutes(10).isAfter(LocalDateTime.now())) {
+                callback.OnError(new IllegalArgumentException("We cannot cancel the ride less than 10 minutes before start."));
+                return;
+            }
+        }
+        rideViewModel.cancelRide(callback);
     }
 }

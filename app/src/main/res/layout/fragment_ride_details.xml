@@ -64,6 +64,17 @@
                     android:paddingBottom="6dp"
                     android:background="@drawable/bg_status_chip" />
             </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_cancel_ride"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                style="@style/Widget.GrUber.Button.Outlined.Red"
+                android:text="@string/cancel_ride"
+                android:visibility="gone"
+                />
         </RelativeLayout>
 
         <!-- PASSENGERS CARD -->

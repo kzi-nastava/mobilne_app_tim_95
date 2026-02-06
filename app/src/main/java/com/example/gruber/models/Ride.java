@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 
 public class Ride {
     // MUST HAVES - ovo mora da bude tu
+    @Exclude
     public String id;
     @NonNull
     public String creatorUserEmail;
@@ -287,6 +288,18 @@ public class Ride {
     public LocalDateTime getStartedAtLocalDateTime() {
         try {
             return startedAt.toDate()
+                    .toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
+        } catch (NullPointerException exception) {
+            return null;
+        }
+    }
+
+    @Exclude
+    public LocalDateTime getScheduledForLocalDateTime() {
+        try {
+            return scheduledFor.toDate()
                     .toInstant()
                     .atZone(ZoneId.systemDefault())
                     .toLocalDateTime();

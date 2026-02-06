@@ -11,6 +11,9 @@ import com.example.gruber.models.Address;
 import com.example.gruber.models.User;
 import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.UserService;
+
+import java.io.ByteArrayOutputStream;
+
 import javax.inject.Inject;
 import dagger.hilt.android.lifecycle.HiltViewModel;
 
@@ -62,6 +65,13 @@ public class AccountViewModel extends ViewModel {
 
     public void setImage(byte[] image) {
         this.image.setValue(image);
+    }
+
+    public void setImage(Bitmap bitmap) {
+        //bitmap to bytes
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream);
+        this.image.setValue(stream.toByteArray());
     }
 
     public MutableLiveData<String> getEmail() {
