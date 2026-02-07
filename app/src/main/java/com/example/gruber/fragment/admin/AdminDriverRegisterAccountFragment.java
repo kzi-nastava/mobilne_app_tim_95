@@ -41,11 +41,11 @@ public class AdminDriverRegisterAccountFragment extends Fragment {
 
         tilEmail = view.findViewById(R.id.til_reg_email);
         tilPassword = view.findViewById(R.id.til_reg_password);
-        tilConfirmPassword = view.findViewById(R.id.til_set_city);
+        tilConfirmPassword = view.findViewById(R.id.til_confirm_password);
 
         etEmail = view.findViewById(R.id.et_reg_email);
         etPassword = view.findViewById(R.id.et_reg_password);
-        etConfirmPassword = view.findViewById(R.id.et_set_city);
+        etConfirmPassword = view.findViewById(R.id.et_confirm_password);
 
         view.findViewById(R.id.reg_button_next).setOnClickListener(v -> onNextClicked());
 

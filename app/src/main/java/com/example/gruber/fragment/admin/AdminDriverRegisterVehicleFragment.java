@@ -110,7 +110,7 @@ public class AdminDriverRegisterVehicleFragment extends Fragment {
         String firstName = viewModel.getFirstName().getValue();
         String lastName = viewModel.getLastName().getValue();
         String phone = viewModel.getPhone().getValue();
-        String photoUri = viewModel.getPhotoUri().getValue();
+        byte[] photoBytes = viewModel.getPhotoBytes().getValue();
         Address address = viewModel.getAddress().getValue();
         VehicleInfo vehicleInfo = viewModel.getVehicleInfo().getValue();
 
@@ -119,7 +119,7 @@ public class AdminDriverRegisterVehicleFragment extends Fragment {
             return;
         }
         // First create the driver; on success we will trigger the activation email placeholder
-        createDriverInFirebase(email, password, firstName, lastName, phone, photoUri, address, vehicleInfo);
+        createDriverInFirebase(email, password, firstName, lastName, phone, photoBytes, address, vehicleInfo);
     }
 
     private void sendActivationEmail(String email, String firstName, String lastName, Runnable onComplete) {
@@ -137,14 +137,14 @@ public class AdminDriverRegisterVehicleFragment extends Fragment {
         );
     }
 
-    private void createDriverInFirebase(String email, String password, String firstName, String lastName, String phone, String photoUri, Address address, VehicleInfo vehicleInfo) {
+    private void createDriverInFirebase(String email, String password, String firstName, String lastName, String phone, byte[] photoBytes, Address address, VehicleInfo vehicleInfo) {
         Map<String, Object> driverData = new HashMap<>();
         driverData.put("firstName", firstName);
         driverData.put("lastName", lastName);
         driverData.put("email", email);
         driverData.put("phone", phone);
-        if (photoUri != null) {
-            driverData.put("photoUri", photoUri);
+        if (photoBytes != null) {
+            driverData.put("photoBytes", java.util.Base64.getEncoder().encodeToString(photoBytes));
         }
         driverData.put("role", UserRole.DRIVER.toString());
         driverData.put("active", false);

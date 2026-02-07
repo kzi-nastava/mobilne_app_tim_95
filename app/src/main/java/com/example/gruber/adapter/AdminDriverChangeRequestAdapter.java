@@ -1,11 +1,15 @@
 package com.example.gruber.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -173,6 +177,11 @@ public class AdminDriverChangeRequestAdapter extends RecyclerView.Adapter<AdminD
                 String oldValue = values[0];
                 String newValue = values[1];
 
+                if ("photoBytes".equals(key)) {
+                    addPhotoChange(ctx, container, oldValue, newValue);
+                    continue;
+                }
+
                 // Create container for this field
                 LinearLayout fieldContainer = new LinearLayout(ctx);
                 fieldContainer.setOrientation(LinearLayout.VERTICAL);
@@ -221,6 +230,84 @@ public class AdminDriverChangeRequestAdapter extends RecyclerView.Adapter<AdminD
                 fieldContainer.setLayoutParams(params);
 
                 container.addView(fieldContainer);
+            }
+        }
+
+        private void addPhotoChange(Context ctx, LinearLayout container, String oldValue, String newValue) {
+            LinearLayout fieldContainer = new LinearLayout(ctx);
+            fieldContainer.setOrientation(LinearLayout.VERTICAL);
+            fieldContainer.setPadding(dpToPx(ctx, 12), dpToPx(ctx, 8), dpToPx(ctx, 12), dpToPx(ctx, 8));
+
+            int primaryColor = getThemeColor(ctx, android.R.attr.colorPrimary);
+            fieldContainer.setBackgroundColor(Color.argb(40, Color.red(primaryColor),
+                    Color.green(primaryColor), Color.blue(primaryColor)));
+
+            TextView fieldName = new TextView(ctx);
+            fieldName.setText("Profile photo");
+            fieldName.setTextAppearance(ctx, android.R.style.TextAppearance_Material_Body2);
+            fieldName.setTypeface(null, Typeface.BOLD);
+            fieldContainer.addView(fieldName);
+
+            if (!oldValue.isEmpty()) {
+                TextView oldLabel = new TextView(ctx);
+                oldLabel.setText("Current:");
+                oldLabel.setTextAppearance(ctx, android.R.style.TextAppearance_Material_Small);
+                oldLabel.setTextColor(Color.GRAY);
+                oldLabel.setPadding(0, dpToPx(ctx, 2), 0, 0);
+                fieldContainer.addView(oldLabel);
+
+                ImageView oldImage = createPhotoView(ctx, oldValue);
+                if (oldImage != null) {
+                    fieldContainer.addView(oldImage);
+                }
+            }
+
+            TextView newLabel = new TextView(ctx);
+            newLabel.setText("New:");
+            newLabel.setTextAppearance(ctx, android.R.style.TextAppearance_Material_Small);
+            newLabel.setTextColor(primaryColor);
+            newLabel.setPadding(0, dpToPx(ctx, 6), 0, 0);
+            fieldContainer.addView(newLabel);
+
+            ImageView newImage = createPhotoView(ctx, newValue);
+            if (newImage != null) {
+                fieldContainer.addView(newImage);
+            }
+
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            params.topMargin = dpToPx(ctx, 4);
+            params.bottomMargin = dpToPx(ctx, 4);
+            fieldContainer.setLayoutParams(params);
+
+            container.addView(fieldContainer);
+        }
+
+        private ImageView createPhotoView(Context ctx, String base64) {
+            Bitmap bitmap = decodeBase64ToBitmap(base64);
+            if (bitmap == null) {
+                return null;
+            }
+            ImageView imageView = new ImageView(ctx);
+            int size = dpToPx(ctx, 64);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+            params.topMargin = dpToPx(ctx, 4);
+            imageView.setLayoutParams(params);
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            imageView.setImageBitmap(bitmap);
+            return imageView;
+        }
+
+        private Bitmap decodeBase64ToBitmap(String base64) {
+            if (base64 == null || base64.isEmpty()) {
+                return null;
+            }
+            try {
+                byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
+                return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+            } catch (IllegalArgumentException e) {
+                return null;
             }
         }
 

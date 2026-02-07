@@ -14,7 +14,7 @@ public class AdminDriverRegistrationViewModel extends ViewModel {
     private final MutableLiveData<String> firstName = new MutableLiveData<>();
     private final MutableLiveData<String> lastName = new MutableLiveData<>();
     private final MutableLiveData<String> phone = new MutableLiveData<>();
-    private final MutableLiveData<String> photoUri = new MutableLiveData<>();
+    private final MutableLiveData<byte[]> photoBytes = new MutableLiveData<>();
     private final MutableLiveData<Address> address = new MutableLiveData<>();
     private final MutableLiveData<VehicleInfo> vehicleInfo = new MutableLiveData<>();
 
@@ -24,7 +24,7 @@ public class AdminDriverRegistrationViewModel extends ViewModel {
     public MutableLiveData<String> getFirstName() { return firstName; }
     public MutableLiveData<String> getLastName() { return lastName; }
     public MutableLiveData<String> getPhone() { return phone; }
-    public MutableLiveData<String> getPhotoUri() { return photoUri; }
+    public MutableLiveData<byte[]> getPhotoBytes() { return photoBytes; }
     public MutableLiveData<Address> getAddress() { return address; }
     public MutableLiveData<VehicleInfo> getVehicleInfo() { return vehicleInfo; }
 
@@ -34,7 +34,7 @@ public class AdminDriverRegistrationViewModel extends ViewModel {
     public void setFirstName(String value) { firstName.setValue(value); }
     public void setLastName(String value) { lastName.setValue(value); }
     public void setPhone(String value) { phone.setValue(value); }
-    public void setPhotoUri(String value) { photoUri.setValue(value); }
+    public void setPhotoBytes(byte[] value) { photoBytes.setValue(value); }
     public void setAddress(Address value) { address.setValue(value); }
     public void setVehicleInfo(VehicleInfo value) { vehicleInfo.setValue(value); }
 
@@ -45,7 +45,7 @@ public class AdminDriverRegistrationViewModel extends ViewModel {
         firstName.setValue(null);
         lastName.setValue(null);
         phone.setValue(null);
-        photoUri.setValue(null);
+        photoBytes.setValue(null);
         address.setValue(null);
         vehicleInfo.setValue(null);
     }
