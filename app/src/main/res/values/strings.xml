@@ -58,6 +58,7 @@
     <!--  DRIVER'S RIDES OVERVIEW  -->
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
+    <string name="search_driver">Search driver</string>
 
     <!--  USER'S RIDES OVERVIEW  -->
     <string name="driver">Driver : </string>
@@ -146,6 +147,7 @@
 
     <!--    RIDE START/TRACKING    -->
     <string name="start_ride">Start Ride</string>
+    <string name="cancel_ride">Cancel Ride</string>
     <string name="no_pending_rides">No rides to start</string>
     <string name="ride_started">Ride started</string>
     <string name="ride_start_error">Failed to start ride</string>

@@ -64,7 +64,12 @@ public class User {
     public UserRole getRole() { return role; }
     public String getPhotoBytes() { return photoBytes; }
     @Exclude
-    public byte[] getPhotoBytesDeserialized() { return Base64.getDecoder().decode(photoBytes);}
+    public byte[] getPhotoBytesDeserialized() {
+        if (photoBytes == null || photoBytes.isEmpty()) {
+            return null;
+        }
+        return Base64.getDecoder().decode(photoBytes);
+    }
     public int getActiveHoursLast24h() { return activeHoursLast24h; }
     public String getVehicleModel() { return vehicleModel; }
     public String getVehiclePlate() { return vehiclePlate; }
@@ -77,7 +82,18 @@ public class User {
     public void setEmail(String email) { this.email = email; }
     public void setPhone(String phone) { this.phone = phone; }
     public void setRole(String role) { this.role = UserRole.valueOf(role); }
-    public void setPhotoBytes(byte[] photoBytes) { this.photoBytes = Base64.getEncoder().encodeToString(photoBytes); }
+    public void setPhotoBytes(String photoBytes) {
+        this.photoBytes = photoBytes;
+    }
+
+    @Exclude
+    public void setPhotoBytesBytes(byte[] photoBytes) {
+        if (photoBytes == null || photoBytes.length == 0) {
+            this.photoBytes = null;
+            return;
+        }
+        this.photoBytes = Base64.getEncoder().encodeToString(photoBytes);
+    }
     public void setActiveHoursLast24h(int activeHoursLast24h) { this.activeHoursLast24h = activeHoursLast24h; }
     public void setVehicleModel(String vehicleModel) { this.vehicleModel = vehicleModel; }
     public void setVehiclePlate(String vehiclePlate) { this.vehiclePlate = vehiclePlate; }

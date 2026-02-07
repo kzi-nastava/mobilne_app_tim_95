@@ -1,6 +1,7 @@
 package com.example.gruber.services;
 
 import android.util.Log;
+import android.util.Base64;
 
 import com.example.gruber.SessionManager;
 import com.example.gruber.models.Login;
@@ -232,7 +233,7 @@ public class UserService {
         if (accountViewModel.getPhone().getValue() != null)
             updates.put("phone", accountViewModel.getPhone().getValue());
         if (accountViewModel.getImage().getValue() != null)
-            updates.put("photoUri", accountViewModel.getImage().getValue());
+            updates.put("photoBytes", Base64.encodeToString(accountViewModel.getImage().getValue(), Base64.DEFAULT));
 
         Map<String, Object> vehicleUpdates = null;
         String email = accountViewModel.getEmail().getValue();

@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.net.Uri;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -28,6 +29,7 @@ import com.example.gruber.services.UserService;
 import com.example.gruber.services.callbacks.AuthCallback;
 import com.example.gruber.viewModels.AccountViewModel;
 import com.example.gruber.viewModels.DriverViewModel;
+import java.io.ByteArrayOutputStream;
 import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -101,8 +103,7 @@ public class EditProfileFragment extends Fragment {
                 new ActivityResultContracts.GetContent(),
                 uri -> {
                     if (uri != null) {
-                        ivProfileImage.setImageURI(uri);
-                        accountViewModel.setImage(uri.toString());
+                        processImage(uri, ivProfileImage, accountViewModel);
                     }
                 });
 
@@ -198,6 +199,37 @@ public class EditProfileFragment extends Fragment {
                 break;
             }
         }
+    }
+
+    private void processImage(Uri imageUri, ImageView imageView, AccountViewModel accountViewModel) {
+        if (imageUri == null) {
+            return;
+        }
+        try {
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(requireContext().getContentResolver(), imageUri);
+            Bitmap scaledBitmap = scaleBitmap(bitmap, 200, 200);
+            byte[] imageBytes = bitmapToBytes(scaledBitmap);
+            accountViewModel.setImage(imageBytes);
+            imageView.setImageBitmap(scaledBitmap);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private Bitmap scaleBitmap(Bitmap bitmap, int maxWidth, int maxHeight) {
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+
+        float ratio = Math.min((float) maxWidth / width, (float) maxHeight / height);
+        int newWidth = Math.round(width * ratio);
+        int newHeight = Math.round(height * ratio);
+
+        return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+    }
+
+    private byte[] bitmapToBytes(Bitmap bitmap) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream);
+        return stream.toByteArray();
     }
     private Bitmap bytesToBitmap(byte[] bytes) {
         if (bytes == null || bytes.length == 0) {

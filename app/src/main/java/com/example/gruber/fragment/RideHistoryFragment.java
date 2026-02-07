@@ -45,23 +45,23 @@ import java.util.Locale;
 
 public class RideHistoryFragment extends Fragment {
 
-    private RideViewModel rideViewModel;
-    private SearchViewModel searchViewModel;
-    private HashMap<String, Boolean> statusSearchMap;
+    protected RideViewModel rideViewModel;
+    protected SearchViewModel searchViewModel;
+    protected HashMap<String, Boolean> statusSearchMap;
 
-    private MaterialButton statusBtn, sortBtn, sortOrderBtn, applyBtn;
-    private LinearLayout dropDownStatusContainer, dropDownSortContainer;
+    protected MaterialButton statusBtn, sortBtn, sortOrderBtn, applyBtn;
+    protected LinearLayout dropDownStatusContainer, dropDownSortContainer;
 
-    private SortCategory sortCategory = SortCategory.DATE;
-    private boolean isAscending = true;
-    private SessionManager sessionManager;
+    protected SortCategory sortCategory = SortCategory.DATE;
+    protected boolean isAscending = true;
+    protected SessionManager sessionManager;
 
-    private SensorManager sensorManager;
-    private Sensor accelerometer;
+    protected SensorManager sensorManager;
+    protected Sensor accelerometer;
 
-    private static final float SHAKE_THRESHOLD = 3.4f;
-    private static final int SHAKE_SLOP_TIME_MS = 500;
-    private long lastShakeTime = 0;
+    protected static final float SHAKE_THRESHOLD = 3.4f;
+    protected static final int SHAKE_SLOP_TIME_MS = 500;
+    protected long lastShakeTime = 0;
 
 
     public RideHistoryFragment() {
@@ -125,7 +125,6 @@ public class RideHistoryFragment extends Fragment {
         sensorManager = (SensorManager) requireContext().getSystemService(Context.SENSOR_SERVICE);
 
         if (sensorManager != null) {
-            Log.d("SHAKEYSHAKEY", "setting sensor manager");
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             sensorManager.registerListener(
                     shakeListener,
@@ -309,8 +308,6 @@ public class RideHistoryFragment extends Fragment {
 
 
             if (gForce > SHAKE_THRESHOLD) {
-                Log.d("SHAKEYSHAKEY", String.valueOf(gForce));
-                Log.d("SHAKEYSHAKEY", "sensor movement recognized");
                 long now = System.currentTimeMillis();
 
                 if (lastShakeTime + SHAKE_SLOP_TIME_MS > now) {
@@ -329,8 +326,6 @@ public class RideHistoryFragment extends Fragment {
     };
 
     private void onPhoneShaken() {
-        //sort the list from searchViewModel
-        Log.d("SHAKEYSHAKEy", "Recognized shaking");
         isAscending = !isAscending;
         sortOrderBtn.setRotation(isAscending ? 0f : 180f);
         searchViewModel.sortExistingRides(isAscending);

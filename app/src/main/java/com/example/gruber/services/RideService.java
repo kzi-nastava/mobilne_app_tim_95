@@ -6,6 +6,7 @@ import android.location.Geocoder;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import com.example.gruber.models.DriverLocation;
+import com.example.gruber.services.callbacks.EmptyCallback;
 import com.example.gruber.services.callbacks.RideCallback;
 import com.example.gruber.services.callbacks.RideIdCallback;
 import com.google.firebase.database.DatabaseReference;
@@ -28,6 +29,7 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -68,6 +70,8 @@ public class RideService {
     private static final String RIDES = "rides";
     private static final String STATUS = "status";
     private static final String USER_EMAIL = "creatorUserEmail";
+    private static final String DRIVER_EMAIL = "driverEmail";
+    private static final String FIRST_NAME = "firstName";
     private static final String USERS = "users";
     private static final String ROLE = "role";
     private static final String STARTED_AT = "startedAt";
@@ -177,13 +181,16 @@ public class RideService {
         });
     }
 
-    public void setRideStatus(String rideID, RideStatus status) {
-        Map<String, Object> statusMap = new HashMap<>();
-        statusMap.put(STATUS, status);
+    public void setRideStatus(@NonNull String rideID, @NonNull RideStatus status, EmptyCallback callback) {
 
         firebaseFirestore.collection(RIDES)
                 .document(rideID)
-                .set(statusMap, SetOptions.merge());
+                .update(STATUS, status.name())
+                .addOnSuccessListener(response -> {
+                    callback.OnSuccess();
+                })
+                .addOnFailureListener(callback::OnError)
+        ;
     }
 
     public void addRide(Ride ride, PriceCallback callback) {
@@ -295,11 +302,32 @@ public class RideService {
                 .orderBy(STARTED_AT)
                 .get()
                 .addOnSuccessListener(snapshot -> {
-                    List<Ride> rides = snapshot.toObjects(Ride.class);
+
+                    List<Ride> rides = getRidesWithIDs(snapshot);
+//                    List<Ride> rides = new ArrayList<>();
+//                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+//                        Ride ride = doc.toObject(Ride.class);
+//                        if (ride != null) {
+//                            ride.id = doc.getId();
+//                            rides.add(ride);
+//                        }
+//                    }
                     callback.onSuccess(rides);
                 })
                 .addOnFailureListener(callback::onError);
 
+    }
+
+    private List<Ride> getRidesWithIDs(QuerySnapshot snapshot) {
+        List<Ride> rides = new ArrayList<>();
+        for (DocumentSnapshot doc : snapshot.getDocuments()) {
+            Ride ride = doc.toObject(Ride.class);
+            if (ride != null) {
+                ride.id = doc.getId();
+                rides.add(ride);
+            }
+        }
+        return rides;
     }
 
     public void getRidesForUser(String userEmail, RidesListCallback callback) {
@@ -307,10 +335,40 @@ public class RideService {
                 .whereEqualTo(USER_EMAIL, userEmail)
                 .get()
                 .addOnSuccessListener(snapshot -> {
-                    List<Ride> rides = snapshot.toObjects(Ride.class);
+                    List<Ride> rides = getRidesWithIDs(snapshot);
+//                    List<Ride> rides = snapshot.toObjects(Ride.class);
                     callback.onSuccess(rides);
                 })
                 .addOnFailureListener(e -> callback.onSuccess(Collections.emptyList()));
+    }
+
+    public void getRidesForDriverEmail(String driverEmail, RidesListCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereEqualTo(DRIVER_EMAIL, driverEmail)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+//                    List<Ride> rides = snapshot.toObjects(Ride.class);
+                    List<Ride> rides = getRidesWithIDs(snapshot);
+                    callback.onSuccess(rides);
+                })
+                .addOnFailureListener(callback::onError);
+    }
+
+    public void getRidesForDriverName(String driverName, RidesListCallback callback) {
+        firebaseFirestore.collection(USERS)
+                .whereEqualTo(FIRST_NAME, driverName)
+                .whereEqualTo(ROLE, UserRole.DRIVER.toString())
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<User> drivers = snapshot.toObjects(User.class);
+                    if (drivers.isEmpty()) callback.onSuccess(Collections.emptyList());
+                    for (User driver : drivers) {
+                        // THE CALLBACK MUST APPEND THE RESULTS ON EXISTING
+                        // KEEP IN MIND THAT THERE MIGHT BE CONCURENCY
+                        getRidesForDriverEmail(driver.getEmail(), callback);
+                    }
+                })
+                .addOnFailureListener(callback::onError);
     }
 
     public void searchAddress(String query, Consumer<List<Stop>> onResult) {
@@ -947,5 +1005,6 @@ public class RideService {
     private double getSimulatedDistance(User driver) {
         return 10.0;
     }
+
 
 }

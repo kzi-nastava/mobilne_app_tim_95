@@ -15,4 +15,8 @@
         android:id="@+id/adminVehiclePricingFragment"
         android:title="Prices"
         android:icon="@drawable/usd_circle"/>
+    <item
+        android:id="@+id/adminRideHistoryFragment"
+        android:title="@string/ride_history"
+        android:icon="@drawable/car_journey"/>
 </menu>
