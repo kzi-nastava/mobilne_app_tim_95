@@ -59,6 +59,11 @@
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
     <string name="search_driver">Search driver</string>
+    <string name="cancellation_successful">Cancellation successful.</string>
+    <string name="successful_cancellation_message">We have canceled your ride</string>
+    <string name="cancellation_unsuccessful">Cancellation unsuccessful.</string>
+    <string name="cancellation_reason">Reason for cancellation</string>
+    <string name="dismiss">Dismiss</string>
 
     <!--  USER'S RIDES OVERVIEW  -->
     <string name="driver">Driver : </string>

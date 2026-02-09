@@ -8,6 +8,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.gruber.SessionManager;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.Route;
 import com.example.gruber.models.Stop;
@@ -36,6 +37,8 @@ public class RideViewModel extends ViewModel {
 
     private final RideService rideService;
 
+    private final SessionManager sessionManager;
+
     private final MutableLiveData<Ride> ride = new MutableLiveData<>();
     private ListenerRegistration rideListener;
 
@@ -55,8 +58,9 @@ public class RideViewModel extends ViewModel {
     private boolean skipResetOnce = false;
 
     @Inject
-    public RideViewModel(RideService rideService) {
+    public RideViewModel(RideService rideService, SessionManager sessionManager) {
         this.rideService = rideService;
+        this.sessionManager = sessionManager;
         ride.setValue(new Ride());
         showRouteTrigger.setValue(Boolean.TRUE);
     }
@@ -516,6 +520,20 @@ public class RideViewModel extends ViewModel {
             public void OnSuccess() {
                 _ride.setStatus(RideStatus.CANCELLED);
                 ride.postValue(_ride);
+                callback.OnSuccess();
+            }
+
+            @Override
+            public void OnError(Exception e) {
+                callback.OnError(e);
+            }
+        });
+    }
+
+    public void cancelFirstPendingRideForDriver(EmptyCallback callback) {
+        rideService.cancelDriverFirstRide(sessionManager.getUserEmail(), new EmptyCallback() {
+            @Override
+            public void OnSuccess() {
                 callback.OnSuccess();
             }
 

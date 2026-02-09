@@ -45,6 +45,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -191,6 +192,23 @@ public class RideService {
                 })
                 .addOnFailureListener(callback::OnError)
         ;
+    }
+
+    public void cancelDriverFirstRide(String driverEmail, EmptyCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereEqualTo(DRIVER_EMAIL, driverEmail)
+                .whereEqualTo(STATUS, RideStatus.PENDING.name())
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                        Ride _ride = doc.toObject(Ride.class);
+                        if (_ride == null || _ride.status != RideStatus.PENDING) continue;
+                        setRideStatus(doc.getId(), RideStatus.CANCELLED, callback);
+                    }
+                    callback.OnError(new NullPointerException("No pending rides."));
+                })
+                .addOnFailureListener(callback::OnError);
+
     }
 
     public void addRide(Ride ride, PriceCallback callback) {

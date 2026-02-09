@@ -1,18 +1,21 @@
 package com.example.gruber.fragment;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
@@ -26,11 +29,14 @@ import com.example.gruber.services.DriverTrackingService;
 import com.example.gruber.services.MapService;
 import com.example.gruber.services.RideCoordinator;
 import com.example.gruber.services.RideService;
-import com.example.gruber.viewModels.RideViewModel;
+import com.example.gruber.services.callbacks.EmptyCallback;
 import com.example.gruber.viewModels.AccountViewModel;
+import com.example.gruber.viewModels.RideViewModel;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.osmdroid.views.MapView;
@@ -98,6 +104,7 @@ public class HomeMapFragment extends Fragment {
         View fabSupportContainer = view.findViewById(R.id.fab_support_container);
         View btnBookRide = view.findViewById(R.id.btnBookRide);
         View btnStartRide = view.findViewById(R.id.btnStartRide);
+        View btnCancelRide = view.findViewById(R.id.btnCancelRide);
         View fabSupport = view.findViewById(R.id.fab_support);
         unreadDot = view.findViewById(R.id.v_support_unread_dot);
 
@@ -138,7 +145,7 @@ public class HomeMapFragment extends Fragment {
                     btnBookRide.setVisibility(View.GONE);
                     btnStartRide.setVisibility(View.VISIBLE);
                     btnStartRide.setEnabled(false);
-                    loadDriverPendingRides(btnStartRide);
+                    loadDriverPendingRides(btnStartRide, btnCancelRide);
                     break;
                 case USER:
                     setupUserRoleUI(btnBookRide, auth, db, accountViewModel);
@@ -194,7 +201,8 @@ public class HomeMapFragment extends Fragment {
             }
         });
 
-        btnStartRide.setOnClickListener(v -> startPendingRide(btnStartRide));
+        btnStartRide.setOnClickListener(v -> startPendingRide(btnStartRide, btnCancelRide));
+        btnCancelRide.setOnClickListener(v -> getCancellationReason());
 
         // ----- Map service setup -----
         bg = Executors.newFixedThreadPool(2);
@@ -245,7 +253,7 @@ public class HomeMapFragment extends Fragment {
         }
     }
 
-    private void loadDriverPendingRides(View btnStartRide) {
+    private void loadDriverPendingRides(View btnStartRide, View btnCancelRide) {
         SessionManager sessionManager = new SessionManager(requireContext());
         String driverEmail = sessionManager.getUserEmail();
 
@@ -256,6 +264,8 @@ public class HomeMapFragment extends Fragment {
             ui.post(() -> {
                 btnStartRide.setVisibility(View.VISIBLE);
                 btnStartRide.setEnabled(!rides.isEmpty());
+                btnCancelRide.setVisibility(View.VISIBLE);
+                btnCancelRide.setEnabled(!rides.isEmpty());
             });
         });
     }
@@ -300,7 +310,7 @@ public class HomeMapFragment extends Fragment {
                 });
     }
 
-    private void startPendingRide(View btnStartRide) {
+    private void startPendingRide(View btnStartRide, View btnCancelRide) {
         SessionManager sessionManager = new SessionManager(requireContext());
         String driverEmail = sessionManager.getUserEmail();
 
@@ -323,6 +333,7 @@ public class HomeMapFragment extends Fragment {
                     if (success) {
                         Toast.makeText(getContext(), R.string.ride_started, Toast.LENGTH_SHORT).show();
                         btnStartRide.setVisibility(View.GONE);
+                        btnCancelRide.setVisibility(View.GONE);
                         NavHostFragment.findNavController(HomeMapFragment.this)
                                 .navigate(R.id.rideTrackingFragment);
                     } else {
@@ -331,5 +342,73 @@ public class HomeMapFragment extends Fragment {
                 });
             });
         });
+    }
+
+    private void getCancellationReason() {
+
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_ride_cancellation, null);
+
+        TextInputLayout inputLayout = dialogView.findViewById(R.id.inputLayout);
+        inputLayout.setHint(getResources().getString(R.string.cancellation_reason));
+
+        TextInputEditText editText = dialogView.findViewById(R.id.inputEditText);
+        CircularProgressIndicator progress = dialogView.findViewById(R.id.progress);
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(getResources().getString(R.string.cancellation_reason))
+                .setView(dialogView)
+                .setPositiveButton(getResources().getString(R.string.cancel_ride), null)
+                .setNeutralButton(getResources().getString(R.string.dismiss), (((dialog, which) -> {
+                    dialog.dismiss();
+                })))
+                ;
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener( v -> {
+                inputLayout.setError(null);
+                if (editText.getText() == null || editText.getText().toString().isEmpty()) {
+                    inputLayout.setError("Field must not be empty.");
+                    return;
+                };
+                progress.setIndeterminate(true);
+                progress.setVisibility(View.VISIBLE);
+                inputLayout.setVisibility(View.GONE);
+
+                cancelPendingRide(editText.getText().toString(), dialog);
+                dialog.dismiss();
+
+        });
+
+
+    }
+    private void cancelPendingRide(String reason, DialogInterface dialog) {
+        rideViewModel.cancelFirstPendingRideForDriver(new EmptyCallback() {
+            @Override
+            public void OnSuccess() {
+                String title = getResources().getString(R.string.cancellation_successful);
+                String message = getResources().getString(R.string.successful_cancellation_message);
+                dialog.dismiss();
+                showDialog(title, message);
+            }
+
+            @Override
+            public void OnError(Exception e) {
+                String title = getResources().getString(R.string.cancellation_unsuccessful);
+                String message = e.getMessage();
+                showDialog(title, message);
+            }
+        });
+    }
+
+
+    private void showDialog(String title, String message) {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(title)
+                .setMessage(message)
+                .setNeutralButton("Ok", ((_dialog, which) -> _dialog.dismiss()))
+                .show();
     }
 }

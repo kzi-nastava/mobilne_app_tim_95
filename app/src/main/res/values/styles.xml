@@ -15,6 +15,14 @@
         <item name="android:minWidth">64dp</item>
         <item name="android:layout_marginHorizontal">50dp</item>
     </style>
+    <style name="Widget.GrUber.Button.Filled.Red"
+        parent="ThemeOverlay.Material3.Button">
+
+        <item name="iconTint">@color/status_cancelled</item>
+
+        <item name="android:backgroundTint">@color/status_cancelled</item>
+
+    </style>
     <style name="Widget.GrUber.Button.Outlined.Red"
         parent="Widget.Material3.Button.OutlinedButton">
 

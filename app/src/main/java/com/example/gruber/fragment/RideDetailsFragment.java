@@ -436,8 +436,8 @@ public class RideDetailsFragment extends Fragment {
         EmptyCallback callback = new EmptyCallback() {
             @Override
             public void OnSuccess() {
-                String title = "Cancellation successful.";
-                String message = "We have canceled your ride.";
+                String title = getResources().getString(R.string.cancellation_successful);
+                String message = getResources().getString(R.string.successful_cancellation_message);
                 //change the color of status label
                 TextView tvStatus = requireActivity().findViewById(R.id.tvStatus);
                 tvStatus.setText(RideStatus.CANCELLED.toString());
@@ -450,7 +450,7 @@ public class RideDetailsFragment extends Fragment {
 
             @Override
             public void OnError(Exception e) {
-                String title = "Cancellation unsuccessful";
+                String title = getResources().getString(R.string.cancellation_unsuccessful);
                 String message = e.getMessage();
                 showDialog(title, message);
             }
