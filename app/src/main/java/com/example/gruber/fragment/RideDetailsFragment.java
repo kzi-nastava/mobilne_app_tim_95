@@ -21,21 +21,17 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
-import com.example.gruber.models.FakeSession;
 import com.example.gruber.models.LatLng;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.RideStatus;
-import com.example.gruber.services.MapService;
 import com.example.gruber.services.callbacks.EmptyCallback;
 import com.example.gruber.viewModels.RideViewModel;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.firebase.Timestamp;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.ITileSource;
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.tileprovider.tilesource.XYTileSource;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -43,7 +39,6 @@ import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.Polyline;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,17 +48,13 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.osmdroid.bonuspack.routing.OSRMRoadManager;
-import org.osmdroid.bonuspack.routing.Road;
-import org.osmdroid.bonuspack.routing.RoadManager;
 
 public class RideDetailsFragment extends Fragment {
 
     private static final DateTimeFormatter DATE_TIME_FMT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
     private RideViewModel rideViewModel;
-
-    private MapService mapService;
+    private String expectedRideId;
 
     private MapView rideMap;
     private Polyline routeLine;
@@ -102,8 +93,7 @@ public class RideDetailsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        String rideId = getArguments() != null ? getArguments().getString("rideId") : null;
-        Ride ride = rideViewModel.getRideValue();
+        expectedRideId = getArguments() != null ? getArguments().getString("rideId") : null;
 
         TextView tvRideId = view.findViewById(R.id.tvRideId);
         TextView tvStatus = view.findViewById(R.id.tvStatus);
@@ -140,133 +130,139 @@ public class RideDetailsFragment extends Fragment {
             return false;
         });
 
-        if (ride == null) {
-            tvRideId.setText("Ride not found");
-            return;
-        }
+        tvRideId.setText(expectedRideId != null ? "Ride #" + expectedRideId : "Ride");
 
-        // --- Header
-        tvRideId.setText("Ride #");
-        tvStatus.setText(ride.status != null ? ride.status.name() : "-");
-
-        if (ride.status == RideStatus.PENDING) btnCancelRide.setVisibility(View.VISIBLE);
-        if (ride.status == RideStatus.SCHEDULED) {
-            LocalDateTime scheduledFor = ride.getScheduledForLocalDateTime();
-            if (scheduledFor.plusMinutes(10).isBefore(LocalDateTime.now()))
-                btnCancelRide.setVisibility(View.VISIBLE);
-        }
-        btnCancelRide.setOnClickListener(click -> cancelRide());
-
-        int statusColorRes;
-        if (ride.status == null) {
-            statusColorRes = R.color.color_text;
-        } else {
-            switch (ride.status) {
-                case COMPLETED:
-                    statusColorRes = R.color.status_completed;
-                    break;
-                case CANCELLED:
-                    statusColorRes = R.color.status_cancelled;
-                    break;
-                default:
-                    statusColorRes = R.color.status_active;
-                    break;
+        rideViewModel.getRide().observe(getViewLifecycleOwner(), ride -> {
+            if (ride == null) {
+                return;
             }
-        }
-        Drawable bg = tvStatus.getBackground().mutate();
-        bg.setTint(ContextCompat.getColor(requireContext(), statusColorRes));
-        tvStatus.setBackground(bg);
+            if (expectedRideId != null && ride.id != null && !expectedRideId.equals(ride.id)) {
+                return;
+            }
 
-        // --- Passenger emails
-        tvMainPassengerEmail.setText(ride.creatorUserEmail != null ? ride.creatorUserEmail : "-");
-        otherPassengersContainer.removeAllViews();
+            // --- Header
+            tvRideId.setText(ride.id != null ? "Ride #" + ride.id : "Ride");
+            tvStatus.setText(ride.status != null ? ride.status.name() : "-");
 
-        List<String> others = ride.passengerEmails;
-        if (others != null && !others.isEmpty()) {
-            for (String email : others) {
+            btnCancelRide.setVisibility(View.GONE);
+            if (ride.status == RideStatus.PENDING) btnCancelRide.setVisibility(View.VISIBLE);
+            if (ride.status == RideStatus.SCHEDULED) {
+                LocalDateTime scheduledFor = ride.getScheduledForLocalDateTime();
+                if (scheduledFor != null && scheduledFor.plusMinutes(10).isBefore(LocalDateTime.now()))
+                    btnCancelRide.setVisibility(View.VISIBLE);
+            }
+            btnCancelRide.setOnClickListener(click -> cancelRide());
+
+            int statusColorRes;
+            if (ride.status == null) {
+                statusColorRes = R.color.color_text;
+            } else {
+                switch (ride.status) {
+                    case COMPLETED:
+                        statusColorRes = R.color.status_completed;
+                        break;
+                    case CANCELLED:
+                        statusColorRes = R.color.status_cancelled;
+                        break;
+                    default:
+                        statusColorRes = R.color.status_active;
+                        break;
+                }
+            }
+            Drawable statusBg = tvStatus.getBackground().mutate();
+            statusBg.setTint(ContextCompat.getColor(requireContext(), statusColorRes));
+            tvStatus.setBackground(statusBg);
+
+            // --- Passenger emails
+            tvMainPassengerEmail.setText(ride.creatorUserEmail != null ? ride.creatorUserEmail : "-");
+            otherPassengersContainer.removeAllViews();
+
+            List<String> others = ride.passengerEmails;
+            if (others != null && !others.isEmpty()) {
+                for (String email : others) {
+                    TextView t = new TextView(requireContext());
+                    t.setText("• " + email);
+                    t.setTextSize(16f);
+                    otherPassengersContainer.addView(t);
+                }
+            } else {
                 TextView t = new TextView(requireContext());
-                t.setText("• " + email);
+                t.setText("• (none)");
                 t.setTextSize(16f);
                 otherPassengersContainer.addView(t);
             }
-        } else {
-            TextView t = new TextView(requireContext());
-            t.setText("• (none)");
-            t.setTextSize(16f);
-            otherPassengersContainer.addView(t);
-        }
 
-        // Conversion because of switch from LocalDate to firebase.Timestamp
-        LocalDateTime _start = ride.getStartedAtLocalDateTime();
-        LocalDateTime _end = ride.getFinishedAtLocalDateTime();
-//        LocalDateTime _start = ride.startedAt.toDate()
-//                .toInstant()
-//                .atZone(ZoneId.systemDefault())
-//                .toLocalDateTime();
-//        LocalDateTime _end = ride.finishedAt.toDate()
-//                .toInstant()
-//                .atZone(ZoneId.systemDefault())
-//                .toLocalDateTime();
+            LocalDateTime _start = ride.getStartedAtLocalDateTime();
+            LocalDateTime _end = ride.getFinishedAtLocalDateTime();
 
-        // --- Times + duration
-        String startTxt = (_start != null) ? _start.format(DATE_TIME_FMT) : "-";
-        String endTxt = (_end != null) ? _end.format(DATE_TIME_FMT) : "-";
+            String startTxt = (_start != null) ? _start.format(DATE_TIME_FMT) : "-";
+            String endTxt = (_end != null) ? _end.format(DATE_TIME_FMT) : "-";
 
-        String durationTxt = "";
-        if (ride.startedAt != null && ride.finishedAt != null) {
+            String durationTxt = "";
+            if (_start != null && _end != null) {
+                long minutes = java.time.Duration.between(_start, _end).toMinutes();
+                durationTxt = " (" + minutes + " min)";
+            }
+            tvTimes.setText(startTxt + " - " + endTxt + durationTxt);
 
-            long minutes = java.time.Duration.between(_start, _end).toMinutes();
-            durationTxt = " (" + minutes + " min)";
-        }
-        tvTimes.setText(startTxt + " - " + endTxt + durationTxt);
+            // --- Addresses
+            String start = "-";
+            String end = "-";
+            if (ride.stopList != null && !ride.stopList.isEmpty()) {
+                start = ride.stopList.get(0) != null ? ride.stopList.get(0).address : "-";
+                int stops = ride.stopList.size();
+                if (stops >= 2) {
+                    end = ride.stopList.get(stops - 1).address;
+                }
+            }
 
-        // --- Addresses
-        String start = ride.stopList.get(0) != null ? ride.stopList.get(0).address : "-";
-        String end;
-        int stops = ride.stopList.size();
-        if (ride.stopList.size() < 2) end = "-";
-        else end = ride.stopList.get(stops - 1).address;
+            tvStartAddress.setText("From: " + start);
+            tvEndAddress.setText("To: " + end);
 
-        tvStartAddress.setText("From: " + start);
-        tvEndAddress.setText("To: " + end);
+            // --- Stops list
+            stopsContainer.removeAllViews();
+            List<Stop> sortedStops = new ArrayList<>();
+            if (ride.stopList != null && ride.stopList.size() > 2) {
+                sortedStops.addAll(ride.stopList.subList(1, ride.stopList.size() - 1));
+                Collections.sort(sortedStops, Comparator.comparingInt(s -> s.number));
+            }
 
-        // --- Stops list
-        stopsContainer.removeAllViews();
-        List<Stop> sortedStops = new ArrayList<>();
-        if (ride.stopList != null) sortedStops.addAll(ride.stopList);
-        sortedStops.remove(0);
-        sortedStops.remove(sortedStops.size() - 1);
-        Collections.sort(sortedStops, Comparator.comparingInt(s -> s.number));
-
-        if (!sortedStops.isEmpty()) {
-            for (Stop s : sortedStops) {
+            if (!sortedStops.isEmpty()) {
+                for (Stop s : sortedStops) {
+                    TextView t = new TextView(requireContext());
+                    t.setText(s.number + ". " + s.getAddress());
+                    t.setTextSize(16f);
+                    stopsContainer.addView(t);
+                }
+            } else {
                 TextView t = new TextView(requireContext());
-                t.setText(s.number + ". " + s.getAddress());
+                t.setText("• (no stops)");
                 t.setTextSize(16f);
                 stopsContainer.addView(t);
             }
-        } else {
-            TextView t = new TextView(requireContext());
-            t.setText("• (no stops)");
-            t.setTextSize(16f);
-            stopsContainer.addView(t);
+
+            // --- Price
+            tvPrice.setText("RSD " + ride.priceDin);
+
+            // --- Additional info
+            tvPanic.setText("Panic triggered: " + (ride.panicTriggered ? "YES" : "NO"));
+
+            if (ride.status == RideStatus.CANCELLED) {
+                tvCancelledBy.setVisibility(View.VISIBLE);
+                tvCancelledBy.setText("Cancelled by: " + (ride.cancelledBy != null ? ride.cancelledBy : "-"));
+            } else {
+                tvCancelledBy.setVisibility(View.GONE);
+            }
+
+            // --- DRAW MAP ROUTE (Pickup -> stops -> dropoff)
+            drawRideRouteOnMap(ride, sortedStops);
+        });
+
+        if (expectedRideId != null) {
+            rideViewModel.loadRideById(expectedRideId);
+        } else if (rideViewModel.getRideValue() == null) {
+            tvRideId.setText("Ride not found");
         }
-
-        // --- Price
-        tvPrice.setText("RSD " + ride.priceDin);
-
-        // --- Additional info
-        tvPanic.setText("Panic triggered: " + (ride.panicTriggered ? "YES" : "NO"));
-
-        if (ride.status == RideStatus.CANCELLED) {
-            tvCancelledBy.setVisibility(View.VISIBLE);
-            tvCancelledBy.setText("Cancelled by: " + (ride.cancelledBy != null ? ride.cancelledBy : "-"));
-        } else {
-            tvCancelledBy.setVisibility(View.GONE);
-        }
-
-        // --- DRAW MAP ROUTE (Pickup -> stops -> dropoff)
-        drawRideRouteOnMap(ride, sortedStops);
 
         view.findViewById(R.id.btnBack).setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigateUp()
@@ -292,13 +288,16 @@ public class RideDetailsFragment extends Fragment {
     }
 
     private void drawRideRouteOnMap(Ride ride, List<Stop> sortedStops) {
+        if (ride.stopList == null || ride.stopList.size() < 2) {
+            return;
+        }
+
         GeoPoint start = toGeoPoint(ride.stopList.get(0).location);
         int stopListSize = ride.stopList.size();
         GeoPoint end = toGeoPoint(ride.stopList.get(stopListSize - 1).location);
-
-//        if (start == null || end == null) {
-//            return;
-//        }
+        if (start == null || end == null) {
+            return;
+        }
 
         ArrayList<GeoPoint> waypoints = new ArrayList<>();
         waypoints.add(start);
@@ -313,7 +312,9 @@ public class RideDetailsFragment extends Fragment {
         // Route line: run network call off main thread
         bg.execute(() -> {
             try {
-                Road road = ride.getRoute().getRoad();
+                if (ride.getRoute() == null || ride.getRoute().getPolyline() == null) {
+                    return;
+                }
 
                 requireActivity().runOnUiThread(() -> {
                     if (!isAdded() || rideMap == null) return;
