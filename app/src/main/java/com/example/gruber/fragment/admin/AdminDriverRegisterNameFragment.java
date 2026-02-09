@@ -1,10 +1,14 @@
 package com.example.gruber.fragment.admin;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -20,6 +24,8 @@ import com.example.gruber.viewModels.AdminDriverRegistrationViewModel;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.io.ByteArrayOutputStream;
+
 public class AdminDriverRegisterNameFragment extends Fragment {
 
     private AdminDriverRegistrationViewModel viewModel;
@@ -30,6 +36,7 @@ public class AdminDriverRegisterNameFragment extends Fragment {
     private TextInputLayout tilLastName;
     private TextInputEditText etPhone;
     private TextInputLayout tilPhone;
+    private ImageView profileImage;
 
     private ActivityResultLauncher<String> pickImageLauncher;
 
@@ -41,11 +48,7 @@ public class AdminDriverRegisterNameFragment extends Fragment {
 
         pickImageLauncher = registerForActivityResult(
                 new ActivityResultContracts.GetContent(),
-                uri -> {
-                    if (uri != null) {
-                        viewModel.setPhotoUri(uri.toString());
-                    }
-                }
+                uri -> processImage(uri)
         );
     }
 
@@ -63,10 +66,19 @@ public class AdminDriverRegisterNameFragment extends Fragment {
         etFirstName = view.findViewById(R.id.et_reg_first_name);
         etLastName = view.findViewById(R.id.et_reg_last_name);
         etPhone = view.findViewById(R.id.et_reg_phone);
+        profileImage = view.findViewById(R.id.imageView);
 
         view.findViewById(R.id.btn_reg_add_image).setOnClickListener(v -> onAddImageClicked());
         view.findViewById(R.id.btn_reg_previous_name).setOnClickListener(v -> onPreviousClicked());
         view.findViewById(R.id.btn_reg_next_name).setOnClickListener(v -> onNextClicked());
+
+        byte[] existingBytes = viewModel.getPhotoBytes().getValue();
+        if (existingBytes != null && existingBytes.length != 0) {
+            Bitmap existingBitmap = bytesToBitmap(existingBytes);
+            if (existingBitmap != null) {
+                profileImage.setImageBitmap(existingBitmap);
+            }
+        }
 
         return view;
     }
@@ -98,6 +110,47 @@ public class AdminDriverRegisterNameFragment extends Fragment {
 
     private void onAddImageClicked() {
         pickImageLauncher.launch("image/*");
+    }
+
+    private void processImage(android.net.Uri imageUri) {
+        if (imageUri == null) {
+            return;
+        }
+        try {
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(requireContext().getContentResolver(), imageUri);
+            Bitmap scaledBitmap = scaleBitmap(bitmap, 200, 200);
+            byte[] imageBytes = bitmapToBytes(scaledBitmap);
+            viewModel.setPhotoBytes(imageBytes);
+            if (profileImage != null) {
+                profileImage.setImageBitmap(scaledBitmap);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Bitmap scaleBitmap(Bitmap bitmap, int maxWidth, int maxHeight) {
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+
+        float ratio = Math.min((float) maxWidth / width, (float) maxHeight / height);
+        int newWidth = Math.round(width * ratio);
+        int newHeight = Math.round(height * ratio);
+
+        return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+    }
+
+    private byte[] bitmapToBytes(Bitmap bitmap) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream);
+        return stream.toByteArray();
+    }
+
+    private Bitmap bytesToBitmap(byte[] bytes) {
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
     }
 
     private boolean isValid(String firstName, String lastName, String phone) {
