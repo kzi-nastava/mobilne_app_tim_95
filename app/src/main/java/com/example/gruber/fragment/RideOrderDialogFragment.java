@@ -5,6 +5,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
@@ -27,9 +28,12 @@ import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.viewModels.LoginViewModel;
 import com.example.gruber.viewModels.RideViewModel;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+import com.google.android.material.textfield.TextInputLayout;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import dagger.hilt.android.AndroidEntryPoint;
@@ -160,7 +164,7 @@ public class RideOrderDialogFragment extends DialogFragment {
                         rideViewModel.setRideRoute(start, end);
                     }
                 } catch (IOException | RuntimeException e) {
-                    Toast.makeText(requireContext(), "One of the destinations do not exist...", Toast.LENGTH_LONG).show();
+                    Toast.makeText(requireContext(), "One of the destinations does not exist...", Toast.LENGTH_LONG).show();
                 }
                 dismiss();
                 return true;
@@ -257,8 +261,10 @@ public class RideOrderDialogFragment extends DialogFragment {
 
         if (userEmail != null && !userEmail.isEmpty()) {
             // Show loading dialog
+            CircularProgressIndicator progress = new CircularProgressIndicator(requireContext());
+            progress.setIndeterminate(true);
             AlertDialog loadingDialog = new AlertDialog.Builder(getContext())
-                    .setView(new ProgressBar(getContext()))
+                    .setView(progress)
                     .setCancelable(false)
                     .show();
 

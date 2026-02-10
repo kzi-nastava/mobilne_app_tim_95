@@ -100,6 +100,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         android:hint="@string/end_location"
+        android:outlineSpotShadowColor="@color/color_primary"
         >
 
         <com.google.android.material.textfield.MaterialAutoCompleteTextView
@@ -107,7 +108,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="text"
-            style="@style/TextAppearance.Material3.BodyMedium"
             android:singleLine="true"
             android:scrollHorizontally="true"
             />

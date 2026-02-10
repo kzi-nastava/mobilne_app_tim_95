@@ -6,6 +6,7 @@ import android.content.Context;
 import androidx.recyclerview.widget.ConcatAdapter;
 
 import com.example.gruber.SessionManager;
+import com.example.gruber.services.DriverTrackingService;
 import com.example.gruber.services.RideService;
 import com.example.gruber.services.UserService;
 import com.google.firebase.auth.FirebaseAuth;
@@ -61,5 +62,6 @@ public class AppModule {
     public RideService provideRideService(@ApplicationContext Context context) {
         return new RideService(context, provideFirebaseFireStore());
     }
+
 
 }

@@ -52,6 +52,7 @@
         <item name="android:layout_marginTop">10dp</item>
         <item name="android:layout_marginHorizontal">50dp</item>
         <item name="android:textAppearance">@style/TextAppearance.GrUber.BodyMedium</item>
+
     </style>
     <style name="TextAppearance.GrUber.TextView.Title"
         parent="TextAppearance.Material3.TitleLarge">
@@ -77,10 +78,9 @@
     </style>
 
     <style name="Theme.GrUber.FullScreenDialog"
-        parent="Theme.Material3.DayNight.NoActionBar">
+        parent="Theme.GrUber">
 
         <!-- Fullscreen behavior -->
-        <item name="android:windowFullscreen">true</item>
         <item name="android:windowIsFloating">false</item>
         <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>
 

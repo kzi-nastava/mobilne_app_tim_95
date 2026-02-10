@@ -32,6 +32,7 @@ import com.example.gruber.services.RideService;
 import com.example.gruber.services.callbacks.EmptyCallback;
 import com.example.gruber.viewModels.AccountViewModel;
 import com.example.gruber.viewModels.RideViewModel;
+import com.example.gruber.viewModels.SearchViewModel;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
@@ -49,6 +50,7 @@ public class HomeMapFragment extends Fragment {
     private MapView map;
     private MapService mapService;
     private RideViewModel rideViewModel;
+    private SearchViewModel searchViewModel;
     private View unreadDot;
     private RideCoordinator rideCoordinator;
     private NavController navController;
@@ -94,6 +96,7 @@ public class HomeMapFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         rideViewModel = new ViewModelProvider(requireActivity()).get(RideViewModel.class);
+        searchViewModel = new ViewModelProvider(requireActivity()).get(SearchViewModel.class);
         rideViewModel.getShowRouteTrigger().observe(getViewLifecycleOwner(), trigger -> {
             Ride ride = rideViewModel.getRideValue();
             if (mapService != null) {
@@ -266,6 +269,18 @@ public class HomeMapFragment extends Fragment {
                 btnStartRide.setEnabled(!rides.isEmpty());
                 btnCancelRide.setVisibility(View.VISIBLE);
                 btnCancelRide.setEnabled(!rides.isEmpty());
+
+
+                // Testing zone - code below relies on bu1s#|[ legacy hope it works
+
+//                Bundle bundle = new Bundle();
+//                bundle.putString("rideId", rides.get(0).id);
+//
+//                if (getView() == null) return;
+//
+//                NavHostFragment.findNavController(HomeMapFragment.this).navigate(R.id.rideTrackingFragment);
+//                NavHostFragment.findNavController(requireParentFragment()).navigate(R.id.rideTrackingFragment);
+
             });
         });
     }
@@ -333,7 +348,6 @@ public class HomeMapFragment extends Fragment {
                     if (success) {
                         Toast.makeText(getContext(), R.string.ride_started, Toast.LENGTH_SHORT).show();
                         btnStartRide.setVisibility(View.GONE);
-                        btnCancelRide.setVisibility(View.GONE);
                         NavHostFragment.findNavController(HomeMapFragment.this)
                                 .navigate(R.id.rideTrackingFragment);
                     } else {
@@ -384,8 +398,8 @@ public class HomeMapFragment extends Fragment {
 
 
     }
-    private void cancelPendingRide(String reason, DialogInterface dialog) {
-        rideViewModel.cancelFirstPendingRideForDriver(new EmptyCallback() {
+    private void cancelPendingRide(String explanation, DialogInterface dialog) {
+        rideViewModel.cancelFirstPendingRideForDriver(explanation, new EmptyCallback() {
             @Override
             public void OnSuccess() {
                 String title = getResources().getString(R.string.cancellation_successful);

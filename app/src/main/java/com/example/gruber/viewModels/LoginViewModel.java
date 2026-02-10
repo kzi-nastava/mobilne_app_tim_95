@@ -32,6 +32,10 @@ public class LoginViewModel extends ViewModel {
     public LoginViewModel(UserService userService, SessionManager sessionManager) {
         this.userService = userService;
         this.sessionManager = sessionManager;
+        UserRole initialRole = sessionManager.getUserRole();
+        role.setValue(initialRole != null ? initialRole : UserRole.GUEST);
+        String initialEmail = sessionManager.getUserEmail();
+        email.setValue(initialEmail != null && !initialEmail.isEmpty() ? initialEmail : "");
     }
     public void login(AuthCallback callback) {
         userService.logIn(new Login(email.getValue(), password.getValue()), new AuthCallback() {

@@ -13,12 +13,13 @@ import com.example.gruber.models.Ride;
 import com.example.gruber.models.Route;
 import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.RideStatus;
+import com.example.gruber.services.DriverTrackingService;
 import com.example.gruber.services.RideService;
 import com.example.gruber.services.callbacks.EmptyCallback;
 import com.example.gruber.services.callbacks.RideCallback;
 import com.example.gruber.services.callbacks.RideIdCallback;
+import com.example.gruber.services.callbacks.RidesListCallback;
 import com.example.gruber.services.callbacks.RouteCallback;
-import com.example.gruber.services.callbacks.PriceCallback;
 import com.google.firebase.firestore.ListenerRegistration;
 
 import org.osmdroid.util.GeoPoint;
@@ -513,9 +514,13 @@ public class RideViewModel extends ViewModel {
     public void cancelRide(EmptyCallback callback) {
         Ride _ride = ride.getValue();
         String _rideId = _ride.id;
-        if (_rideId == null) callback.OnError(new NullPointerException("Ride id missing"));
+        if (_rideId == null) {
+            callback.OnError(new NullPointerException("Ride id missing"));
+            return;
+        }
 
-        rideService.setRideStatus(_rideId, RideStatus.CANCELLED, new EmptyCallback() {
+        String explanation = "CANCELLED_BY_USER";
+        rideService.setRideStatus(_rideId, explanation, RideStatus.CANCELLED, new EmptyCallback() {
             @Override
             public void OnSuccess() {
                 _ride.setStatus(RideStatus.CANCELLED);
@@ -530,8 +535,8 @@ public class RideViewModel extends ViewModel {
         });
     }
 
-    public void cancelFirstPendingRideForDriver(EmptyCallback callback) {
-        rideService.cancelDriverFirstRide(sessionManager.getUserEmail(), new EmptyCallback() {
+    public void cancelFirstPendingRideForDriver(String explanation, EmptyCallback callback) {
+        rideService.cancelDriverFirstRide(explanation, sessionManager.getUserEmail(), new EmptyCallback() {
             @Override
             public void OnSuccess() {
                 callback.OnSuccess();
@@ -539,6 +544,20 @@ public class RideViewModel extends ViewModel {
 
             @Override
             public void OnError(Exception e) {
+                callback.OnError(e);
+            }
+        });
+    }
+
+    public void getFirstPendingRideForDriver(EmptyCallback callback) {
+        rideService.getDriverRidesToStart(sessionManager.getUserEmail(), new RidesListCallback() {
+            @Override
+            public void onSuccess(List<Ride> rides) {
+                callback.OnSuccess();
+            }
+
+            @Override
+            public void onError(Exception e) {
                 callback.OnError(e);
             }
         });
