@@ -104,6 +104,8 @@ public class HomeMapFragment extends Fragment {
             }
         });
 
+        navController = NavHostFragment.findNavController(HomeMapFragment.this);
+
         View fabSupportContainer = view.findViewById(R.id.fab_support_container);
         View btnBookRide = view.findViewById(R.id.btnBookRide);
         View btnStartRide = view.findViewById(R.id.btnStartRide);
@@ -262,27 +264,55 @@ public class HomeMapFragment extends Fragment {
 
         if (driverEmail == null) return;
 
-        RideService rideService = new RideService(requireContext(), FirebaseFirestore.getInstance());
-        rideService.getDriverRidesToStart(driverEmail, rides -> {
-            ui.post(() -> {
+        rideViewModel.getFirstPendingRideForDriver(new EmptyCallback() {
+            @Override
+            public void OnSuccess() {
+                //
                 btnStartRide.setVisibility(View.VISIBLE);
-                btnStartRide.setEnabled(!rides.isEmpty());
+                btnStartRide.setEnabled(rideViewModel.getRideValue() != null);
                 btnCancelRide.setVisibility(View.VISIBLE);
-                btnCancelRide.setEnabled(!rides.isEmpty());
+                btnCancelRide.setEnabled(rideViewModel.getRideValue() != null);
+                //
+                // orient to a ride tracking fragment with given ride
+                if (!isAdded()) return;
 
+                Bundle arguments = new Bundle();
+                arguments.putString("rideId", rideViewModel.getRide().getValue().id);
 
-                // Testing zone - code below relies on bu1s#|[ legacy hope it works
+                navController.navigate(R.id.action_temp, arguments);
+            }
 
-//                Bundle bundle = new Bundle();
-//                bundle.putString("rideId", rides.get(0).id);
-//
-//                if (getView() == null) return;
-//
-//                NavHostFragment.findNavController(HomeMapFragment.this).navigate(R.id.rideTrackingFragment);
-//                NavHostFragment.findNavController(requireParentFragment()).navigate(R.id.rideTrackingFragment);
-
-            });
+            @Override
+            public void OnError(Exception e) {
+                //
+                btnStartRide.setVisibility(View.VISIBLE);
+                btnStartRide.setEnabled(false);
+                btnCancelRide.setVisibility(View.VISIBLE);
+                btnCancelRide.setEnabled(false);
+            }
         });
+
+//        RideService rideService = new RideService(requireContext(), FirebaseFirestore.getInstance());
+//        rideService.getDriverRidesToStart(driverEmail, rides -> {
+//            ui.post(() -> {
+//                btnStartRide.setVisibility(View.VISIBLE);
+//                btnStartRide.setEnabled(!rides.isEmpty());
+//                btnCancelRide.setVisibility(View.VISIBLE);
+//                btnCancelRide.setEnabled(!rides.isEmpty());
+//
+//
+//                // Testing zone - code below relies on bu1s#|[ legacy hope it works
+//
+////                Bundle bundle = new Bundle();
+////                bundle.putString("rideId", rides.get(0).id);
+////
+////                if (getView() == null) return;
+////
+////                NavHostFragment.findNavController(HomeMapFragment.this).navigate(R.id.rideTrackingFragment);
+////                NavHostFragment.findNavController(requireParentFragment()).navigate(R.id.rideTrackingFragment);
+//
+//            });
+//        });
     }
 
     private void setupUserRoleUI(View btnBookRide, FirebaseAuth auth, FirebaseFirestore db, AccountViewModel accountViewModel) {

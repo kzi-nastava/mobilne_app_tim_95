@@ -552,8 +552,15 @@ public class RideViewModel extends ViewModel {
     public void getFirstPendingRideForDriver(EmptyCallback callback) {
         rideService.getDriverRidesToStart(sessionManager.getUserEmail(), new RidesListCallback() {
             @Override
-            public void onSuccess(List<Ride> rides) {
-                callback.OnSuccess();
+            public void onSuccess(List<Ride> _rides) {
+                // sort the rides and get the newest - or not ??
+                if (_rides.isEmpty()) {
+                    callback.OnError(new NullPointerException("No rides for driver currently."));
+                }
+                else {
+                    ride.setValue(_rides.get(0));
+                    callback.OnSuccess();
+                }
             }
 
             @Override

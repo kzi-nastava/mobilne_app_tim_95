@@ -46,6 +46,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -209,7 +210,14 @@ public class RideService {
                         if (_ride == null || _ride.status != RideStatus.PENDING) continue;
                         _ride.setExplanation(explanation);
                         setRideStatus(doc.getId(), explanation, RideStatus.CANCELLED, callback);
+                        updateUserActive(_ride.creatorUserEmail, false, success -> {} );
+                        updateUserActive(_ride.driverEmail, false, success -> {});
+                        for (String passengerEmail : _ride.passengerEmails) {
+                            updateUserActive(passengerEmail, false, success -> {});
+                        }
+                        return;
                     }
+
                     callback.OnError(new NullPointerException("No pending rides."));
                 })
                 .addOnFailureListener(callback::OnError);

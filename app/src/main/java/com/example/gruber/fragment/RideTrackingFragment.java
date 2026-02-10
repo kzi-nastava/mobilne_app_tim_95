@@ -1,6 +1,7 @@
 package com.example.gruber.fragment;
 
 import android.animation.ValueAnimator;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
@@ -9,6 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
@@ -16,23 +18,33 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
+import com.example.gruber.SessionManager;
 import com.example.gruber.models.LatLng;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.services.DriverTrackingService;
 import com.example.gruber.services.RideService;
+import com.example.gruber.services.callbacks.EmptyCallback;
+import com.example.gruber.viewModels.LoginViewModel;
 import com.example.gruber.viewModels.RideViewModel;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.osmdroid.bonuspack.routing.OSRMRoadManager;
 import org.osmdroid.bonuspack.routing.Road;
@@ -77,6 +89,7 @@ public class RideTrackingFragment extends Fragment {
     RideService rideService;
 
     private RideViewModel rideViewModel;
+    private LoginViewModel loginViewModel;
     private String rideId;
     private Marker driverMarker;
     private DriverTrackingService driverTrackingService;
@@ -91,7 +104,11 @@ public class RideTrackingFragment extends Fragment {
     private Handler simulationHandler;
     private Runnable simulationRunnable;
     private ValueAnimator currentAnimator;
+    private MaterialButton btnReport, btnCancelRide, btnStartRide;
 
+    private NavController navController;
+
+    private final Handler ui = new Handler(Looper.getMainLooper());
 
     private static final ITileSource CARTO_POSITRON = new XYTileSource(
             "CartoPositron",
@@ -148,6 +165,7 @@ public class RideTrackingFragment extends Fragment {
         setupMap();
 
         rideViewModel = new ViewModelProvider(this).get(RideViewModel.class);
+        loginViewModel = new ViewModelProvider(this).get(LoginViewModel.class);
 
         observeRide();
 
@@ -155,11 +173,37 @@ public class RideTrackingFragment extends Fragment {
             rideViewModel.loadRideById(rideId);
         }
 
-        MaterialButton btnReport = view.findViewById(R.id.btn_report_driver);
+        btnReport = view.findViewById(R.id.btn_report_driver);
+        btnCancelRide = view.findViewById(R.id.btn_cancel_ride);
+        btnStartRide = view.findViewById(R.id.btn_start_ride);
 
         btnReport.setOnClickListener(v -> {
             openReportDialog();
         });
+        btnCancelRide.setOnClickListener(v -> {
+            getCancellationReason();
+        });
+        btnStartRide.setOnClickListener(v -> {
+            startRide();
+        });
+
+        switch (loginViewModel.getRole().getValue()) {
+            case DRIVER:
+                btnReport.setVisibility(View.GONE);
+                btnStartRide.setVisibility(View.VISIBLE);
+                btnCancelRide.setVisibility(View.VISIBLE);
+                break;
+            case USER:
+            default:
+                btnReport.setVisibility(View.VISIBLE);
+                btnStartRide.setVisibility(View.GONE);
+                btnCancelRide.setVisibility(View.GONE);
+                break;
+
+        }
+
+        navController = NavHostFragment.findNavController(RideTrackingFragment.this);
+
     }
 
     private void openReportDialog() {
@@ -714,4 +758,108 @@ public class RideTrackingFragment extends Fragment {
             return new org.osmdroid.util.BoundingBox(maxLat, maxLon, minLat, minLon);
         }
     }
+
+    private void getCancellationReason() {
+
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_ride_cancellation, null);
+
+        TextInputLayout inputLayout = dialogView.findViewById(R.id.inputLayout);
+        inputLayout.setHint(getResources().getString(R.string.cancellation_reason));
+
+        TextInputEditText editText = dialogView.findViewById(R.id.inputEditText);
+        CircularProgressIndicator progress = dialogView.findViewById(R.id.progress);
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(getResources().getString(R.string.cancellation_reason))
+                .setView(dialogView)
+                .setPositiveButton(getResources().getString(R.string.cancel_ride), null)
+                .setNeutralButton(getResources().getString(R.string.dismiss), (((dialog, which) -> {
+                    dialog.dismiss();
+                })))
+                ;
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener( v -> {
+            inputLayout.setError(null);
+            if (editText.getText() == null || editText.getText().toString().isEmpty()) {
+                inputLayout.setError("Field must not be empty.");
+                return;
+            };
+            progress.setIndeterminate(true);
+            progress.setVisibility(View.VISIBLE);
+            inputLayout.setVisibility(View.GONE);
+
+            cancelPendingRide(editText.getText().toString(), dialog);
+            dialog.dismiss();
+
+        });
+
+
+    }
+    private void cancelPendingRide(String explanation, DialogInterface dialog) {
+        rideViewModel.cancelFirstPendingRideForDriver(explanation, new EmptyCallback() {
+            @Override
+            public void OnSuccess() {
+                String title = getResources().getString(R.string.cancellation_successful);
+                String message = getResources().getString(R.string.successful_cancellation_message);
+                dialog.dismiss();
+                showDialog(title, message);
+                navController.navigate(R.id.action_rideTrackingFragment_to_homeMapFragment);
+            }
+
+            @Override
+            public void OnError(Exception e) {
+                String title = getResources().getString(R.string.cancellation_unsuccessful);
+                String message = e.getMessage();
+                showDialog(title, message);
+            }
+        });
+    }
+
+    private void startRide() {
+        String driverEmail = loginViewModel.getEmail();
+
+        if (driverEmail == null) {
+            Toast.makeText(getContext(), R.string.ride_start_error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        RideService rideService = new RideService(requireContext(), FirebaseFirestore.getInstance());
+        rideService.getDriverRidesToStart(driverEmail, rides -> {
+            if (rides.isEmpty()) {
+                ui.post(() -> Toast.makeText(getContext(), R.string.no_pending_rides, Toast.LENGTH_SHORT).show());
+                return;
+            }
+
+            // Start the first pending ride
+            String rideId = rides.get(0).id;
+            rideService.startRide(rideId, success -> {
+                ui.post(() -> {
+                    if (success) {
+                        Toast.makeText(getContext(), R.string.ride_started, Toast.LENGTH_SHORT).show();
+                        btnStartRide.setVisibility(View.GONE);
+                        btnCancelRide.setVisibility(View.GONE);
+                        DriverTrackingService driverTracking = new DriverTrackingService(driverEmail);
+                        driverTracking.updateStatus(DriverTrackingService.DriverStatus.DRIVING);
+//                        NavHostFragment.findNavController(RideTrackingFragment.this)
+//                                .navigate(R.id.rideTrackingFragment);
+                    } else {
+                        Toast.makeText(getContext(), R.string.ride_start_error, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            });
+        });
+    }
+
+    private void showDialog(String title, String message) {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(title)
+                .setMessage(message)
+                .setNeutralButton("Ok", ((_dialog, which) -> _dialog.dismiss()))
+                .show();
+    }
+
 }

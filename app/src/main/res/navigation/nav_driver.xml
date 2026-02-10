@@ -91,6 +91,9 @@
         <argument
             android:name="rideId"
             app:argType="string" />
+        <action
+            android:id="@+id/action_rideTrackingFragment_to_homeMapFragment"
+            app:destination="@id/homeMapFragment"/>
     </fragment>
     <fragment
         android:id="@+id/supportChatFragment"
