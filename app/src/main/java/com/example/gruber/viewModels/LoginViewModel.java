@@ -14,6 +14,7 @@ import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.DriverTrackingService;
 import com.example.gruber.services.UserService;
 import com.example.gruber.services.callbacks.AuthCallback;
+import com.example.gruber.services.callbacks.EmptyCallback;
 
 import javax.inject.Inject;
 
@@ -102,6 +103,14 @@ public class LoginViewModel extends ViewModel {
             role.setValue(UserRole.GUEST);
             sessionManager.clearSession();
         }
+    }
+
+    public void sendPasswordResetEmail(EmptyCallback callback) {
+        userService.sendPasswordResetEmail(email.getValue(),
+                callback::OnSuccess,
+                error -> {
+                    callback.OnError(new Exception("Failed to send reset password email."));
+                });
     }
 
 }
