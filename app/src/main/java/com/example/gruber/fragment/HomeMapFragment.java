@@ -9,6 +9,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -31,6 +32,7 @@ import com.example.gruber.services.RideCoordinator;
 import com.example.gruber.services.RideService;
 import com.example.gruber.services.callbacks.EmptyCallback;
 import com.example.gruber.viewModels.AccountViewModel;
+import com.example.gruber.viewModels.LoginViewModel;
 import com.example.gruber.viewModels.RideViewModel;
 import com.example.gruber.viewModels.SearchViewModel;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -50,6 +52,8 @@ public class HomeMapFragment extends Fragment {
     private MapView map;
     private MapService mapService;
     private RideViewModel rideViewModel;
+
+    private LoginViewModel loginViewModel;
     private SearchViewModel searchViewModel;
     private View unreadDot;
     private RideCoordinator rideCoordinator;
@@ -97,12 +101,8 @@ public class HomeMapFragment extends Fragment {
 
         rideViewModel = new ViewModelProvider(requireActivity()).get(RideViewModel.class);
         searchViewModel = new ViewModelProvider(requireActivity()).get(SearchViewModel.class);
-        rideViewModel.getShowRouteTrigger().observe(getViewLifecycleOwner(), trigger -> {
-            Ride ride = rideViewModel.getRideValue();
-            if (mapService != null) {
-                mapService.drawUserRoute(ride, Color.GREEN, 8f);
-            }
-        });
+        loginViewModel = new ViewModelProvider(requireActivity()).get(LoginViewModel.class);
+        rideViewModel.getShowRouteTrigger().observe(getViewLifecycleOwner(), trigger -> showRideEstimateCard());
 
         navController = NavHostFragment.findNavController(HomeMapFragment.this);
 
@@ -110,6 +110,7 @@ public class HomeMapFragment extends Fragment {
         View btnBookRide = view.findViewById(R.id.btnBookRide);
         View btnStartRide = view.findViewById(R.id.btnStartRide);
         View btnCancelRide = view.findViewById(R.id.btnCancelRide);
+        View btnAdminLogOut = view.findViewById(R.id.btnAdminLogOut);
         View fabSupport = view.findViewById(R.id.fab_support);
         unreadDot = view.findViewById(R.id.v_support_unread_dot);
 
@@ -158,6 +159,7 @@ public class HomeMapFragment extends Fragment {
                 case ADMIN:
                     fabSupportContainer.setVisibility(View.GONE);
                     btnBookRide.setVisibility(View.GONE);
+                    btnAdminLogOut.setVisibility(View.VISIBLE);
                     break;
                 default:
                     break;
@@ -208,6 +210,7 @@ public class HomeMapFragment extends Fragment {
 
         btnStartRide.setOnClickListener(v -> startPendingRide(btnStartRide, btnCancelRide));
         btnCancelRide.setOnClickListener(v -> getCancellationReason());
+        btnAdminLogOut.setOnClickListener(v -> loginViewModel.logOut());
 
         // ----- Map service setup -----
         bg = Executors.newFixedThreadPool(2);
@@ -447,12 +450,30 @@ public class HomeMapFragment extends Fragment {
         });
     }
 
-
     private void showDialog(String title, String message) {
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(title)
                 .setMessage(message)
                 .setNeutralButton("Ok", ((_dialog, which) -> _dialog.dismiss()))
                 .show();
+    }
+
+    private void showRideEstimateCard() {
+        Ride ride = rideViewModel.getRideValue();
+        if (mapService == null || ride.route == null) return;
+        mapService.drawUserRoute(ride, Color.GREEN, 8f);
+
+        View thisView = requireView();
+        thisView.findViewById(R.id.card_eta).setVisibility(View.VISIBLE);
+
+        String eta = "ETA: " + (int) ride.route.getRoad().mDuration / 60 + " minutes" ;
+        TextView tvEta = thisView.findViewById(R.id.tv_eta);
+        tvEta.setText(eta);
+
+        String addresses = ride.getStartAddress() + " to " + ride.getEndAddress();
+        TextView tvAddresses = thisView.findViewById(R.id.tv_addresses);
+        tvAddresses.setText(addresses);
+
+
     }
 }

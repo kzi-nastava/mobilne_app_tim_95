@@ -2,10 +2,12 @@
     <string name="app_name">GrUber</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="login">Login</string>
+<!--    Forgotten password  -->
     <string name="forgot_password">Forgot password?</string>
     <string name="password_reset_mail_sent">Mail with your new password has been sent.</string>
     <string name="password_reset_error">An error occurred while sending new password, please try again.</string>
     <string name="password_reset_email_missing">Please fill in email field so that a new password could be sent there.</string>
+<!--    Registration    -->
     <string name="register">Register</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
@@ -107,6 +109,7 @@
     <!--    RIDE BOOKING    -->
     <string name="book_ride">Book ride</string>
     <string name="show_estimate">Show estimate</string>
+    <string name="ride_estimate">Ride estimate</string>
     <string name="start_location">Start location</string>
     <string name="end_location">Destination</string>
     <string name="intermediate_stops">Additional stops</string>
