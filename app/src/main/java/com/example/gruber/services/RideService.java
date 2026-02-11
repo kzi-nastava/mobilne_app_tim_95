@@ -44,6 +44,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -333,19 +334,46 @@ public class RideService {
                 .whereGreaterThanOrEqualTo(STARTED_AT, fromInterval)
                 .whereLessThanOrEqualTo(STARTED_AT, toInterval)
                 .whereEqualTo(USER_EMAIL, userEmail)
-                .orderBy(STARTED_AT)
                 .get()
                 .addOnSuccessListener(snapshot -> {
-
                     List<Ride> rides = getRidesWithIDs(snapshot);
-//                    List<Ride> rides = new ArrayList<>();
-//                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
-//                        Ride ride = doc.toObject(Ride.class);
-//                        if (ride != null) {
-//                            ride.id = doc.getId();
-//                            rides.add(ride);
-//                        }
-//                    }
+                    callback.onSuccess(rides);
+                })
+                .addOnFailureListener(callback::onError);
+
+    }
+
+    public void getRidesForUserWithSearch(String userEmail, List<RideStatus> statuses, RidesListCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereIn(STATUS, statuses)
+                .whereEqualTo(USER_EMAIL, userEmail)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Ride> rides = getRidesWithIDs(snapshot);
+                    callback.onSuccess(rides);
+                })
+                .addOnFailureListener(callback::onError);
+    }
+
+    public void getRidesForAdminWithSearch(List<RideStatus> statuses, RidesListCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereIn(STATUS, statuses)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Ride> rides = getRidesWithIDs(snapshot);
+                    callback.onSuccess(rides);
+                })
+                .addOnFailureListener(callback::onError);
+    }
+
+    public void getRidesForAdminWtihSearch(List<RideStatus> statuses, Timestamp fromInterval, Timestamp toInterval, RidesListCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereIn(STATUS, statuses)
+                .whereGreaterThanOrEqualTo(STARTED_AT, fromInterval)
+                .whereLessThanOrEqualTo(STARTED_AT, toInterval)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Ride> rides = getRidesWithIDs(snapshot);
                     callback.onSuccess(rides);
                 })
                 .addOnFailureListener(callback::onError);

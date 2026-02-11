@@ -67,8 +67,17 @@
     <fragment
         android:id="@+id/adminRideHistoryFragment"
         android:name="com.example.gruber.fragment.AdminRideHistoryFragment"
-        android:label="Ride history"/>
+        android:label="Ride history">
+        <action
+            android:id="@+id/action_adminRideHistoryFragment_to_rideDetailsFragment"
+            app:destination="@id/rideDetailsFragment"
+            />
+    </fragment>
 
+    <fragment
+        android:id="@+id/rideDetailsFragment"
+        android:name="com.example.gruber.fragment.RideDetailsFragment"
+        android:label="Ride details"/>
 
 <!--    <fragment-->
 <!--        android:id="@+id/adminActiveRidesFragment"-->

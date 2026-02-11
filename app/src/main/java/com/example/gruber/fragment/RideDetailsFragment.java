@@ -241,7 +241,7 @@ public class RideDetailsFragment extends Fragment {
         if (!sortedStops.isEmpty()) {
             for (Stop s : sortedStops) {
                 TextView t = new TextView(requireContext());
-                t.setText(s.number + ". " + s.getAddress());
+                t.setText(s.number + 1 + ". " + s.getAddress());
                 t.setTextSize(16f);
                 stopsContainer.addView(t);
             }

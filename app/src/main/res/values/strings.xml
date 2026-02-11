@@ -83,6 +83,7 @@
     <string name="favorite_route_save_failed">Failed to add route to favorites.</string>
     <string name="favorite_route_removed">Route removed from favorites.</string>
     <string name="favorite_route_remove_failed">Failed to remove route.</string>
+    <string name="select_date">Select date</string>
 
     <!--   NAVIGATION  -->
     <string name="home">Home</string>

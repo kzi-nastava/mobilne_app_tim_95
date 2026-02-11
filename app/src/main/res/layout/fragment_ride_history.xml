@@ -28,14 +28,24 @@
                 android:text="From:"
                 android:layout_marginEnd="8dp"/>
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/tvFromDate"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:padding="10dp"
-                android:background="?attr/colorSurfaceBright"
-                android:hint="Select date"/>
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/tvFromDate"
+                    android:layout_width="wrap_content"
+                    android:minWidth="140dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:padding="10dp"
+                    android:background="?attr/colorSurfaceBright"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:drawableEnd="@drawable/ic_calendar"
+                    android:drawableTint="?attr/colorOutline"
+                    android:hint="@string/select_date"/>
+            </com.google.android.material.card.MaterialCardView>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -44,14 +54,25 @@
                 android:layout_marginStart="12dp"
                 android:layout_marginEnd="8dp"/>
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/tvToDate"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:padding="10dp"
-                android:background="?attr/colorSurfaceBright"
-                android:hint="Select date"/>
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/tvToDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="140dp"
+                    android:layout_weight="1"
+                    android:padding="10dp"
+                    android:background="?attr/colorSurfaceBright"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:drawableEnd="@drawable/ic_calendar"
+                    android:drawableTint="?attr/colorOutline"
+                    android:hint="@string/select_date"/>
+
+            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
         <LinearLayout
