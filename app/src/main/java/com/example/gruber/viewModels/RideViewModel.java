@@ -15,6 +15,7 @@ import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.services.DriverTrackingService;
 import com.example.gruber.services.RideService;
+import com.example.gruber.services.SupportChatService;
 import com.example.gruber.services.callbacks.EmptyCallback;
 import com.example.gruber.services.callbacks.RideCallback;
 import com.example.gruber.services.callbacks.RideIdCallback;
@@ -38,6 +39,8 @@ public class RideViewModel extends ViewModel {
 
     private final RideService rideService;
 
+    private final SupportChatService supportChatService;
+
     private final SessionManager sessionManager;
 
     private final MutableLiveData<Ride> ride = new MutableLiveData<>();
@@ -59,8 +62,9 @@ public class RideViewModel extends ViewModel {
     private boolean skipResetOnce = false;
 
     @Inject
-    public RideViewModel(RideService rideService, SessionManager sessionManager) {
+    public RideViewModel(RideService rideService, SessionManager sessionManager, SupportChatService supportChatService) {
         this.rideService = rideService;
+        this.supportChatService = supportChatService;
         this.sessionManager = sessionManager;
         ride.setValue(new Ride());
         showRouteTrigger.setValue(Boolean.TRUE);
@@ -565,6 +569,24 @@ public class RideViewModel extends ViewModel {
 
             @Override
             public void onError(Exception e) {
+                callback.OnError(e);
+            }
+        });
+    }
+
+    public void setPanicStatusForRide(String rideId, String explanation, String messageTextForAdmin, EmptyCallback callback) {
+        rideService.setRideStatus(rideId, explanation, RideStatus.PANIC_TRIGGERED, new EmptyCallback() {
+            @Override
+            public void OnSuccess() {
+                //send notification to admin
+                String messageText = messageTextForAdmin + "#" +rideId;
+                supportChatService.sendMessage(messageText,
+                        callback::OnSuccess,
+                        callback::OnError
+                );
+            }
+            @Override
+            public void OnError(Exception e) {
                 callback.OnError(e);
             }
         });

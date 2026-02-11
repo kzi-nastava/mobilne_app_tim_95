@@ -104,7 +104,7 @@ public class RideTrackingFragment extends Fragment {
     private Handler simulationHandler;
     private Runnable simulationRunnable;
     private ValueAnimator currentAnimator;
-    private MaterialButton btnReport, btnCancelRide, btnStartRide;
+    private MaterialButton btnReport, btnCancelRide, btnStartRide, btnPanic;
 
     private NavController navController;
 
@@ -176,6 +176,7 @@ public class RideTrackingFragment extends Fragment {
         btnReport = view.findViewById(R.id.btn_report_driver);
         btnCancelRide = view.findViewById(R.id.btn_cancel_ride);
         btnStartRide = view.findViewById(R.id.btn_start_ride);
+        btnPanic = view.findViewById(R.id.btn_trigger_panic);
 
         btnReport.setOnClickListener(v -> {
             openReportDialog();
@@ -187,17 +188,23 @@ public class RideTrackingFragment extends Fragment {
             startRide();
         });
 
+        btnPanic.setOnClickListener(v -> {
+            triggerPanicNotification();
+        });
+
         switch (loginViewModel.getRole().getValue()) {
             case DRIVER:
                 btnReport.setVisibility(View.GONE);
                 btnStartRide.setVisibility(View.VISIBLE);
                 btnCancelRide.setVisibility(View.VISIBLE);
+                btnPanic.setVisibility(View.GONE);
                 break;
             case USER:
             default:
                 btnReport.setVisibility(View.VISIBLE);
                 btnStartRide.setVisibility(View.GONE);
                 btnCancelRide.setVisibility(View.GONE);
+                btnPanic.setVisibility(View.GONE);
                 break;
 
         }
@@ -425,6 +432,8 @@ public class RideTrackingFragment extends Fragment {
             target = toGeoPoint(currentRide.getStart().getLocation());
         } else if (status == RideStatus.ACTIVE) {
             target = toGeoPoint(currentRide.getEnd().getLocation());
+        } else if (status == RideStatus.PANIC_TRIGGERED) {
+            target = from;
         }
 
         if (target == null) return;
@@ -842,6 +851,7 @@ public class RideTrackingFragment extends Fragment {
                         Toast.makeText(getContext(), R.string.ride_started, Toast.LENGTH_SHORT).show();
                         btnStartRide.setVisibility(View.GONE);
                         btnCancelRide.setVisibility(View.GONE);
+                        btnPanic.setVisibility(View.VISIBLE);
                         DriverTrackingService driverTracking = new DriverTrackingService(driverEmail);
                         driverTracking.updateStatus(DriverTrackingService.DriverStatus.DRIVING);
 //                        NavHostFragment.findNavController(RideTrackingFragment.this)
@@ -860,6 +870,37 @@ public class RideTrackingFragment extends Fragment {
                 .setMessage(message)
                 .setNeutralButton("Ok", ((_dialog, which) -> _dialog.dismiss()))
                 .show();
+    }
+
+    private void triggerPanicNotification() {
+
+        Drawable original = ContextCompat.getDrawable(requireContext(), R.drawable.ic_car_panic_triggered);
+        Drawable tinted = original.mutate();
+
+        tinted.setTint(ContextCompat.getColor(requireContext(), R.color.panic_button_bg));
+
+        driverMarker.setIcon(tinted);
+
+        rideViewModel.setPanicStatusForRide(rideId,
+                ContextCompat.getString(requireContext(), R.string.panic_status_set),
+                ContextCompat.getString(requireContext(), R.string.panic_status_message_for_admin),
+                new EmptyCallback() {
+            @Override
+            public void OnSuccess() {
+                String title = "Info";
+                String message = getResources().getString(R.string.panic_status_set_successfully);
+                showDialog(title, message);
+
+            }
+
+            @Override
+            public void OnError(Exception e) {
+                String title = "Info";
+                String message = getResources().getString(R.string.panic_status_set_unsuccessfully);
+                showDialog(title, message);
+            }
+        });
+
     }
 
 }

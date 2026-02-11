@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.ConcatAdapter;
 import com.example.gruber.SessionManager;
 import com.example.gruber.services.DriverTrackingService;
 import com.example.gruber.services.RideService;
+import com.example.gruber.services.SupportChatService;
 import com.example.gruber.services.UserService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -61,6 +62,12 @@ public class AppModule {
     @Singleton
     public RideService provideRideService(@ApplicationContext Context context) {
         return new RideService(context, provideFirebaseFireStore());
+    }
+
+    @Provides
+    @Singleton
+    public SupportChatService provideSupportChatService() {
+        return new SupportChatService(provideFireBaseAuth(), provideFirebaseFireStore());
     }
 
 

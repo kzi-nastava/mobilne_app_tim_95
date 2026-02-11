@@ -102,7 +102,7 @@
         android:layout_width="62dp"
         android:layout_height="62dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btn_report_driver"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
         app:icon="@drawable/ic_panic_btn"
@@ -110,6 +110,7 @@
         app:iconGravity="textStart"
         android:backgroundTint="@color/panic_button_bg"
         android:drawableTint="@color/black"
+        android:visibility="gone"
         />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
