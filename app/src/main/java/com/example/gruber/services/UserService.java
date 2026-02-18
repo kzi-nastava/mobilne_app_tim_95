@@ -41,7 +41,8 @@ public class UserService {
                     var fbUser = result.getUser();
                     if (fbUser != null && !fbUser.isEmailVerified()) {
                         callback.onError(new Exception("Email unverified."));
-                                return;
+                        fbUser.sendEmailVerification();
+//                                return;
                     }
 
                     String uid = result.getUser().getUid();
