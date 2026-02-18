@@ -224,7 +224,7 @@ public class RideService {
         Map<String, Object> updates = new HashMap<>();
         updates.put(STATUS, status.name());
         updates.put(EXPLANATION, explanation);
-        if(price != 0){
+        if (price != 0) {
             updates.put(PRICE, price);
         }
 
@@ -237,15 +237,20 @@ public class RideService {
                             .document(rideID)
                             .update(updates);
                     if (_ride == null) return;
-                    updateUserActive(_ride.creatorUserEmail, false, success -> {} );
-                    updateUserActive(_ride.driverEmail, false, success -> {});
+                    updateUserActive(_ride.creatorUserEmail, false, success -> {
+                    });
+                    updateUserActive(_ride.driverEmail, false, success -> {
+                    });
                     for (String passengerEmail : _ride.passengerEmails) {
-                        updateUserActive(passengerEmail, false, success -> {});
+                        updateUserActive(passengerEmail, false, success -> {
+                        });
                     }
                     callback.OnSuccess();
                 })
                 .addOnFailureListener(callback::OnError)
         ;
+    }
+
     public void triggerPanicForRide(String rideID, String explanation, EmptyCallback callback) {
         firebaseFirestore.collection(RIDES)
                 .document(rideID)
