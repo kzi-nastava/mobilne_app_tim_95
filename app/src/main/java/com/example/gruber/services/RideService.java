@@ -158,6 +158,23 @@ public class RideService {
         });
     }
 
+    public void getRouteWithStops(List<Stop> stops, RouteCallback callback) {
+        ArrayList<GeoPoint> waypoints = new ArrayList<>();
+        for (Stop stop : stops) {
+            GeoPoint point = new GeoPoint(stop.location.lat, stop.location.lon);
+            waypoints.add(point);
+        }
+        executor.execute(() -> {
+            Road road = roadManager.getRoad(waypoints);
+            if (road != null && road.mLength > 0) {
+                Polyline polyline = OSRMRoadManager.buildRoadOverlay(road);
+                callback.onSuccess(new Route(road, polyline));
+            } else {
+                callback.onError(new Exception("Route calculation failed or returned zero distance"));
+            }
+        });
+    }
+
     public Road calculateRoad(ArrayList<GeoPoint> waypoints) {
         executor.execute(() -> {
             Road road = roadManager.getRoad(waypoints);
@@ -347,7 +364,24 @@ public class RideService {
 
                     if (geocodedCount[0] == totalStops) {
                         ride.stopList = geocodedStops;
-                        saveRideToFirebaseWithId(ride, callback);
+                        getRouteWithStops(geocodedStops, new RouteCallback() {
+                            @Override
+                            public void onSuccess(Route _route) {
+                                ride.mLength = _route.getRoad().mLength;
+                                ride.mDuration = _route.getRoad().mDuration;
+                                saveRideToFirebaseWithId(ride, callback);
+                            }
+
+                            @Override
+                            public void onError(Exception e) {
+
+                            }
+                        });
+
+               //         saveRideToFirebaseWithId(ride, callback);
+//                        // ^ old that works but without route
+//
+//                        // get the route for the ride
                     }
                 });
             }

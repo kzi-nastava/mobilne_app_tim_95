@@ -175,12 +175,12 @@ public class SearchViewModel extends ViewModel {
                     else _rides.sort(Comparator.comparing(Ride::getPriceDin));
                     break;
                 case DURATION:
-                    if (isAscending) _rides.sort(Comparator.comparing((Ride ride) -> ride.getRoute().getRoad().mDuration, Comparator.nullsFirst(Comparator.naturalOrder())).reversed());
-                    else _rides.sort(Comparator.comparingDouble((Ride ride) -> ride.getRoute().getRoad().mDuration));
+                    if (isAscending) _rides.sort(Comparator.comparing((Ride ride) -> ride.mDuration, Comparator.nullsFirst(Comparator.naturalOrder())).reversed());
+                    else _rides.sort(Comparator.comparingDouble((Ride ride) -> ride.mDuration));
                     break;
                 case RANGE:
-                    if (isAscending) _rides.sort(Comparator.comparing((Ride ride) -> ride.getRoute().getRoad().mLength, Comparator.nullsFirst(Comparator.naturalOrder())).reversed());
-                    else _rides.sort(Comparator.comparingDouble((Ride ride) -> ride.getRoute().getRoad().mLength));
+                    if (isAscending) _rides.sort(Comparator.comparing((Ride ride) -> ride.mLength, Comparator.nullsFirst(Comparator.naturalOrder())).reversed());
+                    else _rides.sort(Comparator.comparingDouble((Ride ride) -> ride.mLength));
                     break;
                 case DATE:
                     if (isAscending) _rides.sort(Comparator.comparing(Ride::getStartedAtLocalDateTime, Comparator.nullsFirst(Comparator.naturalOrder())).reversed());

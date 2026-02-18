@@ -36,6 +36,8 @@ public class Ride {
     public String vehicleType; // Type name as String (e.g. "Standard", "Van")
     public boolean hasBabies;
     public boolean hasPets;
+    public double mLength;
+    public double mDuration;
     public Timestamp scheduledFor; // Zakazano vreme vožnje (null = odmah)
 
     // REDUNDANT ?? - da li ovo ispod moze da se brise ??
