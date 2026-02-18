@@ -207,7 +207,8 @@ public class RideTrackingFragment extends Fragment {
         switch (loginViewModel.getRole().getValue()) {
             case DRIVER:
                 btnReport.setVisibility(View.GONE);
-                if (rideViewModel.getRideValue().status.equals(RideStatus.ACTIVE)) {
+                Ride _ride = rideViewModel.getRideValue();
+                if (_ride != null && RideStatus.ACTIVE.equals(_ride.status)) {
                     btnStartRide.setVisibility(View.GONE);
                     btnCancelRide.setVisibility(View.GONE);
                     btnStopRide.setVisibility(View.VISIBLE);
@@ -216,8 +217,8 @@ public class RideTrackingFragment extends Fragment {
                 else {
                     btnStartRide.setVisibility(View.VISIBLE);
                     btnCancelRide.setVisibility(View.VISIBLE);
-                    btnPanic.setVisibility(View.GONE);
                     btnStopRide.setVisibility(View.GONE);
+                    btnPanic.setVisibility(View.GONE);
                 }
                 break;
             case USER:
@@ -296,8 +297,7 @@ public class RideTrackingFragment extends Fragment {
 
             if (!reviewOpened && ride.status == RideStatus.COMPLETED && loginViewModel.getRole().getValue() == UserRole.USER) {
                 reviewOpened = true;
-//                Toast.makeText(requireContext(), "Ride completed! Please leave a review. The price is " + ride.priceDin, Toast.LENGTH_SHORT).show();
-                Snackbar snackbar = Snackbar.make(requireView(), "Ride has stopped, the price is : " + ride.priceDin, Snackbar.LENGTH_INDEFINITE);
+                Snackbar snackbar = Snackbar.make(requireView(), "Ride has stopped, the price is : " + ride.priceDin + " rsd.", Snackbar.LENGTH_INDEFINITE);
                 snackbar.setAction("DISMISS", v -> snackbar.dismiss());
                 snackbar.show();
                 openLeaveReviewFragment(ride);
@@ -305,8 +305,7 @@ public class RideTrackingFragment extends Fragment {
 
             if (!navigatedAfterCompletion && ride.status == RideStatus.COMPLETED && loginViewModel.getRole().getValue() == UserRole.DRIVER) {
                 navigatedAfterCompletion = true;
-//                Toast.makeText(requireContext(), "Ride completed.", Toast.LENGTH_SHORT).show();
-                Snackbar snackbar = Snackbar.make(requireView(), "Ride has stopped, the price is : " + ride.priceDin, Snackbar.LENGTH_INDEFINITE);
+                Snackbar snackbar = Snackbar.make(requireView(), "Ride has stopped, the price is : " + ride.priceDin + " rsd.", Snackbar.LENGTH_INDEFINITE);
                 snackbar.setAction("DISMISS", v -> snackbar.dismiss());
                 snackbar.show();
                 NavHostFragment.findNavController(this)
