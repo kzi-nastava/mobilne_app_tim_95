@@ -1,6 +1,7 @@
 package com.example.gruber.fragment;
 
 import android.animation.ValueAnimator;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -100,6 +101,10 @@ public class RideTrackingFragment extends Fragment {
 
     private List<GeoPoint> simulatedRoute;
     private int routeIndex = 0;
+
+    private boolean reviewOpened = false;
+    private boolean navigatedAfterCompletion = false;
+
     private boolean isSimulating = false;
 
     private Handler simulationHandler;
@@ -280,8 +285,17 @@ public class RideTrackingFragment extends Fragment {
                 startDriverTracking(ride);
             }
 
-            if (ride.status == RideStatus.COMPLETED && loginViewModel.getRole().getValue() == UserRole.USER) {
+            if (!reviewOpened && ride.status == RideStatus.COMPLETED && loginViewModel.getRole().getValue() == UserRole.USER) {
+                reviewOpened = true;
+                Toast.makeText(requireContext(), "Ride completed! Please leave a review.", Toast.LENGTH_SHORT).show();
                 openLeaveReviewFragment(ride);
+            }
+
+            if (!navigatedAfterCompletion && ride.status == RideStatus.COMPLETED && loginViewModel.getRole().getValue() == UserRole.DRIVER) {
+                navigatedAfterCompletion = true;
+                Toast.makeText(requireContext(), "Ride completed.", Toast.LENGTH_SHORT).show();
+                NavHostFragment.findNavController(this)
+                        .navigate(R.id.action_rideTrackingFragment_to_homeMapFragment);
             }
         });
     }
@@ -933,12 +947,12 @@ public class RideTrackingFragment extends Fragment {
             driverTrackingService.updateLocation(lastDriverPoint);
         }
 
-        // If close enough complete without changing price
+        // if close enough complete without changing price
         if (distToEnd <= END_NEAR_THRESHOLD_M) {
             rideViewModel.setCompetedStatusForRide(
                     currentRide.id,
                     "Ride completed.",
-                    0, // price 0 => don't update price in db
+                    0, // price 0 means don't update price in db
                     "Ride completed. ",
                     new EmptyCallback() {
                         @Override public void OnSuccess() {
@@ -957,16 +971,15 @@ public class RideTrackingFragment extends Fragment {
             );
             return;
         }
-
-        // Not near end -> recalc price using current simulated location -> end
-        rideViewModel.recalculatePriceFromGeoPoints(start, lastDriverPoint, result -> {
-            // result is a String in your API, but better is Double; keeping your style:
+        Context context = requireContext();
+        // Not near end recalculate price using current simulated location end
+        rideViewModel.recalculatePriceFromGeoPoints(start, lastDriverPoint, context, result -> {
             if (result == null) {
                 ui.post(() -> Toast.makeText(getContext(), "Failed to recalculate price", Toast.LENGTH_SHORT).show());
                 rideViewModel.setCompetedStatusForRide(
                         currentRide.id,
                         "Ride completed.",
-                        0, // price 0 => don't update price in db
+                        0, // price 0 means don't update price in db
                         "Ride completed. ",
                         new EmptyCallback() {
                             @Override public void OnSuccess() {
