@@ -30,9 +30,13 @@ import com.example.gruber.viewModels.RideViewModel;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import org.osmdroid.bonuspack.routing.OSRMRoadManager;
+import org.osmdroid.bonuspack.routing.Road;
+import org.osmdroid.bonuspack.routing.RoadManager;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.ITileSource;
 import org.osmdroid.tileprovider.tilesource.XYTileSource;
+import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
@@ -288,33 +292,30 @@ public class RideDetailsFragment extends Fragment {
     }
 
     private void drawRideRouteOnMap(Ride ride, List<Stop> sortedStops) {
-        if (ride.stopList == null || ride.stopList.size() < 2) {
-            return;
-        }
+        if (ride.stopList == null || ride.stopList.size() < 2) return;
 
         GeoPoint start = toGeoPoint(ride.stopList.get(0).location);
-        int stopListSize = ride.stopList.size();
-        GeoPoint end = toGeoPoint(ride.stopList.get(stopListSize - 1).location);
-        if (start == null || end == null) {
-            return;
-        }
+        GeoPoint end = toGeoPoint(ride.stopList.get(ride.stopList.size() - 1).location);
+        if (start == null || end == null) return;
 
         ArrayList<GeoPoint> waypoints = new ArrayList<>();
         waypoints.add(start);
 
-        for (Stop s : sortedStops) {
-            GeoPoint p = toGeoPoint(s.getLocation());
-            if (p != null) waypoints.add(p);
+        if (sortedStops != null) {
+            for (Stop s : sortedStops) {
+                GeoPoint p = toGeoPoint(s.getLocation());
+                if (p != null) waypoints.add(p);
+            }
         }
 
         waypoints.add(end);
 
-        // Route line: run network call off main thread
         bg.execute(() -> {
             try {
-                if (ride.getRoute() == null || ride.getRoute().getPolyline() == null) {
-                    return;
-                }
+                // Build road from waypoints
+                RoadManager rm = new OSRMRoadManager(requireContext(), Configuration.getInstance().getUserAgentValue());
+                Road road = rm.getRoad(waypoints);
+                if (road == null || road.mRouteHigh == null || road.mRouteHigh.isEmpty()) return;
 
                 requireActivity().runOnUiThread(() -> {
                     if (!isAdded() || rideMap == null) return;
@@ -324,25 +325,31 @@ public class RideDetailsFragment extends Fragment {
                         rideMap.getOverlays().remove(routeLine);
                     }
 
-//                    routeLine = RoadManager.buildRoadOverlay(road);
-                    routeLine = ride.getRoute().getPolyline();
-                    // Make it BLUE (use your palette: status_active)
-                    int blue = ContextCompat.getColor(requireContext(), R.color.status_cancelled);
-                    routeLine.getOutlinePaint().setColor(blue);
+                    // Build polyline overlay from road
+                    routeLine = OSRMRoadManager.buildRoadOverlay(road);
+
+                    int color = ContextCompat.getColor(requireContext(), R.color.status_cancelled);
+                    routeLine.getOutlinePaint().setColor(color);
                     routeLine.getOutlinePaint().setStrokeWidth(8f);
                     routeLine.getOutlinePaint().setAntiAlias(true);
 
                     rideMap.getOverlays().add(routeLine);
 
+                    // Markers
                     addMarker(start, "Start", R.drawable.ic_pin_start);
+
                     int stopIndex = 1;
-                    for (Stop s : sortedStops) {
-                        GeoPoint p = toGeoPoint(s.getLocation());
-                        if (p != null) addMarker(p, "Stop " + stopIndex++, R.drawable.ic_pin_stop);
+                    if (sortedStops != null) {
+                        for (Stop s : sortedStops) {
+                            GeoPoint p = toGeoPoint(s.getLocation());
+                            if (p != null) addMarker(p, "Stop " + stopIndex++, R.drawable.ic_pin_stop);
+                        }
                     }
+
                     addMarker(end, "End", R.drawable.ic_pin_end);
 
-                    org.osmdroid.util.BoundingBox bb = BoundingBoxUtil.fromGeoPoints(waypoints);
+                    // Zoom to fit
+                    BoundingBox bb = BoundingBoxUtil.fromGeoPoints(waypoints);
                     if (bb != null) {
                         rideMap.zoomToBoundingBox(bb, true, 80);
                     } else {
@@ -357,6 +364,7 @@ public class RideDetailsFragment extends Fragment {
             }
         });
     }
+
 
     private void addMarker(GeoPoint p, String title, int iconRes) {
         Marker m = new Marker(rideMap);
