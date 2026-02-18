@@ -954,6 +954,7 @@ public class RideService {
                             .addOnSuccessListener(v1 -> {
                                 // Update driver status to DRIVING in realtime database
                                 DriverTrackingService driverTracking = new DriverTrackingService(ride.driverEmail);
+                                updateDriverLocationToRideStart(ride, driverTracking);
                                 driverTracking.updateStatus(DriverTrackingService.DriverStatus.DRIVING);
 
                                 updateUserActive(ride.driverEmail, true, success1 -> {
@@ -994,6 +995,19 @@ public class RideService {
                             .addOnFailureListener(e -> callback.accept(false));
                 })
                 .addOnFailureListener(e -> callback.accept(false));
+    }
+
+    private void updateDriverLocationToRideStart(@NonNull Ride ride,
+            @NonNull DriverTrackingService driverTracking) {
+        Stop start = ride.getStart();
+        if (start != null && start.getLocation() != null) {
+            driverTracking.updateLocation(new GeoPoint(start.getLocation().lat, start.getLocation().lon));
+            return;
+        }
+
+        if (ride.pickupLocation != null) {
+            driverTracking.updateLocation(new GeoPoint(ride.pickupLocation.lat, ride.pickupLocation.lon));
+        }
     }
 
     private void updateUserActive(String userEmail, boolean active, Consumer<Boolean> callback) {
