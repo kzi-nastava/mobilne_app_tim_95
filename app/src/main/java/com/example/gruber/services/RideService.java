@@ -11,6 +11,8 @@ import com.example.gruber.services.callbacks.RideCallback;
 import com.example.gruber.services.callbacks.RideIdCallback;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.example.gruber.models.Route;
@@ -50,6 +52,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -143,7 +146,6 @@ public class RideService {
             }
         }
 
-        // Dodaj end point
         GeoPoint endPoint = getGeoPoint(end);
         waypoints.add(endPoint);
 
@@ -225,6 +227,12 @@ public class RideService {
         Map<String, Object> updates = new HashMap<>();
         updates.put(STATUS, status.name());
         updates.put(EXPLANATION, explanation);
+        if(status == RideStatus.PANIC_TRIGGERED){
+            updates.put("finishedAt", Timestamp.now());
+        }
+        else if (status == RideStatus.CANCELLED){
+            updates.put("startedAt", Timestamp.now());
+        }
 
         firebaseFirestore.collection(RIDES)
                 .document(rideID)
@@ -242,8 +250,9 @@ public class RideService {
         updates.put(STATUS, status.name());
         updates.put(EXPLANATION, explanation);
         if (price != 0) {
-            updates.put(PRICE, price);
+            updates.put("priceDin", price);
         }
+        updates.put("finishedAt", Timestamp.now());
 
         firebaseFirestore.collection(RIDES)
                 .document(rideID)
@@ -316,6 +325,73 @@ public class RideService {
         driverTracking.updateStatus(DriverTrackingService.DriverStatus.AVAILABLE);
 
     }
+
+    public void reverseGeocode(@NonNull GeoPoint p, Context context, @NonNull Consumer<String> cb) {
+        executor.execute(() -> {
+            try {
+                Geocoder geocoder = new Geocoder(context, Locale.getDefault());
+                List<Address> res = geocoder.getFromLocation(p.getLatitude(), p.getLongitude(), 1);
+                String addr = null;
+                if (res != null && !res.isEmpty()) {
+                    Address a = res.get(0);
+                    // you can format as you like
+                    addr = a.getAddressLine(0);
+                }
+                cb.accept(addr);
+            } catch (Exception e) {
+                cb.accept(null);
+            }
+        });
+    }
+
+    public void updateRideEndStop(@NonNull String rideId,
+                                  @NonNull GeoPoint newEnd,
+                                  @Nullable String newAddress,
+                                  @NonNull EmptyCallback cb) {
+
+        Map<String, Object> updates = new HashMap<>();
+
+        // If you have "end" as a separate field
+        updates.put("end.location.lat", newEnd.getLatitude());
+        updates.put("end.location.lon", newEnd.getLongitude());
+        if (newAddress != null) updates.put("end.address", newAddress);
+
+        firebaseFirestore.collection("rides").document(rideId)
+                .get()
+                .addOnSuccessListener(doc -> {
+                    if (!doc.exists()) { cb.OnError(new Exception("Ride not found")); return; }
+
+                    // assuming stopList stored as array of maps or POJOs
+                    List<Map<String, Object>> stopList = (List<Map<String, Object>>) doc.get("stopList");
+                    if (stopList != null && stopList.size() >= 1) {
+                        int last = stopList.size() - 1;
+
+                        Map<String, Object> endStop = stopList.get(last);
+                        if (endStop == null) endStop = new HashMap<>();
+
+                        endStop.put("address", newAddress != null ? newAddress : endStop.get("address"));
+
+                        Map<String, Object> loc = (Map<String, Object>) endStop.get("location");
+                        if (loc == null) loc = new HashMap<>();
+                        loc.put("lat", newEnd.getLatitude());
+                        loc.put("lon", newEnd.getLongitude());
+                        endStop.put("location", loc);
+
+                        stopList.set(last, endStop);
+
+                        updates.put("stopList", stopList);
+                    }
+
+                    firebaseFirestore.collection("rides").document(rideId)
+                            .update(updates)
+                            .addOnSuccessListener(v -> cb.OnSuccess())
+                            .addOnFailureListener(cb::OnError);
+
+                })
+                .addOnFailureListener(cb::OnError);
+    }
+
+
 
     public void addRide(Ride ride, PriceCallback callback) {
         if (ride.scheduledFor != null) {
@@ -1053,6 +1129,7 @@ public class RideService {
 
                     Map<String, Object> rideUpdate = new HashMap<>();
                     rideUpdate.put(STATUS, RideStatus.ACTIVE);
+                    rideUpdate.put("startedAt", Timestamp.now());
 
                     firebaseFirestore.collection(RIDES)
                             .document(rideId)

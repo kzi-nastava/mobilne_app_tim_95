@@ -1,5 +1,6 @@
 package com.example.gruber.viewModels;
 
+import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -613,6 +614,7 @@ public class RideViewModel extends ViewModel {
 
     public void recalculatePriceFromGeoPoints(@NonNull GeoPoint from,
                                               @NonNull GeoPoint to,
+                                              Context context,
                                               @NonNull Consumer<String> onComplete) {
 
         Ride bookingRide = ride.getValue();
@@ -621,41 +623,60 @@ public class RideViewModel extends ViewModel {
             return;
         }
 
-        String finalVehicleTypeValue = bookingRide.vehicleType;
+        String rideId = bookingRide.id;
+        String vehicleType = bookingRide.vehicleType;
 
-        rideService.getRouteGeo(from, to, new RouteCallback() {
-            @Override
-            public void onSuccess(Route route) {
-                if (route == null || route.getRoad() == null || route.getRoad().mLength <= 0) {
-                    onComplete.accept(null);
-                    return;
+        // reverse geocode of last known address
+        rideService.reverseGeocode(to, context, address -> {
+
+            // update end stop in DB (end and stopList[last])
+            rideService.updateRideEndStop(rideId, to, address, new EmptyCallback() {
+                @Override
+                public void OnSuccess() {
+
+                    // recalculate route and price
+                    rideService.getRouteGeo(from, to, new RouteCallback() {
+                        @Override
+                        public void onSuccess(Route route) {
+                            if (route == null || route.getRoad() == null || route.getRoad().mLength <= 0) {
+                                onComplete.accept(null);
+                                return;
+                            }
+
+                            rideService.calculateRidePrice(route, vehicleType, price -> {
+                                if (price <= 0) {
+                                    onComplete.accept(null);
+                                    return;
+                                }
+
+                                setCompetedStatusForRide(
+                                        rideId,
+                                        "Ride stopped before end.",
+                                        price,
+                                        "Ride stopped before end.",
+                                        new EmptyCallback() {
+                                            @Override public void OnSuccess() { onComplete.accept("OK"); }
+                                            @Override public void OnError(Exception e) { onComplete.accept(null); }
+                                        }
+                                );
+                            });
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            onComplete.accept(null);
+                        }
+                    });
                 }
 
-                rideService.calculateRidePrice(route, finalVehicleTypeValue, price -> {
-                    if (price <= 0) {
-                        onComplete.accept(null);
-                        return;
-                    }
-
-                    setCompetedStatusForRide(
-                            bookingRide.id,
-                            "Ride stopped before end. ",
-                            price,
-                            "Ride stopped before end. ",
-                            new EmptyCallback() {
-                                @Override public void OnSuccess() { onComplete.accept("OK"); }
-                                @Override public void OnError(Exception e) { onComplete.accept(null); }
-                            }
-                    );
-                });
-            }
-
-            @Override
-            public void onError(Exception e) {
-                onComplete.accept(null);
-            }
+                @Override
+                public void OnError(Exception e) {
+                    onComplete.accept(null);
+                }
+            });
         });
     }
+
 
 
 }
