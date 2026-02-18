@@ -207,10 +207,18 @@ public class RideTrackingFragment extends Fragment {
         switch (loginViewModel.getRole().getValue()) {
             case DRIVER:
                 btnReport.setVisibility(View.GONE);
-                btnStartRide.setVisibility(View.VISIBLE);
-                btnCancelRide.setVisibility(View.VISIBLE);
-                btnPanic.setVisibility(View.GONE);
-                btnStopRide.setVisibility(View.GONE);
+                if (rideViewModel.getRideValue().status.equals(RideStatus.ACTIVE)) {
+                    btnStartRide.setVisibility(View.GONE);
+                    btnCancelRide.setVisibility(View.GONE);
+                    btnStopRide.setVisibility(View.VISIBLE);
+                    btnPanic.setVisibility(View.VISIBLE);
+                }
+                else {
+                    btnStartRide.setVisibility(View.VISIBLE);
+                    btnCancelRide.setVisibility(View.VISIBLE);
+                    btnPanic.setVisibility(View.GONE);
+                    btnStopRide.setVisibility(View.GONE);
+                }
                 break;
             case USER:
             default:
