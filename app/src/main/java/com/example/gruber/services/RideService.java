@@ -200,6 +200,27 @@ public class RideService {
         ;
     }
 
+    public void triggerPanicForRide(String rideID, String explanation, EmptyCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .document(rideID)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    Ride _ride = snapshot.toObject(Ride.class);
+                    if (_ride == null) return;
+                    setRideStatus(snapshot.getId(), explanation, RideStatus.PANIC_TRIGGERED, callback);
+                    updateUserActive(_ride.driverEmail, false, success -> {});
+                    updateUserActive(_ride.creatorUserEmail, false, success -> {});
+                    for (String passengerEmail : _ride.passengerEmails) {
+                        updateUserActive(passengerEmail, false, success -> {});
+                    }
+                    DriverTrackingService driverTracking = new DriverTrackingService(_ride.driverEmail);
+                    driverTracking.updateStatus(DriverTrackingService.DriverStatus.AVAILABLE);
+                }
+                )
+                .addOnFailureListener(callback::OnError);
+
+    }
+
     public void cancelDriverFirstRide(String explanation, String driverEmail, EmptyCallback callback) {
         firebaseFirestore.collection(RIDES)
                 .whereEqualTo(DRIVER_EMAIL, driverEmail)

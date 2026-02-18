@@ -16,6 +16,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Toast;
 import com.example.gruber.R;
+import com.example.gruber.adapter.AddressAutoCompleteAdapter;
 import com.example.gruber.adapter.StopAdapter;
 import com.example.gruber.models.LatLng;
 import com.example.gruber.models.Stop;
@@ -33,7 +34,8 @@ public class RideStopsTabFragment extends Fragment {
     private StopAdapter stopAdapter;
     private RecyclerView rvIntermediateStops;
     private MaterialAutoCompleteTextView etStopAddress;
-    private ArrayAdapter<Stop> intermediateAdapter;
+//    private ArrayAdapter<Stop> intermediateAdapter;
+    private AddressAutoCompleteAdapter intermediateAdapter;
     private Button btnAddStop;
     private Stop selectedStop = null;
 
@@ -100,13 +102,14 @@ public class RideStopsTabFragment extends Fragment {
 
     private void setupListeners() {
         // Setup autocomplete adapter
-        intermediateAdapter = new ArrayAdapter<>(
-                requireContext(),
-                android.R.layout.simple_dropdown_item_1line,
-                new ArrayList<>()
-        );
+//        intermediateAdapter = new ArrayAdapter<>(
+//                requireContext(),
+//                android.R.layout.simple_dropdown_item_1line,
+//                new ArrayList<>()
+//        );
+        intermediateAdapter = new AddressAutoCompleteAdapter(requireContext());
         etStopAddress.setAdapter(intermediateAdapter);
-        etStopAddress.setThreshold(3);
+        etStopAddress.setThreshold(1);
 
         // Listener za izbor iz dropdown-a - samo popuni polje, NE dodaje automatski
         etStopAddress.setOnItemClickListener((parent, _view, position, id) -> {
