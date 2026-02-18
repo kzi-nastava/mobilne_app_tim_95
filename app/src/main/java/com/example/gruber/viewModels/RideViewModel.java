@@ -576,7 +576,7 @@ public class RideViewModel extends ViewModel {
     }
 
     public void setPanicStatusForRide(String rideId, String explanation, String messageTextForAdmin, EmptyCallback callback) {
-        rideService.setRideStatus(rideId, explanation, RideStatus.PANIC_TRIGGERED, new EmptyCallback() {
+        rideService.triggerPanicForRide(rideId, explanation, new EmptyCallback() {
             @Override
             public void OnSuccess() {
                 //send notification to admin
