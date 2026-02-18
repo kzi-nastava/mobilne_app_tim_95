@@ -22,6 +22,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import com.example.gruber.R;
+import com.example.gruber.adapter.AddressAutoCompleteAdapter;
 import com.example.gruber.adapter.RideOptionsViewPagerAdapter;
 import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.UserRole;
@@ -46,10 +47,8 @@ public class RideOrderDialogFragment extends DialogFragment {
     private LoginViewModel loginViewModel;
 
     private MaterialAutoCompleteTextView startAutoCompleteTV;
-    private ArrayAdapter<Stop> startAdapter;
-
+    private AddressAutoCompleteAdapter startAdapter, endAdapter;
     private MaterialAutoCompleteTextView endAutoCompleteTv;
-    private ArrayAdapter<Stop> endAdapter;
 
     public RideOrderDialogFragment() {
         // Required empty public constructor
@@ -75,12 +74,10 @@ public class RideOrderDialogFragment extends DialogFragment {
         rideViewModel.resetRide();
 
         startAutoCompleteTV = view.findViewById(R.id.et_start_street);
-        startAdapter = new ArrayAdapter<>(
-                requireContext(),
-                android.R.layout.simple_dropdown_item_1line,
-                new ArrayList<>());
+
+        startAdapter = new AddressAutoCompleteAdapter(requireContext());
         startAutoCompleteTV.setAdapter(startAdapter);
-        startAutoCompleteTV.setThreshold(3);
+        startAutoCompleteTV.setThreshold(1);
         startAutoCompleteTV.setText(rideViewModel.getRideValue().getStartAddress());
 
         startAutoCompleteTV.setOnItemClickListener((parent, _view, position, id) -> {
@@ -89,12 +86,10 @@ public class RideOrderDialogFragment extends DialogFragment {
         });
 
         endAutoCompleteTv = view.findViewById(R.id.et_end_street);
-        endAdapter = new ArrayAdapter<>(
-                requireContext(),
-                android.R.layout.simple_dropdown_item_1line,
-                new ArrayList<>());
+
+        endAdapter = new AddressAutoCompleteAdapter(requireContext());
         endAutoCompleteTv.setAdapter(endAdapter);
-        endAutoCompleteTv.setThreshold(3);
+        endAutoCompleteTv.setThreshold(1);
         endAutoCompleteTv.setText(rideViewModel.getRideValue().getEndAddress());
 
         endAutoCompleteTv.setOnItemClickListener((parent, _view, position, id) -> {
@@ -180,11 +175,7 @@ public class RideOrderDialogFragment extends DialogFragment {
                     startAdapter.clear();
                     startAdapter.addAll(suggestions);
                     startAdapter.notifyDataSetChanged();
-
-                    if (!suggestions.isEmpty())
-                        startAutoCompleteTV.showDropDown();
-                    else
-                        startAutoCompleteTV.dismissDropDown();
+                    startAutoCompleteTV.requestFocus();
 
                 });
 
@@ -193,11 +184,6 @@ public class RideOrderDialogFragment extends DialogFragment {
                     endAdapter.clear();
                     endAdapter.addAll(suggestions);
                     endAdapter.notifyDataSetChanged();
-
-                    if (!suggestions.isEmpty())
-                        endAutoCompleteTv.showDropDown();
-                    else
-                        endAutoCompleteTv.dismissDropDown();
 
                 });
 

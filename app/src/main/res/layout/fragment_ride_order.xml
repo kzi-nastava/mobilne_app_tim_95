@@ -60,9 +60,11 @@
             android:id="@+id/et_start_street"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:singleLine="true"
+            android:singleLine="false"
             android:scrollHorizontally="true"
             android:inputType="text"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
             />
 <!--            style="@style/TextAppearance.Material3.BodyMedium"-->
     </com.google.android.material.textfield.TextInputLayout>
