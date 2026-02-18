@@ -41,6 +41,7 @@ import com.example.gruber.viewModels.RideViewModel;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.database.DataSnapshot;
@@ -998,7 +999,12 @@ public class RideTrackingFragment extends Fragment {
                 );
                 return;
             }
-            ui.post(() -> Toast.makeText(getContext(), "Ride stopped early. Price updated.", Toast.LENGTH_SHORT).show());
+            ui.post(() -> {
+                Snackbar snackbar = Snackbar.make(requireView(), "Ride has stopped, the price is : " + result, Snackbar.LENGTH_INDEFINITE);
+                snackbar.setAction("DISMISS", v -> snackbar.dismiss());
+                snackbar.show();
+//                Toast.makeText(getContext(), "Ride stopped early. Price updated.", Toast.LENGTH_SHORT).show();
+            });
             if (driverTrackingService != null) {
                 driverTrackingService.updateStatus(DriverTrackingService.DriverStatus.AVAILABLE);
             }

@@ -655,7 +655,7 @@ public class RideViewModel extends ViewModel {
                                         price,
                                         "Ride stopped before end.",
                                         new EmptyCallback() {
-                                            @Override public void OnSuccess() { onComplete.accept("OK"); }
+                                            @Override public void OnSuccess() { onComplete.accept(price.toString()); }
                                             @Override public void OnError(Exception e) { onComplete.accept(null); }
                                         }
                                 );
