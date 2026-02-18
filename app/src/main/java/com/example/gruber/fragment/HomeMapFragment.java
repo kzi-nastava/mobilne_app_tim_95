@@ -116,23 +116,23 @@ public class HomeMapFragment extends Fragment {
 
         SessionManager sessionManager = new SessionManager(requireContext());
         UserRole role = sessionManager.getUserRole();
-        String myUid = sessionManager.getUserID();
+        String myEmail = sessionManager.getUserEmail();
 
-// ---- Ride coordinator ----
-        rideCoordinator = new RideCoordinator(myUid);
-        rideCoordinator.getActiveRide().observe(
-                getViewLifecycleOwner(),
-                rideId -> {
-                    if (rideId != null && !navigatedToRide) {
-                        navigatedToRide = true;
+        rideCoordinator = new RideCoordinator(myEmail, role);
+        rideCoordinator.start();
+        rideCoordinator.getActiveRide().observe(getViewLifecycleOwner(), rideId -> {
+            if (rideId != null && !navigatedToRide) {
+                navigatedToRide = true;
 
-                        Log.d("RIDE_COORD", "Active ride detected: " + rideId);
+                Log.d("RIDE_COORD", "Active ride detected: " + rideId);
 
-                        NavHostFragment.findNavController(this)
-                                .navigate(R.id.action_homeMapFragment_to_rideTrackingFragment);
-                    }
-                }
-        );
+                Bundle args = new Bundle();
+                args.putString("rideId", rideId);
+
+                NavHostFragment.findNavController(this)
+                        .navigate(R.id.action_homeMapFragment_to_rideTrackingFragment, args);
+            }
+        });
 
         // Shared auth/db for status checks and support bubble
         FirebaseAuth auth = FirebaseAuth.getInstance();
