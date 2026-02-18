@@ -73,7 +73,7 @@ public class User {
     public int getActiveHoursLast24h() { return activeHoursLast24h; }
     public String getVehicleModel() { return vehicleModel; }
     public String getVehiclePlate() { return vehiclePlate; }
-    public boolean isActive() { return active; }
+//    public boolean isActive() { return active; }
     public boolean isBlocked() { return blocked; }
 
     // SETTERS

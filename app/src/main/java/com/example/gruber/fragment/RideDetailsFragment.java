@@ -227,19 +227,19 @@ public class RideDetailsFragment extends Fragment {
                 Collections.sort(sortedStops, Comparator.comparingInt(s -> s.number));
             }
 
-            if (!sortedStops.isEmpty()) {
-                for (Stop s : sortedStops) {
-                    TextView t = new TextView(requireContext());
-                    t.setText(s.number + ". " + s.getAddress());
-                    t.setTextSize(16f);
-                    stopsContainer.addView(t);
-                }
-            } else {
+        if (!sortedStops.isEmpty()) {
+            for (Stop s : sortedStops) {
                 TextView t = new TextView(requireContext());
-                t.setText("• (no stops)");
+                t.setText(s.number + 1 + ". " + s.getAddress());
                 t.setTextSize(16f);
                 stopsContainer.addView(t);
             }
+        } else {
+            TextView t = new TextView(requireContext());
+            t.setText("• (no stops)");
+            t.setTextSize(16f);
+            stopsContainer.addView(t);
+        }
 
             // --- Price
             tvPrice.setText("RSD " + ride.priceDin);
@@ -437,8 +437,8 @@ public class RideDetailsFragment extends Fragment {
         EmptyCallback callback = new EmptyCallback() {
             @Override
             public void OnSuccess() {
-                String title = "Cancellation successful.";
-                String message = "We have canceled your ride.";
+                String title = getResources().getString(R.string.cancellation_successful);
+                String message = getResources().getString(R.string.successful_cancellation_message);
                 //change the color of status label
                 TextView tvStatus = requireActivity().findViewById(R.id.tvStatus);
                 tvStatus.setText(RideStatus.CANCELLED.toString());
@@ -451,7 +451,7 @@ public class RideDetailsFragment extends Fragment {
 
             @Override
             public void OnError(Exception e) {
-                String title = "Cancellation unsuccessful";
+                String title = getResources().getString(R.string.cancellation_unsuccessful);
                 String message = e.getMessage();
                 showDialog(title, message);
             }

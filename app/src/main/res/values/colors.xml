@@ -27,7 +27,6 @@
     <color name="status_active">#1565C0</color>
     <color name="status_pending">#F1E23B</color>
     <color name="status_panic_triggered">#B40000</color>
-
     <!-- ===================== -->
     <!-- DARK MODE COLORS -->
     <!-- ===================== -->
@@ -66,4 +65,8 @@
     <!-- USER BLOCK COLORS -->
     <color name="blocked_user_bg">#FFCDD2</color>  <!-- light red -->
     <color name="normal_user_bg">#FFFFFF</color>   <!-- white -->
+
+    <!--  DRIVER BLOCK COLORS  -->
+    <color name="panic_button_bg">#eec800</color>
+<!--    ff9300-->
 </resources>

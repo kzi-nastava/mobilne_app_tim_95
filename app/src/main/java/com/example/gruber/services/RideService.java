@@ -30,7 +30,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firebase.firestore.SetOptions;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.osmdroid.bonuspack.routing.OSRMRoadManager;
@@ -44,8 +44,10 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +71,7 @@ public class RideService {
     private static final String VEHICLE_TYPE = "vehicleType";
     private static final String RIDES = "rides";
     private static final String STATUS = "status";
+    private static final String EXPLANATION = "explanation";
     private static final String USER_EMAIL = "creatorUserEmail";
     private static final String DRIVER_EMAIL = "driverEmail";
     private static final String FIRST_NAME = "firstName";
@@ -181,16 +184,48 @@ public class RideService {
         });
     }
 
-    public void setRideStatus(@NonNull String rideID, @NonNull RideStatus status, EmptyCallback callback) {
+    public void setRideStatus(@NonNull String rideID, String explanation,  @NonNull RideStatus status, EmptyCallback callback) {
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put(STATUS, status.name());
+        updates.put(EXPLANATION, explanation);
 
         firebaseFirestore.collection(RIDES)
                 .document(rideID)
-                .update(STATUS, status.name())
+                .update(updates)
                 .addOnSuccessListener(response -> {
                     callback.OnSuccess();
                 })
                 .addOnFailureListener(callback::OnError)
         ;
+    }
+
+    public void cancelDriverFirstRide(String explanation, String driverEmail, EmptyCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereEqualTo(DRIVER_EMAIL, driverEmail)
+                .whereEqualTo(STATUS, RideStatus.PENDING.name())
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                        Ride _ride = doc.toObject(Ride.class);
+                        if (_ride == null || _ride.status != RideStatus.PENDING) continue;
+                        _ride.setExplanation(explanation);
+                        setRideStatus(doc.getId(), explanation, RideStatus.CANCELLED, callback);
+                        updateUserActive(_ride.creatorUserEmail, false, success -> {} );
+                        updateUserActive(_ride.driverEmail, false, success -> {});
+                        for (String passengerEmail : _ride.passengerEmails) {
+                            updateUserActive(passengerEmail, false, success -> {});
+                        }
+                        return;
+                    }
+
+                    callback.OnError(new NullPointerException("No pending rides."));
+                })
+                .addOnFailureListener(callback::OnError);
+
+        DriverTrackingService driverTracking = new DriverTrackingService(driverEmail);
+        driverTracking.updateStatus(DriverTrackingService.DriverStatus.AVAILABLE);
+
     }
 
     public void addRide(Ride ride, PriceCallback callback) {
@@ -299,19 +334,46 @@ public class RideService {
                 .whereGreaterThanOrEqualTo(STARTED_AT, fromInterval)
                 .whereLessThanOrEqualTo(STARTED_AT, toInterval)
                 .whereEqualTo(USER_EMAIL, userEmail)
-                .orderBy(STARTED_AT)
                 .get()
                 .addOnSuccessListener(snapshot -> {
-
                     List<Ride> rides = getRidesWithIDs(snapshot);
-//                    List<Ride> rides = new ArrayList<>();
-//                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
-//                        Ride ride = doc.toObject(Ride.class);
-//                        if (ride != null) {
-//                            ride.id = doc.getId();
-//                            rides.add(ride);
-//                        }
-//                    }
+                    callback.onSuccess(rides);
+                })
+                .addOnFailureListener(callback::onError);
+
+    }
+
+    public void getRidesForUserWithSearch(String userEmail, List<RideStatus> statuses, RidesListCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereIn(STATUS, statuses)
+                .whereEqualTo(USER_EMAIL, userEmail)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Ride> rides = getRidesWithIDs(snapshot);
+                    callback.onSuccess(rides);
+                })
+                .addOnFailureListener(callback::onError);
+    }
+
+    public void getRidesForAdminWithSearch(List<RideStatus> statuses, RidesListCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereIn(STATUS, statuses)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Ride> rides = getRidesWithIDs(snapshot);
+                    callback.onSuccess(rides);
+                })
+                .addOnFailureListener(callback::onError);
+    }
+
+    public void getRidesForAdminWtihSearch(List<RideStatus> statuses, Timestamp fromInterval, Timestamp toInterval, RidesListCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereIn(STATUS, statuses)
+                .whereGreaterThanOrEqualTo(STARTED_AT, fromInterval)
+                .whereLessThanOrEqualTo(STARTED_AT, toInterval)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Ride> rides = getRidesWithIDs(snapshot);
                     callback.onSuccess(rides);
                 })
                 .addOnFailureListener(callback::onError);
@@ -836,6 +898,40 @@ public class RideService {
                     callback.accept(ridesToStart);
                 })
                 .addOnFailureListener(e -> callback.accept(Collections.emptyList()));
+    }
+
+    public void getDriverRidesToStart(String driverEmail, RidesListCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereEqualTo("driverEmail", driverEmail)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Ride> allRides = new ArrayList<>();
+                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                        Ride ride = doc.toObject(Ride.class);
+                        if (ride != null) {
+                            ride.id = doc.getId();
+                            allRides.add(ride);
+                        }
+                    }
+
+                    List<Ride> ridesToStart = allRides.stream()
+                            .filter(r -> {
+                                if (r.status == null)
+                                    return false;
+                                if (r.status == RideStatus.PENDING)
+                                    return true;
+                                if (r.status == RideStatus.SCHEDULED && r.scheduledFor == null)
+                                    return true;
+                                if (r.status == RideStatus.SCHEDULED && r.scheduledFor != null) {
+                                    return r.scheduledFor.getSeconds() <= System.currentTimeMillis() / 1000;
+                                }
+                                return false;
+                            })
+                            .collect(Collectors.toList());
+
+                    callback.onSuccess(ridesToStart);
+                })
+                .addOnFailureListener(callback::onError);
     }
 
     public void startRide(String rideId, Consumer<Boolean> callback) {

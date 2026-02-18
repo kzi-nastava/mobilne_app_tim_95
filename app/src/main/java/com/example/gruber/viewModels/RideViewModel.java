@@ -8,16 +8,19 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.gruber.SessionManager;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.Route;
 import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.RideStatus;
+import com.example.gruber.services.DriverTrackingService;
 import com.example.gruber.services.RideService;
+import com.example.gruber.services.SupportChatService;
 import com.example.gruber.services.callbacks.EmptyCallback;
 import com.example.gruber.services.callbacks.RideCallback;
 import com.example.gruber.services.callbacks.RideIdCallback;
+import com.example.gruber.services.callbacks.RidesListCallback;
 import com.example.gruber.services.callbacks.RouteCallback;
-import com.example.gruber.services.callbacks.PriceCallback;
 import com.google.firebase.firestore.ListenerRegistration;
 
 import org.osmdroid.util.GeoPoint;
@@ -35,6 +38,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel;
 public class RideViewModel extends ViewModel {
 
     private final RideService rideService;
+
+    private final SupportChatService supportChatService;
+
+    private final SessionManager sessionManager;
 
     private final MutableLiveData<Ride> ride = new MutableLiveData<>();
     private ListenerRegistration rideListener;
@@ -55,8 +62,10 @@ public class RideViewModel extends ViewModel {
     private boolean skipResetOnce = false;
 
     @Inject
-    public RideViewModel(RideService rideService) {
+    public RideViewModel(RideService rideService, SessionManager sessionManager, SupportChatService supportChatService) {
         this.rideService = rideService;
+        this.supportChatService = supportChatService;
+        this.sessionManager = sessionManager;
         ride.setValue(new Ride());
         showRouteTrigger.setValue(Boolean.TRUE);
     }
@@ -509,9 +518,13 @@ public class RideViewModel extends ViewModel {
     public void cancelRide(EmptyCallback callback) {
         Ride _ride = ride.getValue();
         String _rideId = _ride.id;
-        if (_rideId == null) callback.OnError(new NullPointerException("Ride id missing"));
+        if (_rideId == null) {
+            callback.OnError(new NullPointerException("Ride id missing"));
+            return;
+        }
 
-        rideService.setRideStatus(_rideId, RideStatus.CANCELLED, new EmptyCallback() {
+        String explanation = "CANCELLED_BY_USER";
+        rideService.setRideStatus(_rideId, explanation, RideStatus.CANCELLED, new EmptyCallback() {
             @Override
             public void OnSuccess() {
                 _ride.setStatus(RideStatus.CANCELLED);
@@ -519,6 +532,59 @@ public class RideViewModel extends ViewModel {
                 callback.OnSuccess();
             }
 
+            @Override
+            public void OnError(Exception e) {
+                callback.OnError(e);
+            }
+        });
+    }
+
+    public void cancelFirstPendingRideForDriver(String explanation, EmptyCallback callback) {
+        rideService.cancelDriverFirstRide(explanation, sessionManager.getUserEmail(), new EmptyCallback() {
+            @Override
+            public void OnSuccess() {
+                callback.OnSuccess();
+            }
+
+            @Override
+            public void OnError(Exception e) {
+                callback.OnError(e);
+            }
+        });
+    }
+
+    public void getFirstPendingRideForDriver(EmptyCallback callback) {
+        rideService.getDriverRidesToStart(sessionManager.getUserEmail(), new RidesListCallback() {
+            @Override
+            public void onSuccess(List<Ride> _rides) {
+                // sort the rides and get the newest - or not ??
+                if (_rides.isEmpty()) {
+                    callback.OnError(new NullPointerException("No rides for driver currently."));
+                }
+                else {
+                    ride.setValue(_rides.get(0));
+                    callback.OnSuccess();
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                callback.OnError(e);
+            }
+        });
+    }
+
+    public void setPanicStatusForRide(String rideId, String explanation, String messageTextForAdmin, EmptyCallback callback) {
+        rideService.setRideStatus(rideId, explanation, RideStatus.PANIC_TRIGGERED, new EmptyCallback() {
+            @Override
+            public void OnSuccess() {
+                //send notification to admin
+                String messageText = messageTextForAdmin + "#" +rideId;
+                supportChatService.sendMessage(messageText,
+                        callback::OnSuccess,
+                        callback::OnError
+                );
+            }
             @Override
             public void OnError(Exception e) {
                 callback.OnError(e);

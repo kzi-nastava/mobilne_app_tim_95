@@ -2,6 +2,12 @@
     <string name="app_name">GrUber</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="login">Login</string>
+<!--    Forgotten password  -->
+    <string name="forgot_password">Forgot password?</string>
+    <string name="password_reset_mail_sent">Mail with your new password has been sent.</string>
+    <string name="password_reset_error">An error occurred while sending new password, please try again.</string>
+    <string name="password_reset_email_missing">Please fill in email field so that a new password could be sent there.</string>
+<!--    Registration    -->
     <string name="register">Register</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
@@ -59,6 +65,11 @@
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
     <string name="search_driver">Search driver</string>
+    <string name="cancellation_successful">Cancellation successful.</string>
+    <string name="successful_cancellation_message">We have canceled your ride</string>
+    <string name="cancellation_unsuccessful">Cancellation unsuccessful.</string>
+    <string name="cancellation_reason">Reason for cancellation</string>
+    <string name="dismiss">Dismiss</string>
 
     <!--  USER'S RIDES OVERVIEW  -->
     <string name="driver">Driver : </string>
@@ -72,6 +83,7 @@
     <string name="favorite_route_save_failed">Failed to add route to favorites.</string>
     <string name="favorite_route_removed">Route removed from favorites.</string>
     <string name="favorite_route_remove_failed">Failed to remove route.</string>
+    <string name="select_date">Select date</string>
 
     <!--   NAVIGATION  -->
     <string name="home">Home</string>
@@ -98,6 +110,7 @@
     <!--    RIDE BOOKING    -->
     <string name="book_ride">Book ride</string>
     <string name="show_estimate">Show estimate</string>
+    <string name="ride_estimate">Ride estimate</string>
     <string name="start_location">Start location</string>
     <string name="end_location">Destination</string>
     <string name="intermediate_stops">Additional stops</string>
@@ -151,6 +164,15 @@
     <string name="no_pending_rides">No rides to start</string>
     <string name="ride_started">Ride started</string>
     <string name="ride_start_error">Failed to start ride</string>
+
+    <!--  RIDE PANIC STATUS OCCURRED  -->
+    <string name="panic_status_set">Panic situation has occurred.</string>
+    <string name="panic_status_set_successfully">Panic status has been emitted and you will be contacted soon.</string>
+    <string name="panic_status_set_unsuccessfully">Panic status has not been emitted, please handle situation yourself.</string>
+    <string name="panic_status_message_for_admin">Panic status has been raised on ride : </string>
+
+    <!--  RIDE STOPPING  -->
+    <string name="stop_ride">Stop ride</string>
 
     <!--    BLOCKING    -->
     <string name="user_blocked_message">Your account has been blocked. Please contact support.</string>

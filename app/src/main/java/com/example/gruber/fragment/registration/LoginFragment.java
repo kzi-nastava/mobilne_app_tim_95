@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,8 +15,11 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.example.gruber.R;
 import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.callbacks.AuthCallback;
+import com.example.gruber.services.callbacks.EmptyCallback;
 import com.example.gruber.viewModels.LoginViewModel;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.snackbar.BaseTransientBottomBar;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
@@ -30,6 +34,8 @@ public class LoginFragment extends Fragment {
     private TextInputLayout tilEmail;
     private TextInputEditText etPassword;
     private TextInputLayout tilPassword;
+
+    private TextView forgotPassword;
 
     public LoginFragment() {
         super(R.layout.fragment_login);
@@ -46,7 +52,10 @@ public class LoginFragment extends Fragment {
         etEmail = view.findViewById(R.id.etEmail);
         etPassword = view.findViewById(R.id.etPassword);
 
+
         view.findViewById(R.id.login_button).setOnClickListener(v -> onLoginClicked());
+
+        view.findViewById(R.id.forgot_password).setOnClickListener(v -> sendPasswordMail());
 
         return view;
 
@@ -113,5 +122,24 @@ public class LoginFragment extends Fragment {
     private void clearErrors() {
         tilEmail.setError(null);
         tilPassword.setError(null);
+    }
+
+    private void sendPasswordMail() {
+        if (etEmail.getText() == null || etEmail.getText().toString().isEmpty()) {
+            Snackbar.make(requireView(), getResources().getString(R.string.password_reset_email_missing), BaseTransientBottomBar.LENGTH_LONG).show();
+            return;
+        }
+        loginViewModel.setEmail(etEmail.getText().toString());
+        loginViewModel.sendPasswordResetEmail(new EmptyCallback() {
+            @Override
+            public void OnSuccess() {
+                Snackbar.make(requireView(), getResources().getString(R.string.password_reset_mail_sent), BaseTransientBottomBar.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void OnError(Exception e) {
+                Snackbar.make(requireView(), getResources().getString(R.string.password_reset_error), BaseTransientBottomBar.LENGTH_LONG).show();
+            }
+        });
     }
 }
