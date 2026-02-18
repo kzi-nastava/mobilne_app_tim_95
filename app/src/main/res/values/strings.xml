@@ -171,6 +171,9 @@
     <string name="panic_status_set_unsuccessfully">Panic status has not been emitted, please handle situation yourself.</string>
     <string name="panic_status_message_for_admin">Panic status has been raised on ride : </string>
 
+    <!--  RIDE STOPPING  -->
+    <string name="stop_ride">Stop ride</string>
+
     <!--    BLOCKING    -->
     <string name="user_blocked_message">Your account has been blocked. Please contact support.</string>
     <string name="user_blocked_message_with_reason">Your account has been blocked.\nReason: %1$s</string>

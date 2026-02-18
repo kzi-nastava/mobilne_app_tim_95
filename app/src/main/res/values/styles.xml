@@ -23,6 +23,14 @@
         <item name="android:backgroundTint">@color/status_cancelled</item>
 
     </style>
+    <style name="Widget.GrUber.Button.Filled.Yellow"
+        parent="ThemeOverlay.Material3.Button">
+
+        <item name="iconTint">@color/status_pending</item>
+
+        <item name="android:backgroundTint">@color/status_pending</item>
+
+    </style>
     <style name="Widget.GrUber.Button.Outlined.Red"
         parent="Widget.Material3.Button.OutlinedButton">
 

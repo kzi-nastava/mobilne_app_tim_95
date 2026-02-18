@@ -104,7 +104,7 @@ public class RideTrackingFragment extends Fragment {
     private Handler simulationHandler;
     private Runnable simulationRunnable;
     private ValueAnimator currentAnimator;
-    private MaterialButton btnReport, btnCancelRide, btnStartRide, btnPanic;
+    private MaterialButton btnReport, btnCancelRide, btnStartRide, btnPanic, btnStopRide;
 
     private NavController navController;
 
@@ -177,6 +177,7 @@ public class RideTrackingFragment extends Fragment {
         btnCancelRide = view.findViewById(R.id.btn_cancel_ride);
         btnStartRide = view.findViewById(R.id.btn_start_ride);
         btnPanic = view.findViewById(R.id.btn_trigger_panic);
+        btnStopRide = view.findViewById(R.id.btn_stop_ride);
 
         btnReport.setOnClickListener(v -> {
             openReportDialog();
@@ -187,9 +188,11 @@ public class RideTrackingFragment extends Fragment {
         btnStartRide.setOnClickListener(v -> {
             startRide();
         });
-
         btnPanic.setOnClickListener(v -> {
             triggerPanicNotification();
+        });
+        btnStopRide.setOnClickListener(v -> {
+            stopRide();
         });
 
         switch (loginViewModel.getRole().getValue()) {
@@ -198,6 +201,7 @@ public class RideTrackingFragment extends Fragment {
                 btnStartRide.setVisibility(View.VISIBLE);
                 btnCancelRide.setVisibility(View.VISIBLE);
                 btnPanic.setVisibility(View.GONE);
+                btnStopRide.setVisibility(View.GONE);
                 break;
             case USER:
             default:
@@ -205,6 +209,7 @@ public class RideTrackingFragment extends Fragment {
                 btnStartRide.setVisibility(View.GONE);
                 btnCancelRide.setVisibility(View.GONE);
                 btnPanic.setVisibility(View.GONE);
+                btnStopRide.setVisibility(View.GONE);
                 break;
 
         }
@@ -852,10 +857,10 @@ public class RideTrackingFragment extends Fragment {
                         btnStartRide.setVisibility(View.GONE);
                         btnCancelRide.setVisibility(View.GONE);
                         btnPanic.setVisibility(View.VISIBLE);
+                        btnStopRide.setVisibility(View.VISIBLE);
                         DriverTrackingService driverTracking = new DriverTrackingService(driverEmail);
                         driverTracking.updateStatus(DriverTrackingService.DriverStatus.DRIVING);
-//                        NavHostFragment.findNavController(RideTrackingFragment.this)
-//                                .navigate(R.id.rideTrackingFragment);
+
                     } else {
                         Toast.makeText(getContext(), R.string.ride_start_error, Toast.LENGTH_SHORT).show();
                     }
@@ -903,4 +908,9 @@ public class RideTrackingFragment extends Fragment {
 
     }
 
+    private void stopRide() {
+        //imlpement ride stopping
+        //call the VM function
+        //display message
+    }
 }
