@@ -31,6 +31,7 @@ import com.example.gruber.models.LatLng;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.RideStatus;
+import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.DriverTrackingService;
 import com.example.gruber.services.RideService;
 import com.example.gruber.services.callbacks.EmptyCallback;
@@ -107,6 +108,8 @@ public class RideTrackingFragment extends Fragment {
     private MaterialButton btnReport, btnCancelRide, btnStartRide, btnPanic, btnStopRide;
 
     private NavController navController;
+
+    private static final double END_NEAR_THRESHOLD_M = 200.0;
 
     private final Handler ui = new Handler(Looper.getMainLooper());
 
@@ -277,7 +280,7 @@ public class RideTrackingFragment extends Fragment {
                 startDriverTracking(ride);
             }
 
-            if (ride.status == RideStatus.COMPLETED) {
+            if (ride.status == RideStatus.COMPLETED && loginViewModel.getRole().getValue() == UserRole.USER) {
                 openLeaveReviewFragment(ride);
             }
         });
@@ -909,8 +912,84 @@ public class RideTrackingFragment extends Fragment {
     }
 
     private void stopRide() {
-        //imlpement ride stopping
-        //call the VM function
-        //display message
+        if (currentRide == null) {
+            Toast.makeText(getContext(), "Ride not loaded", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (lastDriverPoint == null) {
+            Toast.makeText(getContext(), "Driver position unknown", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (currentRide.getEnd() == null || !currentRide.getEnd().hasLocation()) {
+            Toast.makeText(getContext(), "Ride end location missing", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        GeoPoint end = toGeoPoint(currentRide.getEnd().getLocation());
+        GeoPoint start = toGeoPoint(currentRide.getStart().getLocation());
+        double distToEnd = lastDriverPoint.distanceToAsDouble(end);
+
+        if (driverTrackingService != null) {
+            driverTrackingService.updateLocation(lastDriverPoint);
+        }
+
+        // If close enough complete without changing price
+        if (distToEnd <= END_NEAR_THRESHOLD_M) {
+            rideViewModel.setCompetedStatusForRide(
+                    currentRide.id,
+                    "Ride completed.",
+                    0, // price 0 => don't update price in db
+                    "Ride completed. ",
+                    new EmptyCallback() {
+                        @Override public void OnSuccess() {
+                            ui.post(() -> {
+                                Toast.makeText(getContext(), "Ride completed", Toast.LENGTH_SHORT).show();
+                                // driver back to available
+                                if (driverTrackingService != null) {
+                                    driverTrackingService.updateStatus(DriverTrackingService.DriverStatus.AVAILABLE);
+                                }
+                            });
+                        }
+                        @Override public void OnError(Exception e) {
+                            ui.post(() -> Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show());
+                        }
+                    }
+            );
+            return;
+        }
+
+        // Not near end -> recalc price using current simulated location -> end
+        rideViewModel.recalculatePriceFromGeoPoints(start, lastDriverPoint, result -> {
+            // result is a String in your API, but better is Double; keeping your style:
+            if (result == null) {
+                ui.post(() -> Toast.makeText(getContext(), "Failed to recalculate price", Toast.LENGTH_SHORT).show());
+                rideViewModel.setCompetedStatusForRide(
+                        currentRide.id,
+                        "Ride completed.",
+                        0, // price 0 => don't update price in db
+                        "Ride completed. ",
+                        new EmptyCallback() {
+                            @Override public void OnSuccess() {
+                                ui.post(() -> {
+                                    Toast.makeText(getContext(), "Ride completed", Toast.LENGTH_SHORT).show();
+                                    // driver back to available
+                                    if (driverTrackingService != null) {
+                                        driverTrackingService.updateStatus(DriverTrackingService.DriverStatus.AVAILABLE);
+                                    }
+                                });
+                            }
+                            @Override public void OnError(Exception e) {
+                                ui.post(() -> Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show());
+                            }
+                        }
+                );
+                return;
+            }
+            ui.post(() -> Toast.makeText(getContext(), "Ride stopped early. Price updated.", Toast.LENGTH_SHORT).show());
+            if (driverTrackingService != null) {
+                driverTrackingService.updateStatus(DriverTrackingService.DriverStatus.AVAILABLE);
+            }
+        });
     }
+
 }

@@ -77,6 +77,7 @@ public class RideService {
     private static final String FIRST_NAME = "firstName";
     private static final String USERS = "users";
     private static final String ROLE = "role";
+    private static final String PRICE = "price";
     private static final String STARTED_AT = "startedAt";
     private static final String RTDB_URL = "https://gruber-c7d3a-default-rtdb.europe-west1.firebasedatabase.app";
     private static final String DRIVERS_PATH = "drivers";
@@ -103,6 +104,24 @@ public class RideService {
                 callback.onSuccess(new Route(road, polyline));
             }
         });
+
+    }
+
+    public void getRouteGeo(GeoPoint start, GeoPoint end, RouteCallback callback){
+        ArrayList<GeoPoint> waypoints = new ArrayList<GeoPoint>();
+        waypoints.add(start);
+        waypoints.add(end);
+        try {
+            executor.execute(() -> {
+                Road road = roadManager.getRoad(waypoints);
+                if (road != null) {
+                    Polyline polyline = OSRMRoadManager.buildRoadOverlay(road);
+                    callback.onSuccess(new Route(road, polyline));
+                }
+            });
+        } catch (Exception e){
+            return;
+        }
 
     }
 
@@ -194,6 +213,35 @@ public class RideService {
                 .document(rideID)
                 .update(updates)
                 .addOnSuccessListener(response -> {
+                    callback.OnSuccess();
+                })
+                .addOnFailureListener(callback::OnError)
+        ;
+    }
+
+    public void setRideStatusAndPrice(@NonNull String rideID, String explanation, double price,  @NonNull RideStatus status, EmptyCallback callback) {
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put(STATUS, status.name());
+        updates.put(EXPLANATION, explanation);
+        if(price != 0){
+            updates.put(PRICE, price);
+        }
+
+        firebaseFirestore.collection(RIDES)
+                .document(rideID)
+                .get()
+                .addOnSuccessListener(response -> {
+                    Ride _ride = response.toObject(Ride.class);
+                    firebaseFirestore.collection(RIDES)
+                            .document(rideID)
+                            .update(updates);
+                    if (_ride == null) return;
+                    updateUserActive(_ride.creatorUserEmail, false, success -> {} );
+                    updateUserActive(_ride.driverEmail, false, success -> {});
+                    for (String passengerEmail : _ride.passengerEmails) {
+                        updateUserActive(passengerEmail, false, success -> {});
+                    }
                     callback.OnSuccess();
                 })
                 .addOnFailureListener(callback::OnError)
