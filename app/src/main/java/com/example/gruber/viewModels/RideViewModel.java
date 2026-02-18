@@ -12,6 +12,7 @@ import com.example.gruber.SessionManager;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.Route;
 import com.example.gruber.models.Stop;
+import com.example.gruber.models.VehicleType;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.services.DriverTrackingService;
 import com.example.gruber.services.RideService;
@@ -591,4 +592,70 @@ public class RideViewModel extends ViewModel {
             }
         });
     }
+
+    public void setCompetedStatusForRide(String rideId, String explanation, double price, String messageTextForAdmin, EmptyCallback callback) {
+        rideService.setRideStatusAndPrice(rideId, explanation, price, RideStatus.COMPLETED, new EmptyCallback() {
+            @Override
+            public void OnSuccess() {
+                //send notification to admin
+                String messageText = messageTextForAdmin + "#" +rideId;
+                supportChatService.sendMessage(messageText,
+                        callback::OnSuccess,
+                        callback::OnError
+                );
+            }
+            @Override
+            public void OnError(Exception e) {
+                callback.OnError(e);
+            }
+        });
+    }
+
+    public void recalculatePriceFromGeoPoints(@NonNull GeoPoint from,
+                                              @NonNull GeoPoint to,
+                                              @NonNull Consumer<String> onComplete) {
+
+        Ride bookingRide = ride.getValue();
+        if (bookingRide == null) {
+            onComplete.accept(null);
+            return;
+        }
+
+        String finalVehicleTypeValue = bookingRide.vehicleType;
+
+        rideService.getRouteGeo(from, to, new RouteCallback() {
+            @Override
+            public void onSuccess(Route route) {
+                if (route == null || route.getRoad() == null || route.getRoad().mLength <= 0) {
+                    onComplete.accept(null);
+                    return;
+                }
+
+                rideService.calculateRidePrice(route, finalVehicleTypeValue, price -> {
+                    if (price <= 0) {
+                        onComplete.accept(null);
+                        return;
+                    }
+
+                    setCompetedStatusForRide(
+                            bookingRide.id,
+                            "Ride stopped before end. ",
+                            price,
+                            "Ride stopped before end. ",
+                            new EmptyCallback() {
+                                @Override public void OnSuccess() { onComplete.accept("OK"); }
+                                @Override public void OnError(Exception e) { onComplete.accept(null); }
+                            }
+                    );
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                onComplete.accept(null);
+            }
+        });
+    }
+
+
 }
