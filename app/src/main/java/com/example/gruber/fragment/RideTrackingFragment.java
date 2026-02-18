@@ -288,13 +288,19 @@ public class RideTrackingFragment extends Fragment {
 
             if (!reviewOpened && ride.status == RideStatus.COMPLETED && loginViewModel.getRole().getValue() == UserRole.USER) {
                 reviewOpened = true;
-                Toast.makeText(requireContext(), "Ride completed! Please leave a review.", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(requireContext(), "Ride completed! Please leave a review. The price is " + ride.priceDin, Toast.LENGTH_SHORT).show();
+                Snackbar snackbar = Snackbar.make(requireView(), "Ride has stopped, the price is : " + ride.priceDin, Snackbar.LENGTH_INDEFINITE);
+                snackbar.setAction("DISMISS", v -> snackbar.dismiss());
+                snackbar.show();
                 openLeaveReviewFragment(ride);
             }
 
             if (!navigatedAfterCompletion && ride.status == RideStatus.COMPLETED && loginViewModel.getRole().getValue() == UserRole.DRIVER) {
                 navigatedAfterCompletion = true;
-                Toast.makeText(requireContext(), "Ride completed.", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(requireContext(), "Ride completed.", Toast.LENGTH_SHORT).show();
+                Snackbar snackbar = Snackbar.make(requireView(), "Ride has stopped, the price is : " + ride.priceDin, Snackbar.LENGTH_INDEFINITE);
+                snackbar.setAction("DISMISS", v -> snackbar.dismiss());
+                snackbar.show();
                 NavHostFragment.findNavController(this)
                         .navigate(R.id.action_rideTrackingFragment_to_homeMapFragment);
             }
@@ -1000,9 +1006,9 @@ public class RideTrackingFragment extends Fragment {
                 return;
             }
             ui.post(() -> {
-                Snackbar snackbar = Snackbar.make(requireView(), "Ride has stopped, the price is : " + result, Snackbar.LENGTH_INDEFINITE);
-                snackbar.setAction("DISMISS", v -> snackbar.dismiss());
-                snackbar.show();
+//                Snackbar snackbar = Snackbar.make(getParentFragment().requireView(), "Ride has stopped, the price is : " + result, Snackbar.LENGTH_INDEFINITE);
+//                snackbar.setAction("DISMISS", v -> snackbar.dismiss());
+//                snackbar.show();
 //                Toast.makeText(getContext(), "Ride stopped early. Price updated.", Toast.LENGTH_SHORT).show();
             });
             if (driverTrackingService != null) {
