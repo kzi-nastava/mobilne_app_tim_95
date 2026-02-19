@@ -70,5 +70,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Submit Review"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_close"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Close"/>
     </LinearLayout>
 </ScrollView>

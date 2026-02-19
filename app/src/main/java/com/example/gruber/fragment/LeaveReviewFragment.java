@@ -38,6 +38,8 @@ public class LeaveReviewFragment extends Fragment {
     private EditText etComment;
     private MaterialButton btnSubmit;
 
+    private MaterialButton btnClose;
+
     private RideViewModel rideViewModel;
     private String rideId;
     private Ride currentRide;
@@ -70,6 +72,8 @@ public class LeaveReviewFragment extends Fragment {
         etComment = view.findViewById(R.id.et_comment);
         btnSubmit = view.findViewById(R.id.btn_submit_review);
 
+        btnClose = view.findViewById(R.id.btn_close);
+
         // Configure NumberPickers
         npDriver.setMinValue(1);
         npDriver.setMaxValue(10);
@@ -87,6 +91,7 @@ public class LeaveReviewFragment extends Fragment {
         });
 
         btnSubmit.setOnClickListener(v -> submitReview());
+        btnClose.setOnClickListener(v -> close());
     }
 
     private void submitReview() {
@@ -119,5 +124,13 @@ public class LeaveReviewFragment extends Fragment {
                     }
                 }
         );
+    }
+
+    private void close() {
+        NavHostFragment.findNavController(this)
+                .navigate(R.id.homeMapFragment, null,
+                        new androidx.navigation.NavOptions.Builder()
+                                .setPopUpTo(R.id.homeMapFragment, true)
+                                .build());
     }
 }
