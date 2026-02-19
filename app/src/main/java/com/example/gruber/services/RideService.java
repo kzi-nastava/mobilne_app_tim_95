@@ -915,7 +915,7 @@ public class RideService {
                         processed[0]++;
                         if (!snapshot.isEmpty()) {
                             User user = snapshot.getDocuments().get(0).toObject(User.class);
-                            if (user != null && user.getActiveHoursLast24h() <= 8) {
+                            if (user != null && !user.isBlocked() && user.getActiveHoursLast24h() <= 8) {
                                 result.add(encoded);
                             }
                         }
