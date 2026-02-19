@@ -28,6 +28,7 @@ import com.example.gruber.models.Review;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.RideStatus;
+import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.callbacks.EmptyCallback;
 import com.example.gruber.viewModels.RideViewModel;
 import com.google.android.material.button.MaterialButton;
@@ -108,6 +109,9 @@ public class RideDetailsFragment extends Fragment {
         TextView tvStatus = view.findViewById(R.id.tvStatus);
         MaterialButton btnCancelRide = view.findViewById(R.id.btn_cancel_ride);
 
+        MaterialCardView driverEmailCard = view.findViewById(R.id.driverEmailCard);
+        TextView tvDriverEmail = view.findViewById(R.id.tvDriverEmail);
+
         TextView tvMainPassengerEmail = view.findViewById(R.id.tvMainPassengerEmail);
         LinearLayout otherPassengersContainer = view.findViewById(R.id.otherPassengersContainer);
 
@@ -140,6 +144,11 @@ public class RideDetailsFragment extends Fragment {
         Log.d("REVIEW_SERVICE", "BBBBBBBBBBBBB");
         SessionManager sm = new SessionManager(requireContext());
         String myEmail = sm.getUserEmail();
+
+        if (sm.getUserRole() == UserRole.ADMIN) {
+            tvDriverEmail.setText(rideViewModel.getRideValue().getDriverEmail());
+            driverEmailCard.setVisibility(View.VISIBLE);
+        }
 
         final Review[] latestReview = { null };
         final Ride[] latestRide = { null };
