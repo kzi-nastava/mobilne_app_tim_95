@@ -289,7 +289,11 @@ public class RideHistoryFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         UsersRideAdapter adapter = new UsersRideAdapter(ride -> {
             rideViewModel.setRide(ride);
-            NavHostFragment.findNavController(RideHistoryFragment.this).navigate(R.id.action_usersRidesHistory_to_rideDetailsFragment);
+
+            Bundle args = new Bundle();
+            args.putString("rideId", ride.id);
+            NavHostFragment.findNavController(RideHistoryFragment.this)
+                    .navigate(R.id.action_usersRidesHistory_to_rideDetailsFragment, args);
         });
         adapter.setOnFavoriteClickListener(ride -> {
             if (ride == null || ride.stopList == null || ride.stopList.isEmpty()) {

@@ -10,12 +10,14 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.gruber.SessionManager;
+import com.example.gruber.models.Review;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.Route;
 import com.example.gruber.models.Stop;
 import com.example.gruber.models.VehicleType;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.services.DriverTrackingService;
+import com.example.gruber.services.ReviewService;
 import com.example.gruber.services.RideService;
 import com.example.gruber.services.SupportChatService;
 import com.example.gruber.services.callbacks.EmptyCallback;
@@ -28,6 +30,7 @@ import com.google.firebase.firestore.ListenerRegistration;
 import org.osmdroid.util.GeoPoint;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -41,6 +44,7 @@ public class RideViewModel extends ViewModel {
 
     private final RideService rideService;
 
+    private final ReviewService reviewService = new ReviewService();
     private final SupportChatService supportChatService;
 
     private final SessionManager sessionManager;
@@ -61,10 +65,17 @@ public class RideViewModel extends ViewModel {
     private final MutableLiveData<Boolean> hasPets = new MutableLiveData<>(false);
     private final MutableLiveData<java.util.Date> scheduledTime = new MutableLiveData<>(null); // null means "now"
 
+    private final MutableLiveData<Review> review = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> canLeaveReview = new MutableLiveData<>(false);
+
+    public LiveData<Review> getReview() { return review; }
+    public LiveData<Boolean> getCanLeaveReview() { return canLeaveReview; }
+
     private boolean skipResetOnce = false;
 
     @Inject
     public RideViewModel(RideService rideService, SessionManager sessionManager, SupportChatService supportChatService) {
+        canLeaveReview.setValue(false);
         this.rideService = rideService;
         this.supportChatService = supportChatService;
         this.sessionManager = sessionManager;
@@ -122,6 +133,83 @@ public class RideViewModel extends ViewModel {
         _ride.setEnd(end);
         ride.postValue(_ride);
     }
+
+    public interface SubmitReviewCallback {
+        void onDone(boolean success);
+    }
+
+    public void submitReviewForCurrentRide(int driverRating,
+                                           int vehicleRating,
+                                           @NonNull String comment,
+                                           @NonNull SubmitReviewCallback callback) {
+
+        Ride r = ride.getValue();
+        if (r == null || r.id == null) {
+            callback.onDone(false);
+            return;
+        }
+
+        String userEmail = sessionManager.getUserEmail();
+        if (userEmail == null || r.creatorUserEmail == null || !userEmail.equals(r.creatorUserEmail)) {
+            callback.onDone(false);
+            return;
+        }
+
+        Review newReview = new Review(
+                r.id,
+                r.driverEmail,
+                userEmail,
+                driverRating,
+                vehicleRating,
+                comment
+        );
+
+        reviewService.submitReview(newReview, success -> {
+            if (success) {
+                review.postValue(newReview);
+                recomputeCanLeaveReview(r, newReview); // will become false after submit
+            }
+            callback.onDone(success);
+        });
+    }
+
+    public void loadReviewForRide(@NonNull String rideId) {
+        Log.e("RideVM", "loadReviewForRide START rideId=" + rideId);
+
+        review.setValue(null);
+
+        reviewService.getReviewForRide(rideId, loadedReview -> {
+            Log.e("RideVM", "loadReviewForRide CALLBACK review=" + (loadedReview == null ? "null" : "OK"));
+            review.setValue(loadedReview);
+            recomputeCanLeaveReview(ride.getValue(), loadedReview);
+        });
+    }
+
+    private void recomputeCanLeaveReview(@Nullable Ride rideVal,
+                                         @Nullable Review existingReview) {
+
+        boolean allowed = false;
+
+        if (rideVal != null
+                && rideVal.status == RideStatus.COMPLETED
+                && existingReview == null) {
+
+            String me = sessionManager.getUserEmail();
+            String creator = rideVal.creatorUserEmail;
+
+            if (me != null && creator != null && me.equals(creator)) {
+                LocalDateTime finished = rideVal.getFinishedAtLocalDateTime();
+                if (finished != null) {
+                    // inclusive boundary is nicer (exactly 3 days still allowed)
+                    allowed = !finished.plusDays(3).isBefore(LocalDateTime.now());
+                }
+            }
+        }
+
+        // IMPORTANT: setValue (not postValue) if you're on main thread
+        canLeaveReview.setValue(allowed);
+    }
+
 
     public void setRideRoute(String start, String end) throws IOException {
         Ride _ride = ride.getValue();
@@ -208,7 +296,6 @@ public class RideViewModel extends ViewModel {
     }
 
     public void loadRideById(@NonNull String rideId) {
-        // Remove old listener if any
         if (rideListener != null) {
             rideListener.remove();
             rideListener = null;
@@ -218,7 +305,12 @@ public class RideViewModel extends ViewModel {
             @Override
             public void onSuccess(Ride loadedRide) {
                 if (loadedRide == null) return;
-                ride.postValue(loadedRide);
+
+                // IMPORTANT: setValue (not postValue)
+                ride.setValue(loadedRide);
+
+                // this will now run after ride value is actually updated
+                recomputeCanLeaveReview(loadedRide, review.getValue());
             }
 
             @Override

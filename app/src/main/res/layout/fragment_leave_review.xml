@@ -70,5 +70,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Submit Review"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_close"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/cardview_dark_background"
+            android:textColor="@color/white"
+            android:text="Close"/>
     </LinearLayout>
 </ScrollView>
