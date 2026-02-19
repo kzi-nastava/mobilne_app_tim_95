@@ -1,7 +1,6 @@
 package com.example.gruber.fragment;
 
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.NumberPicker;
@@ -11,7 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 import androidx.navigation.fragment.NavHostFragment;
 
@@ -19,12 +17,8 @@ import com.example.gruber.R;
 import com.example.gruber.SessionManager;
 import com.example.gruber.models.Review;
 import com.example.gruber.models.Ride;
-import com.example.gruber.services.ReviewService;
 import com.example.gruber.viewModels.RideViewModel;
 import com.google.android.material.button.MaterialButton;
-import com.google.firebase.auth.FirebaseAuth;
-
-import javax.inject.Inject;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -32,6 +26,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class LeaveReviewFragment extends Fragment {
 
     public static final String ARG_RIDE_ID = "rideId";
+    public static final String ARG_RETURN_TO_DETAILS = "returnToDetails";
 
     private NumberPicker npDriver;
     private NumberPicker npVehicle;
@@ -39,6 +34,9 @@ public class LeaveReviewFragment extends Fragment {
     private MaterialButton btnSubmit;
 
     private MaterialButton btnClose;
+
+    private boolean returnToDetails;
+
 
     private RideViewModel rideViewModel;
     private String rideId;
@@ -52,11 +50,14 @@ public class LeaveReviewFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Bundle args = getArguments();
         rideId = getArguments() != null
                 ? getArguments().getString(ARG_RIDE_ID)
                 : null;
 
-        rideViewModel = new ViewModelProvider(this).get(RideViewModel.class);
+        returnToDetails = args != null && args.getBoolean(ARG_RETURN_TO_DETAILS, false);
+
+        rideViewModel = new ViewModelProvider(requireActivity()).get(RideViewModel.class);
 
         if (rideId != null) {
             rideViewModel.loadRideById(rideId);
@@ -114,11 +115,7 @@ public class LeaveReviewFragment extends Fragment {
                 success -> {
                     if (success) {
                         Toast.makeText(requireContext(), "Review submitted!", Toast.LENGTH_SHORT).show();
-                        NavHostFragment.findNavController(this)
-                                .navigate(R.id.homeMapFragment, null,
-                                        new androidx.navigation.NavOptions.Builder()
-                                                .setPopUpTo(R.id.homeMapFragment, true)
-                                                .build());
+                        goBackAfterReview();
                     } else {
                         Toast.makeText(requireContext(), "Can't submit review (not allowed / error).", Toast.LENGTH_SHORT).show();
                     }
@@ -127,10 +124,25 @@ public class LeaveReviewFragment extends Fragment {
     }
 
     private void close() {
-        NavHostFragment.findNavController(this)
-                .navigate(R.id.homeMapFragment, null,
-                        new androidx.navigation.NavOptions.Builder()
-                                .setPopUpTo(R.id.homeMapFragment, true)
-                                .build());
+        goBackAfterReview();
+    }
+
+    private void goBackAfterReview() {
+        if (returnToDetails && rideId != null) {
+            Bundle b = new Bundle();
+            b.putString("rideId", rideId);
+
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.rideDetailsFragment, b,
+                            new NavOptions.Builder()
+                                    .setPopUpTo(R.id.rideDetailsFragment, true) // remove LeaveReview from back stack
+                                    .build());
+        } else {
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.homeMapFragment, null,
+                            new NavOptions.Builder()
+                                    .setPopUpTo(R.id.homeMapFragment, true)
+                                    .build());
+        }
     }
 }

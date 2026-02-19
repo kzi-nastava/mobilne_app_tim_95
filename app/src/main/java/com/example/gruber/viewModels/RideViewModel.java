@@ -174,10 +174,13 @@ public class RideViewModel extends ViewModel {
     }
 
     public void loadReviewForRide(@NonNull String rideId) {
-        review.postValue(null);
+        Log.e("RideVM", "loadReviewForRide START rideId=" + rideId);
+
+        review.setValue(null);
 
         reviewService.getReviewForRide(rideId, loadedReview -> {
-            review.postValue(loadedReview);
+            Log.e("RideVM", "loadReviewForRide CALLBACK review=" + (loadedReview == null ? "null" : "OK"));
+            review.setValue(loadedReview);
             recomputeCanLeaveReview(ride.getValue(), loadedReview);
         });
     }
@@ -197,13 +200,16 @@ public class RideViewModel extends ViewModel {
             if (me != null && creator != null && me.equals(creator)) {
                 LocalDateTime finished = rideVal.getFinishedAtLocalDateTime();
                 if (finished != null) {
-                    allowed = finished.plusDays(3).isAfter(LocalDateTime.now());
+                    // inclusive boundary is nicer (exactly 3 days still allowed)
+                    allowed = !finished.plusDays(3).isBefore(LocalDateTime.now());
                 }
             }
         }
 
-        canLeaveReview.postValue(allowed);
+        // IMPORTANT: setValue (not postValue) if you're on main thread
+        canLeaveReview.setValue(allowed);
     }
+
 
     public void setRideRoute(String start, String end) throws IOException {
         Ride _ride = ride.getValue();
@@ -290,7 +296,6 @@ public class RideViewModel extends ViewModel {
     }
 
     public void loadRideById(@NonNull String rideId) {
-        // Remove old listener if any
         if (rideListener != null) {
             rideListener.remove();
             rideListener = null;
@@ -300,7 +305,11 @@ public class RideViewModel extends ViewModel {
             @Override
             public void onSuccess(Ride loadedRide) {
                 if (loadedRide == null) return;
-                ride.postValue(loadedRide);
+
+                // IMPORTANT: setValue (not postValue)
+                ride.setValue(loadedRide);
+
+                // this will now run after ride value is actually updated
                 recomputeCanLeaveReview(loadedRide, review.getValue());
             }
 

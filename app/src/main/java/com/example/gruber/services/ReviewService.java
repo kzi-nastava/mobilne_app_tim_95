@@ -53,12 +53,20 @@ public class ReviewService {
                 .document(rideId)
                 .get()
                 .addOnSuccessListener(doc -> {
+                    Log.d("REVIEW_SERVICE", "doc exists=" + (doc != null && doc.exists())
+                            + " id=" + rideId);
+
                     if (doc != null && doc.exists()) {
-                        cb.onResult(doc.toObject(Review.class));
+                        Review r = doc.toObject(Review.class);
+                        Log.d("REVIEW_SERVICE", "toObject result=" + (r == null ? "null" : "OK"));
+                        cb.onResult(r);
                     } else {
                         cb.onResult(null);
                     }
                 })
-                .addOnFailureListener(e -> cb.onResult(null));
+                .addOnFailureListener(e -> {
+                    Log.e("REVIEW_SERVICE", "FAILED reading review for rideId=" + rideId, e);
+                    cb.onResult(null);
+                });
     }
 }
