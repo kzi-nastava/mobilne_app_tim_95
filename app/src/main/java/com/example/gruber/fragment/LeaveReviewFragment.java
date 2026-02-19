@@ -38,9 +38,6 @@ public class LeaveReviewFragment extends Fragment {
     private EditText etComment;
     private MaterialButton btnSubmit;
 
-    @Inject
-    ReviewService reviewService;
-
     private RideViewModel rideViewModel;
     private String rideId;
     private Ride currentRide;
@@ -105,16 +102,22 @@ public class LeaveReviewFragment extends Fragment {
 
         Review review = new Review(rideId, driverEmail, userEmail, driverRating, vehicleRating, comment);
 
-        reviewService.submitReview(review, success -> {
-            if (success) {
-                Toast.makeText(requireContext(), "Review submitted!", Toast.LENGTH_SHORT).show();
-                NavController navController = NavHostFragment.findNavController(this);
-                navController.navigate(R.id.homeMapFragment, null, new NavOptions.Builder()
-                        .setPopUpTo(R.id.leaveReviewFragment, true) // removes LeaveReviewFragment from back stack
-                        .build());
-            } else {
-                Toast.makeText(requireContext(), "Error submitting review!", Toast.LENGTH_SHORT).show();
-            }
-        });
+        rideViewModel.submitReviewForCurrentRide(
+                npDriver.getValue(),
+                npVehicle.getValue(),
+                comment,
+                success -> {
+                    if (success) {
+                        Toast.makeText(requireContext(), "Review submitted!", Toast.LENGTH_SHORT).show();
+                        NavHostFragment.findNavController(this)
+                                .navigate(R.id.homeMapFragment, null,
+                                        new androidx.navigation.NavOptions.Builder()
+                                                .setPopUpTo(R.id.homeMapFragment, true)
+                                                .build());
+                    } else {
+                        Toast.makeText(requireContext(), "Can't submit review (not allowed / error).", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
     }
 }
