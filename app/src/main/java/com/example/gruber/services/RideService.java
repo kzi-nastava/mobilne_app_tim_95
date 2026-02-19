@@ -68,7 +68,6 @@ public class RideService {
     private final FirebaseFirestore firebaseFirestore;
     private final DatabaseReference driversRef;
     private final Executor executor = Executors.newSingleThreadExecutor();
-    private static final String NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
     private static final String PHOTON_URL = "https://photon.komoot.io/api/";
     private static final String TYPE = "type";
     private static final String VEHICLE_TYPE = "vehicleType";
