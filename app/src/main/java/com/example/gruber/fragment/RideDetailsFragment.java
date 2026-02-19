@@ -125,6 +125,11 @@ public class RideDetailsFragment extends Fragment {
         TextView tvReviewComment = view.findViewById(R.id.tvReviewComment);
         MaterialButton btnLeaveReview = view.findViewById(R.id.btnLeaveReview);
         TextView tvReviewHint = view.findViewById(R.id.tvReviewHint);
+        cardReview.setVisibility(View.GONE);
+        tvReviewRatings.setText("Loading review...");
+        tvReviewComment.setVisibility(View.GONE);
+        btnLeaveReview.setVisibility(View.GONE);
+        tvReviewHint.setVisibility(View.GONE);
 
         if (expectedRideId != null) {
             rideViewModel.loadRideById(expectedRideId);

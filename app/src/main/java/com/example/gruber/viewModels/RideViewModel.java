@@ -174,6 +174,8 @@ public class RideViewModel extends ViewModel {
     }
 
     public void loadReviewForRide(@NonNull String rideId) {
+        review.postValue(null);
+
         reviewService.getReviewForRide(rideId, loadedReview -> {
             review.postValue(loadedReview);
             recomputeCanLeaveReview(ride.getValue(), loadedReview);

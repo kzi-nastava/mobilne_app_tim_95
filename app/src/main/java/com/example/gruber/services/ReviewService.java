@@ -48,20 +48,17 @@ public class ReviewService {
                 });
     }
 
-    public void getReviewForRide(@NonNull String rideId, @NonNull ReviewCallback callback) {
+    public void getReviewForRide(@NonNull String rideId, @NonNull ReviewCallback cb) {
         db.collection("reviews")
-                .document(rideId) // one review per ride
+                .document(rideId)
                 .get()
                 .addOnSuccessListener(doc -> {
                     if (doc != null && doc.exists()) {
-                        callback.onResult(doc.toObject(Review.class));
+                        cb.onResult(doc.toObject(Review.class));
                     } else {
-                        callback.onResult(null);
+                        cb.onResult(null);
                     }
                 })
-                .addOnFailureListener(e -> {
-                    Log.e("REVIEW_SERVICE", "Failed to load review", e);
-                    callback.onResult(null);
-                });
+                .addOnFailureListener(e -> cb.onResult(null));
     }
 }
