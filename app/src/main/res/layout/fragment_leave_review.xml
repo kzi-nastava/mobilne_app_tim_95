@@ -75,7 +75,8 @@
             android:id="@+id/btn_close"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/color_secondary"
+            android:backgroundTint="@color/cardview_dark_background"
+            android:textColor="@color/white"
             android:text="Close"/>
     </LinearLayout>
 </ScrollView>
