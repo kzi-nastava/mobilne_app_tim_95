@@ -1294,10 +1294,5 @@ public class RideService {
     }
 
 
-    //
-    private double getSimulatedDistance(User driver) {
-        return 10.0;
-    }
-
 
 }
