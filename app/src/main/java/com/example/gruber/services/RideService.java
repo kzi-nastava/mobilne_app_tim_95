@@ -1293,6 +1293,4 @@ public class RideService {
                 .addOnFailureListener(e -> callback.accept(false));
     }
 
-
-
 }
