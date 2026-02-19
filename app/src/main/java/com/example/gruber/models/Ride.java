@@ -30,11 +30,14 @@ public class Ride {
     public int priceDin;
     public String cancelledBy; // posto za cancel voznje treba i razlog zasto ovo bolje bih izbacio i dodao
                                // novu kolekciju : class Cancelations { String canceledBy; String rideUid;
-                               // String explanation; }
+    public String explanation;
+
     // Dodatne opcije za ulogovane korisnike
     public String vehicleType; // Type name as String (e.g. "Standard", "Van")
     public boolean hasBabies;
     public boolean hasPets;
+    public double mLength;
+    public double mDuration;
     public Timestamp scheduledFor; // Zakazano vreme vožnje (null = odmah)
 
     // REDUNDANT ?? - da li ovo ispod moze da se brise ??
@@ -346,5 +349,13 @@ public class Ride {
 
     public void setStatus(RideStatus status) {
         this.status = status;
+    }
+
+    public void setExplanation(String explanation) {
+        this.explanation = explanation;
+    }
+
+    public String getExplanation() {
+        return explanation;
     }
 }

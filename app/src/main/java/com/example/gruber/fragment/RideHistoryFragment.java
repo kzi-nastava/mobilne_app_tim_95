@@ -1,12 +1,18 @@
 package com.example.gruber.fragment;
 
 import android.content.Context;
-import android.graphics.PorterDuff;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
@@ -15,29 +21,25 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
-import android.widget.Toast;
-
 import com.example.gruber.R;
-import com.example.gruber.adapter.RideAdapter;
+import com.example.gruber.SessionManager;
 import com.example.gruber.adapter.UsersRideAdapter;
-import com.example.gruber.models.Ride;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.models.enums.SortCategory;
-import com.example.gruber.SessionManager;
 import com.example.gruber.viewModels.RideViewModel;
 import com.example.gruber.viewModels.SearchViewModel;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.checkbox.MaterialCheckBox;
+import com.google.android.material.datepicker.CalendarConstraints;
+import com.google.android.material.datepicker.DateValidatorPointBackward;
+import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textview.MaterialTextView;
+import com.google.firebase.Timestamp;
 
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -52,8 +54,14 @@ public class RideHistoryFragment extends Fragment {
     protected MaterialButton statusBtn, sortBtn, sortOrderBtn, applyBtn;
     protected LinearLayout dropDownStatusContainer, dropDownSortContainer;
 
+    protected TextView tvDateStart, tvDateEnd;
+
+    protected MaterialDatePicker<Long> dpStart, dpEnd;
+    protected Timestamp timestampStart, timestampEnd;
+
     protected SortCategory sortCategory = SortCategory.DATE;
     protected boolean isAscending = true;
+
     protected SessionManager sessionManager;
 
     protected SensorManager sensorManager;
@@ -63,6 +71,7 @@ public class RideHistoryFragment extends Fragment {
     protected static final int SHAKE_SLOP_TIME_MS = 500;
     protected long lastShakeTime = 0;
 
+    protected final String displayDatePattern = "dd.MM.yyyy";
 
     public RideHistoryFragment() {
         // Required empty public constructor
@@ -87,6 +96,37 @@ public class RideHistoryFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_ride_history, container, false);
+
+        // Only past dates are selectable
+        CalendarConstraints calendarConstraints = new CalendarConstraints.Builder()
+                .setValidator(DateValidatorPointBackward.now())
+                .build();
+
+        tvDateStart = view.findViewById(R.id.tvFromDate);
+        dpStart = MaterialDatePicker.Builder
+                .datePicker()
+                .setTitleText(getResources().getString(R.string.select_date))
+                .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                .setCalendarConstraints(calendarConstraints)
+                .setInputMode(MaterialDatePicker.INPUT_MODE_CALENDAR)
+                .build();
+        tvDateStart.setOnClickListener(v-> dpStart.show(getParentFragmentManager(), "DATE_PICKER"));
+
+        tvDateEnd = view.findViewById(R.id.tvToDate);
+        dpEnd = MaterialDatePicker.Builder
+                .datePicker()
+                .setTitleText(getResources().getString(R.string.select_date))
+                .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                .setCalendarConstraints(calendarConstraints)
+                .setInputMode(MaterialDatePicker.INPUT_MODE_CALENDAR)
+                .build();
+        tvDateEnd.setOnClickListener(v -> dpEnd.show(getParentFragmentManager(), "DATE_PICKER"));
+
+        dpStart.addOnPositiveButtonClickListener(this::setDateSelectionStart);
+        dpStart.addOnCancelListener(v -> clearDateSelectionStart());
+
+        dpEnd.addOnPositiveButtonClickListener(this::setDateSelectionEnd);
+        dpEnd.addOnCancelListener(v -> clearDateSelectionEnd());
 
         statusBtn = view.findViewById(R.id.btn_status);
         statusBtn.setOnClickListener(v -> setUpStatusDropDownMenu());
@@ -245,11 +285,15 @@ public class RideHistoryFragment extends Fragment {
         });
     }
 
-    private void setUpRidesAdapter(RecyclerView recyclerView) {
+    protected void setUpRidesAdapter(RecyclerView recyclerView) {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         UsersRideAdapter adapter = new UsersRideAdapter(ride -> {
             rideViewModel.setRide(ride);
-            NavHostFragment.findNavController(RideHistoryFragment.this).navigate(R.id.action_usersRidesHistory_to_rideDetailsFragment);
+
+            Bundle args = new Bundle();
+            args.putString("rideId", ride.id);
+            NavHostFragment.findNavController(RideHistoryFragment.this)
+                    .navigate(R.id.action_usersRidesHistory_to_rideDetailsFragment, args);
         });
         adapter.setOnFavoriteClickListener(ride -> {
             if (ride == null || ride.stopList == null || ride.stopList.isEmpty()) {
@@ -285,11 +329,10 @@ public class RideHistoryFragment extends Fragment {
 
         //getInterval for search
         //fix the input date mechanism
-        LocalDateTime from = LocalDateTime.now().minusMonths(2);
-        LocalDateTime to = LocalDateTime.now();
+
         //getSort type
         //call VM function
-        searchViewModel.sortRidesForUser(sortCategory, isAscending, statuses, from, to);
+        searchViewModel.sortRidesForUser(sortCategory, isAscending, statuses, timestampStart, timestampEnd);
     }
 
     private final SensorEventListener shakeListener = new SensorEventListener() {
@@ -329,6 +372,37 @@ public class RideHistoryFragment extends Fragment {
         isAscending = !isAscending;
         sortOrderBtn.setRotation(isAscending ? 0f : 180f);
         searchViewModel.sortExistingRides(isAscending);
+    }
+
+    private void setDateSelectionStart(Long selection) {
+        //set long value to searchViewModel
+        timestampStart = new Timestamp(new Date(selection));
+
+        tvDateStart.setText(formatTimestamp(timestampStart));
+    }
+    private void clearDateSelectionStart() {
+        timestampStart = null;
+        tvDateStart.setText("");
+    }
+    private void setDateSelectionEnd(Long selection) {
+        timestampEnd = new Timestamp(new Date(selection));
+
+        tvDateEnd.setText(formatTimestamp(timestampEnd));
+    }
+    private void clearDateSelectionEnd() {
+        timestampEnd = null;
+        tvDateEnd.setText("");
+    }
+
+    private String formatTimestamp(Timestamp timestamp) {
+        if (timestamp == null) return "";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(displayDatePattern);
+
+        return timestamp
+                .toDate()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .format(formatter);
     }
 
 }

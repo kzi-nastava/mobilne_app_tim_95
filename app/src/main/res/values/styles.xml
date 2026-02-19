@@ -15,6 +15,22 @@
         <item name="android:minWidth">64dp</item>
         <item name="android:layout_marginHorizontal">50dp</item>
     </style>
+    <style name="Widget.GrUber.Button.Filled.Red"
+        parent="ThemeOverlay.Material3.Button">
+
+        <item name="iconTint">@color/status_cancelled</item>
+
+        <item name="android:backgroundTint">@color/status_cancelled</item>
+
+    </style>
+    <style name="Widget.GrUber.Button.Filled.Yellow"
+        parent="ThemeOverlay.Material3.Button">
+
+        <item name="iconTint">@color/status_pending</item>
+
+        <item name="android:backgroundTint">@color/status_pending</item>
+
+    </style>
     <style name="Widget.GrUber.Button.Outlined.Red"
         parent="Widget.Material3.Button.OutlinedButton">
 
@@ -44,6 +60,7 @@
         <item name="android:layout_marginTop">10dp</item>
         <item name="android:layout_marginHorizontal">50dp</item>
         <item name="android:textAppearance">@style/TextAppearance.GrUber.BodyMedium</item>
+
     </style>
     <style name="TextAppearance.GrUber.TextView.Title"
         parent="TextAppearance.Material3.TitleLarge">
@@ -69,10 +86,9 @@
     </style>
 
     <style name="Theme.GrUber.FullScreenDialog"
-        parent="Theme.Material3.DayNight.NoActionBar">
+        parent="Theme.GrUber">
 
         <!-- Fullscreen behavior -->
-        <item name="android:windowFullscreen">true</item>
         <item name="android:windowIsFloating">false</item>
         <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>
 

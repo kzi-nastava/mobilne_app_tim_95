@@ -11,6 +11,8 @@ import com.example.gruber.services.callbacks.RideCallback;
 import com.example.gruber.services.callbacks.RideIdCallback;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.example.gruber.models.Route;
@@ -30,7 +32,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firebase.firestore.SetOptions;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.osmdroid.bonuspack.routing.OSRMRoadManager;
@@ -44,10 +46,13 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -69,11 +74,13 @@ public class RideService {
     private static final String VEHICLE_TYPE = "vehicleType";
     private static final String RIDES = "rides";
     private static final String STATUS = "status";
+    private static final String EXPLANATION = "explanation";
     private static final String USER_EMAIL = "creatorUserEmail";
     private static final String DRIVER_EMAIL = "driverEmail";
     private static final String FIRST_NAME = "firstName";
     private static final String USERS = "users";
     private static final String ROLE = "role";
+    private static final String PRICE = "price";
     private static final String STARTED_AT = "startedAt";
     private static final String RTDB_URL = "https://gruber-c7d3a-default-rtdb.europe-west1.firebasedatabase.app";
     private static final String DRIVERS_PATH = "drivers";
@@ -103,6 +110,24 @@ public class RideService {
 
     }
 
+    public void getRouteGeo(GeoPoint start, GeoPoint end, RouteCallback callback){
+        ArrayList<GeoPoint> waypoints = new ArrayList<GeoPoint>();
+        waypoints.add(start);
+        waypoints.add(end);
+        try {
+            executor.execute(() -> {
+                Road road = roadManager.getRoad(waypoints);
+                if (road != null) {
+                    Polyline polyline = OSRMRoadManager.buildRoadOverlay(road);
+                    callback.onSuccess(new Route(road, polyline));
+                }
+            });
+        } catch (Exception e){
+            return;
+        }
+
+    }
+
     public void getRouteWithStops(String start, List<Stop> intermediateStops, String end, RouteCallback callback)
             throws IOException {
         ArrayList<GeoPoint> waypoints = new ArrayList<GeoPoint>();
@@ -121,10 +146,26 @@ public class RideService {
             }
         }
 
-        // Dodaj end point
         GeoPoint endPoint = getGeoPoint(end);
         waypoints.add(endPoint);
 
+        executor.execute(() -> {
+            Road road = roadManager.getRoad(waypoints);
+            if (road != null && road.mLength > 0) {
+                Polyline polyline = OSRMRoadManager.buildRoadOverlay(road);
+                callback.onSuccess(new Route(road, polyline));
+            } else {
+                callback.onError(new Exception("Route calculation failed or returned zero distance"));
+            }
+        });
+    }
+
+    public void getRouteWithStops(List<Stop> stops, RouteCallback callback) {
+        ArrayList<GeoPoint> waypoints = new ArrayList<>();
+        for (Stop stop : stops) {
+            GeoPoint point = new GeoPoint(stop.location.lat, stop.location.lon);
+            waypoints.add(point);
+        }
         executor.execute(() -> {
             Road road = roadManager.getRoad(waypoints);
             if (road != null && road.mLength > 0) {
@@ -181,17 +222,176 @@ public class RideService {
         });
     }
 
-    public void setRideStatus(@NonNull String rideID, @NonNull RideStatus status, EmptyCallback callback) {
+    public void setRideStatus(@NonNull String rideID, String explanation,  @NonNull RideStatus status, EmptyCallback callback) {
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put(STATUS, status.name());
+        updates.put(EXPLANATION, explanation);
+        if(status == RideStatus.PANIC_TRIGGERED){
+            updates.put("finishedAt", Timestamp.now());
+        }
+        else if (status == RideStatus.CANCELLED){
+            updates.put("startedAt", Timestamp.now());
+        }
 
         firebaseFirestore.collection(RIDES)
                 .document(rideID)
-                .update(STATUS, status.name())
+                .update(updates)
                 .addOnSuccessListener(response -> {
                     callback.OnSuccess();
                 })
                 .addOnFailureListener(callback::OnError)
         ;
     }
+
+    public void setRideStatusAndPrice(@NonNull String rideID, String explanation, double price,  @NonNull RideStatus status, EmptyCallback callback) {
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put(STATUS, status.name());
+        updates.put(EXPLANATION, explanation);
+        if (price != 0) {
+            updates.put("priceDin", price);
+        }
+        updates.put("finishedAt", Timestamp.now());
+
+        firebaseFirestore.collection(RIDES)
+                .document(rideID)
+                .get()
+                .addOnSuccessListener(response -> {
+                    Ride _ride = response.toObject(Ride.class);
+                    firebaseFirestore.collection(RIDES)
+                            .document(rideID)
+                            .update(updates);
+                    if (_ride == null) return;
+                    updateUserActive(_ride.creatorUserEmail, false, success -> {
+                    });
+                    updateUserActive(_ride.driverEmail, false, success -> {
+                    });
+                    for (String passengerEmail : _ride.passengerEmails) {
+                        updateUserActive(passengerEmail, false, success -> {
+                        });
+                    }
+                    callback.OnSuccess();
+                })
+                .addOnFailureListener(callback::OnError)
+        ;
+    }
+
+    public void triggerPanicForRide(String rideID, String explanation, EmptyCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .document(rideID)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    Ride _ride = snapshot.toObject(Ride.class);
+                    if (_ride == null) return;
+                    setRideStatus(snapshot.getId(), explanation, RideStatus.PANIC_TRIGGERED, callback);
+                    updateUserActive(_ride.driverEmail, false, success -> {});
+                    updateUserActive(_ride.creatorUserEmail, false, success -> {});
+                    for (String passengerEmail : _ride.passengerEmails) {
+                        updateUserActive(passengerEmail, false, success -> {});
+                    }
+                    DriverTrackingService driverTracking = new DriverTrackingService(_ride.driverEmail);
+                    driverTracking.updateStatus(DriverTrackingService.DriverStatus.AVAILABLE);
+                }
+                )
+                .addOnFailureListener(callback::OnError);
+
+    }
+
+    public void cancelDriverFirstRide(String explanation, String driverEmail, EmptyCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereEqualTo(DRIVER_EMAIL, driverEmail)
+                .whereEqualTo(STATUS, RideStatus.PENDING.name())
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                        Ride _ride = doc.toObject(Ride.class);
+                        if (_ride == null || _ride.status != RideStatus.PENDING) continue;
+                        _ride.setExplanation(explanation);
+                        setRideStatus(doc.getId(), explanation, RideStatus.CANCELLED, callback);
+                        updateUserActive(_ride.creatorUserEmail, false, success -> {} );
+                        updateUserActive(_ride.driverEmail, false, success -> {});
+                        for (String passengerEmail : _ride.passengerEmails) {
+                            updateUserActive(passengerEmail, false, success -> {});
+                        }
+                        return;
+                    }
+
+                    callback.OnError(new NullPointerException("No pending rides."));
+                })
+                .addOnFailureListener(callback::OnError);
+
+        DriverTrackingService driverTracking = new DriverTrackingService(driverEmail);
+        driverTracking.updateStatus(DriverTrackingService.DriverStatus.AVAILABLE);
+
+    }
+
+    public void reverseGeocode(@NonNull GeoPoint p, Context context, @NonNull Consumer<String> cb) {
+        executor.execute(() -> {
+            try {
+                Geocoder geocoder = new Geocoder(context, Locale.getDefault());
+                List<Address> res = geocoder.getFromLocation(p.getLatitude(), p.getLongitude(), 1);
+                String addr = null;
+                if (res != null && !res.isEmpty()) {
+                    Address a = res.get(0);
+                    // you can format as you like
+                    addr = a.getAddressLine(0);
+                }
+                cb.accept(addr);
+            } catch (Exception e) {
+                cb.accept(null);
+            }
+        });
+    }
+
+    public void updateRideEndStop(@NonNull String rideId,
+                                  @NonNull GeoPoint newEnd,
+                                  @Nullable String newAddress,
+                                  @NonNull EmptyCallback cb) {
+
+        Map<String, Object> updates = new HashMap<>();
+
+        // If you have "end" as a separate field
+        updates.put("end.location.lat", newEnd.getLatitude());
+        updates.put("end.location.lon", newEnd.getLongitude());
+        if (newAddress != null) updates.put("end.address", newAddress);
+
+        firebaseFirestore.collection("rides").document(rideId)
+                .get()
+                .addOnSuccessListener(doc -> {
+                    if (!doc.exists()) { cb.OnError(new Exception("Ride not found")); return; }
+
+                    // assuming stopList stored as array of maps or POJOs
+                    List<Map<String, Object>> stopList = (List<Map<String, Object>>) doc.get("stopList");
+                    if (stopList != null && stopList.size() >= 1) {
+                        int last = stopList.size() - 1;
+
+                        Map<String, Object> endStop = stopList.get(last);
+                        if (endStop == null) endStop = new HashMap<>();
+
+                        endStop.put("address", newAddress != null ? newAddress : endStop.get("address"));
+
+                        Map<String, Object> loc = (Map<String, Object>) endStop.get("location");
+                        if (loc == null) loc = new HashMap<>();
+                        loc.put("lat", newEnd.getLatitude());
+                        loc.put("lon", newEnd.getLongitude());
+                        endStop.put("location", loc);
+
+                        stopList.set(last, endStop);
+
+                        updates.put("stopList", stopList);
+                    }
+
+                    firebaseFirestore.collection("rides").document(rideId)
+                            .update(updates)
+                            .addOnSuccessListener(v -> cb.OnSuccess())
+                            .addOnFailureListener(cb::OnError);
+
+                })
+                .addOnFailureListener(cb::OnError);
+    }
+
+
 
     public void addRide(Ride ride, PriceCallback callback) {
         if (ride.scheduledFor != null) {
@@ -240,7 +440,24 @@ public class RideService {
 
                     if (geocodedCount[0] == totalStops) {
                         ride.stopList = geocodedStops;
-                        saveRideToFirebaseWithId(ride, callback);
+                        getRouteWithStops(geocodedStops, new RouteCallback() {
+                            @Override
+                            public void onSuccess(Route _route) {
+                                ride.mLength = _route.getRoad().mLength;
+                                ride.mDuration = _route.getRoad().mDuration;
+                                saveRideToFirebaseWithId(ride, callback);
+                            }
+
+                            @Override
+                            public void onError(Exception e) {
+
+                            }
+                        });
+
+               //         saveRideToFirebaseWithId(ride, callback);
+//                        // ^ old that works but without route
+//
+//                        // get the route for the ride
                     }
                 });
             }
@@ -299,19 +516,46 @@ public class RideService {
                 .whereGreaterThanOrEqualTo(STARTED_AT, fromInterval)
                 .whereLessThanOrEqualTo(STARTED_AT, toInterval)
                 .whereEqualTo(USER_EMAIL, userEmail)
-                .orderBy(STARTED_AT)
                 .get()
                 .addOnSuccessListener(snapshot -> {
-
                     List<Ride> rides = getRidesWithIDs(snapshot);
-//                    List<Ride> rides = new ArrayList<>();
-//                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
-//                        Ride ride = doc.toObject(Ride.class);
-//                        if (ride != null) {
-//                            ride.id = doc.getId();
-//                            rides.add(ride);
-//                        }
-//                    }
+                    callback.onSuccess(rides);
+                })
+                .addOnFailureListener(callback::onError);
+
+    }
+
+    public void getRidesForUserWithSearch(String userEmail, List<RideStatus> statuses, RidesListCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereIn(STATUS, statuses)
+                .whereEqualTo(USER_EMAIL, userEmail)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Ride> rides = getRidesWithIDs(snapshot);
+                    callback.onSuccess(rides);
+                })
+                .addOnFailureListener(callback::onError);
+    }
+
+    public void getRidesForAdminWithSearch(List<RideStatus> statuses, RidesListCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereIn(STATUS, statuses)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Ride> rides = getRidesWithIDs(snapshot);
+                    callback.onSuccess(rides);
+                })
+                .addOnFailureListener(callback::onError);
+    }
+
+    public void getRidesForAdminWtihSearch(List<RideStatus> statuses, Timestamp fromInterval, Timestamp toInterval, RidesListCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereIn(STATUS, statuses)
+                .whereGreaterThanOrEqualTo(STARTED_AT, fromInterval)
+                .whereLessThanOrEqualTo(STARTED_AT, toInterval)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Ride> rides = getRidesWithIDs(snapshot);
                     callback.onSuccess(rides);
                 })
                 .addOnFailureListener(callback::onError);
@@ -671,7 +915,7 @@ public class RideService {
                         processed[0]++;
                         if (!snapshot.isEmpty()) {
                             User user = snapshot.getDocuments().get(0).toObject(User.class);
-                            if (user != null && user.getActiveHoursLast24h() <= 8) {
+                            if (user != null && !user.isBlocked() && user.getActiveHoursLast24h() <= 8) {
                                 result.add(encoded);
                             }
                         }
@@ -838,6 +1082,40 @@ public class RideService {
                 .addOnFailureListener(e -> callback.accept(Collections.emptyList()));
     }
 
+    public void getDriverRidesToStart(String driverEmail, RidesListCallback callback) {
+        firebaseFirestore.collection(RIDES)
+                .whereEqualTo("driverEmail", driverEmail)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Ride> allRides = new ArrayList<>();
+                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                        Ride ride = doc.toObject(Ride.class);
+                        if (ride != null) {
+                            ride.id = doc.getId();
+                            allRides.add(ride);
+                        }
+                    }
+
+                    List<Ride> ridesToStart = allRides.stream()
+                            .filter(r -> {
+                                if (r.status == null)
+                                    return false;
+                                if (r.status == RideStatus.PENDING)
+                                    return true;
+                                if (r.status == RideStatus.SCHEDULED && r.scheduledFor == null)
+                                    return true;
+                                if (r.status == RideStatus.SCHEDULED && r.scheduledFor != null) {
+                                    return r.scheduledFor.getSeconds() <= System.currentTimeMillis() / 1000;
+                                }
+                                return false;
+                            })
+                            .collect(Collectors.toList());
+
+                    callback.onSuccess(ridesToStart);
+                })
+                .addOnFailureListener(callback::onError);
+    }
+
     public void startRide(String rideId, Consumer<Boolean> callback) {
         firebaseFirestore.collection(RIDES)
                 .document(rideId)
@@ -851,6 +1129,7 @@ public class RideService {
 
                     Map<String, Object> rideUpdate = new HashMap<>();
                     rideUpdate.put(STATUS, RideStatus.ACTIVE);
+                    rideUpdate.put("startedAt", Timestamp.now());
 
                     firebaseFirestore.collection(RIDES)
                             .document(rideId)
@@ -858,6 +1137,7 @@ public class RideService {
                             .addOnSuccessListener(v1 -> {
                                 // Update driver status to DRIVING in realtime database
                                 DriverTrackingService driverTracking = new DriverTrackingService(ride.driverEmail);
+                                updateDriverLocationToRideStart(ride, driverTracking);
                                 driverTracking.updateStatus(DriverTrackingService.DriverStatus.DRIVING);
 
                                 updateUserActive(ride.driverEmail, true, success1 -> {
@@ -898,6 +1178,19 @@ public class RideService {
                             .addOnFailureListener(e -> callback.accept(false));
                 })
                 .addOnFailureListener(e -> callback.accept(false));
+    }
+
+    private void updateDriverLocationToRideStart(@NonNull Ride ride,
+            @NonNull DriverTrackingService driverTracking) {
+        Stop start = ride.getStart();
+        if (start != null && start.getLocation() != null) {
+            driverTracking.updateLocation(new GeoPoint(start.getLocation().lat, start.getLocation().lon));
+            return;
+        }
+
+        if (ride.pickupLocation != null) {
+            driverTracking.updateLocation(new GeoPoint(ride.pickupLocation.lat, ride.pickupLocation.lon));
+        }
     }
 
     private void updateUserActive(String userEmail, boolean active, Consumer<Boolean> callback) {

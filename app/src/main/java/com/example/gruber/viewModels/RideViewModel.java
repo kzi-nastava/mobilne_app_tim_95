@@ -1,5 +1,6 @@
 package com.example.gruber.viewModels;
 
+import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -8,21 +9,28 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.gruber.SessionManager;
+import com.example.gruber.models.Review;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.Route;
 import com.example.gruber.models.Stop;
+import com.example.gruber.models.VehicleType;
 import com.example.gruber.models.enums.RideStatus;
+import com.example.gruber.services.DriverTrackingService;
+import com.example.gruber.services.ReviewService;
 import com.example.gruber.services.RideService;
+import com.example.gruber.services.SupportChatService;
 import com.example.gruber.services.callbacks.EmptyCallback;
 import com.example.gruber.services.callbacks.RideCallback;
 import com.example.gruber.services.callbacks.RideIdCallback;
+import com.example.gruber.services.callbacks.RidesListCallback;
 import com.example.gruber.services.callbacks.RouteCallback;
-import com.example.gruber.services.callbacks.PriceCallback;
 import com.google.firebase.firestore.ListenerRegistration;
 
 import org.osmdroid.util.GeoPoint;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -35,6 +43,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel;
 public class RideViewModel extends ViewModel {
 
     private final RideService rideService;
+
+    private final ReviewService reviewService = new ReviewService();
+    private final SupportChatService supportChatService;
+
+    private final SessionManager sessionManager;
 
     private final MutableLiveData<Ride> ride = new MutableLiveData<>();
     private ListenerRegistration rideListener;
@@ -52,11 +65,20 @@ public class RideViewModel extends ViewModel {
     private final MutableLiveData<Boolean> hasPets = new MutableLiveData<>(false);
     private final MutableLiveData<java.util.Date> scheduledTime = new MutableLiveData<>(null); // null means "now"
 
+    private final MutableLiveData<Review> review = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> canLeaveReview = new MutableLiveData<>(false);
+
+    public LiveData<Review> getReview() { return review; }
+    public LiveData<Boolean> getCanLeaveReview() { return canLeaveReview; }
+
     private boolean skipResetOnce = false;
 
     @Inject
-    public RideViewModel(RideService rideService) {
+    public RideViewModel(RideService rideService, SessionManager sessionManager, SupportChatService supportChatService) {
+        canLeaveReview.setValue(false);
         this.rideService = rideService;
+        this.supportChatService = supportChatService;
+        this.sessionManager = sessionManager;
         ride.setValue(new Ride());
         showRouteTrigger.setValue(Boolean.TRUE);
     }
@@ -111,6 +133,83 @@ public class RideViewModel extends ViewModel {
         _ride.setEnd(end);
         ride.postValue(_ride);
     }
+
+    public interface SubmitReviewCallback {
+        void onDone(boolean success);
+    }
+
+    public void submitReviewForCurrentRide(int driverRating,
+                                           int vehicleRating,
+                                           @NonNull String comment,
+                                           @NonNull SubmitReviewCallback callback) {
+
+        Ride r = ride.getValue();
+        if (r == null || r.id == null) {
+            callback.onDone(false);
+            return;
+        }
+
+        String userEmail = sessionManager.getUserEmail();
+        if (userEmail == null || r.creatorUserEmail == null || !userEmail.equals(r.creatorUserEmail)) {
+            callback.onDone(false);
+            return;
+        }
+
+        Review newReview = new Review(
+                r.id,
+                r.driverEmail,
+                userEmail,
+                driverRating,
+                vehicleRating,
+                comment
+        );
+
+        reviewService.submitReview(newReview, success -> {
+            if (success) {
+                review.postValue(newReview);
+                recomputeCanLeaveReview(r, newReview); // will become false after submit
+            }
+            callback.onDone(success);
+        });
+    }
+
+    public void loadReviewForRide(@NonNull String rideId) {
+        Log.e("RideVM", "loadReviewForRide START rideId=" + rideId);
+
+        review.setValue(null);
+
+        reviewService.getReviewForRide(rideId, loadedReview -> {
+            Log.e("RideVM", "loadReviewForRide CALLBACK review=" + (loadedReview == null ? "null" : "OK"));
+            review.setValue(loadedReview);
+            recomputeCanLeaveReview(ride.getValue(), loadedReview);
+        });
+    }
+
+    private void recomputeCanLeaveReview(@Nullable Ride rideVal,
+                                         @Nullable Review existingReview) {
+
+        boolean allowed = false;
+
+        if (rideVal != null
+                && rideVal.status == RideStatus.COMPLETED
+                && existingReview == null) {
+
+            String me = sessionManager.getUserEmail();
+            String creator = rideVal.creatorUserEmail;
+
+            if (me != null && creator != null && me.equals(creator)) {
+                LocalDateTime finished = rideVal.getFinishedAtLocalDateTime();
+                if (finished != null) {
+                    // inclusive boundary is nicer (exactly 3 days still allowed)
+                    allowed = !finished.plusDays(3).isBefore(LocalDateTime.now());
+                }
+            }
+        }
+
+        // IMPORTANT: setValue (not postValue) if you're on main thread
+        canLeaveReview.setValue(allowed);
+    }
+
 
     public void setRideRoute(String start, String end) throws IOException {
         Ride _ride = ride.getValue();
@@ -197,7 +296,6 @@ public class RideViewModel extends ViewModel {
     }
 
     public void loadRideById(@NonNull String rideId) {
-        // Remove old listener if any
         if (rideListener != null) {
             rideListener.remove();
             rideListener = null;
@@ -207,7 +305,12 @@ public class RideViewModel extends ViewModel {
             @Override
             public void onSuccess(Ride loadedRide) {
                 if (loadedRide == null) return;
-                ride.postValue(loadedRide);
+
+                // IMPORTANT: setValue (not postValue)
+                ride.setValue(loadedRide);
+
+                // this will now run after ride value is actually updated
+                recomputeCanLeaveReview(loadedRide, review.getValue());
             }
 
             @Override
@@ -509,9 +612,13 @@ public class RideViewModel extends ViewModel {
     public void cancelRide(EmptyCallback callback) {
         Ride _ride = ride.getValue();
         String _rideId = _ride.id;
-        if (_rideId == null) callback.OnError(new NullPointerException("Ride id missing"));
+        if (_rideId == null) {
+            callback.OnError(new NullPointerException("Ride id missing"));
+            return;
+        }
 
-        rideService.setRideStatus(_rideId, RideStatus.CANCELLED, new EmptyCallback() {
+        String explanation = "CANCELLED_BY_USER";
+        rideService.setRideStatus(_rideId, explanation, RideStatus.CANCELLED, new EmptyCallback() {
             @Override
             public void OnSuccess() {
                 _ride.setStatus(RideStatus.CANCELLED);
@@ -525,4 +632,143 @@ public class RideViewModel extends ViewModel {
             }
         });
     }
+
+    public void cancelFirstPendingRideForDriver(String explanation, EmptyCallback callback) {
+        rideService.cancelDriverFirstRide(explanation, sessionManager.getUserEmail(), new EmptyCallback() {
+            @Override
+            public void OnSuccess() {
+                callback.OnSuccess();
+            }
+
+            @Override
+            public void OnError(Exception e) {
+                callback.OnError(e);
+            }
+        });
+    }
+
+    public void getFirstPendingRideForDriver(EmptyCallback callback) {
+        rideService.getDriverRidesToStart(sessionManager.getUserEmail(), new RidesListCallback() {
+            @Override
+            public void onSuccess(List<Ride> _rides) {
+                // sort the rides and get the newest - or not ??
+                if (_rides.isEmpty()) {
+                    callback.OnError(new NullPointerException("No rides for driver currently."));
+                }
+                else {
+                    ride.setValue(_rides.get(0));
+                    callback.OnSuccess();
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                callback.OnError(e);
+            }
+        });
+    }
+
+    public void setPanicStatusForRide(String rideId, String explanation, String messageTextForAdmin, EmptyCallback callback) {
+        rideService.triggerPanicForRide(rideId, explanation, new EmptyCallback() {
+            @Override
+            public void OnSuccess() {
+                //send notification to admin
+                String messageText = messageTextForAdmin + "#" +rideId;
+                supportChatService.sendMessage(messageText,
+                        callback::OnSuccess,
+                        callback::OnError
+                );
+            }
+            @Override
+            public void OnError(Exception e) {
+                callback.OnError(e);
+            }
+        });
+    }
+
+    public void setCompetedStatusForRide(String rideId, String explanation, double price, String messageTextForAdmin, EmptyCallback callback) {
+        rideService.setRideStatusAndPrice(rideId, explanation, price, RideStatus.COMPLETED, new EmptyCallback() {
+            @Override
+            public void OnSuccess() {
+                //send notification to admin
+                String messageText = messageTextForAdmin + "#" +rideId;
+                supportChatService.sendMessage(messageText,
+                        callback::OnSuccess,
+                        callback::OnError
+                );
+            }
+            @Override
+            public void OnError(Exception e) {
+                callback.OnError(e);
+            }
+        });
+    }
+
+    public void recalculatePriceFromGeoPoints(@NonNull GeoPoint from,
+                                              @NonNull GeoPoint to,
+                                              Context context,
+                                              @NonNull Consumer<String> onComplete) {
+
+        Ride bookingRide = ride.getValue();
+        if (bookingRide == null) {
+            onComplete.accept(null);
+            return;
+        }
+
+        String rideId = bookingRide.id;
+        String vehicleType = bookingRide.vehicleType;
+
+        // reverse geocode of last known address
+        rideService.reverseGeocode(to, context, address -> {
+
+            // update end stop in DB (end and stopList[last])
+            rideService.updateRideEndStop(rideId, to, address, new EmptyCallback() {
+                @Override
+                public void OnSuccess() {
+
+                    // recalculate route and price
+                    rideService.getRouteGeo(from, to, new RouteCallback() {
+                        @Override
+                        public void onSuccess(Route route) {
+                            if (route == null || route.getRoad() == null || route.getRoad().mLength <= 0) {
+                                onComplete.accept(null);
+                                return;
+                            }
+
+                            rideService.calculateRidePrice(route, vehicleType, price -> {
+                                if (price <= 0) {
+                                    onComplete.accept(null);
+                                    return;
+                                }
+
+                                setCompetedStatusForRide(
+                                        rideId,
+                                        "Ride stopped before end.",
+                                        price,
+                                        "Ride stopped before end.",
+                                        new EmptyCallback() {
+                                            @Override public void OnSuccess() { onComplete.accept(price.toString()); }
+                                            @Override public void OnError(Exception e) { onComplete.accept(null); }
+                                        }
+                                );
+                            });
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            onComplete.accept(null);
+                        }
+                    });
+                }
+
+                @Override
+                public void OnError(Exception e) {
+                    onComplete.accept(null);
+                }
+            });
+        });
+    }
+
+
+
 }

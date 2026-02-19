@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,29 +22,32 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
-import com.example.gruber.models.FakeSession;
+import com.example.gruber.SessionManager;
 import com.example.gruber.models.LatLng;
+import com.example.gruber.models.Review;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.RideStatus;
-import com.example.gruber.services.MapService;
+import com.example.gruber.models.enums.UserRole;
 import com.example.gruber.services.callbacks.EmptyCallback;
 import com.example.gruber.viewModels.RideViewModel;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.firebase.Timestamp;
 
+import org.osmdroid.bonuspack.routing.OSRMRoadManager;
+import org.osmdroid.bonuspack.routing.Road;
+import org.osmdroid.bonuspack.routing.RoadManager;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.ITileSource;
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.tileprovider.tilesource.XYTileSource;
+import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.Polyline;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,9 +57,6 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.osmdroid.bonuspack.routing.OSRMRoadManager;
-import org.osmdroid.bonuspack.routing.Road;
-import org.osmdroid.bonuspack.routing.RoadManager;
 
 public class RideDetailsFragment extends Fragment {
 
@@ -63,7 +64,7 @@ public class RideDetailsFragment extends Fragment {
 
     private RideViewModel rideViewModel;
 
-    private MapService mapService;
+    private String expectedRideId;
 
     private MapView rideMap;
     private Polyline routeLine;
@@ -102,12 +103,14 @@ public class RideDetailsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        String rideId = getArguments() != null ? getArguments().getString("rideId") : null;
-        Ride ride = rideViewModel.getRideValue();
+        expectedRideId = getArguments() != null ? getArguments().getString("rideId") : null;
 
         TextView tvRideId = view.findViewById(R.id.tvRideId);
         TextView tvStatus = view.findViewById(R.id.tvStatus);
         MaterialButton btnCancelRide = view.findViewById(R.id.btn_cancel_ride);
+
+        MaterialCardView driverEmailCard = view.findViewById(R.id.driverEmailCard);
+        TextView tvDriverEmail = view.findViewById(R.id.tvDriverEmail);
 
         TextView tvMainPassengerEmail = view.findViewById(R.id.tvMainPassengerEmail);
         LinearLayout otherPassengersContainer = view.findViewById(R.id.otherPassengersContainer);
@@ -121,6 +124,53 @@ public class RideDetailsFragment extends Fragment {
         TextView tvPrice = view.findViewById(R.id.tvPrice);
         TextView tvCancelledBy = view.findViewById(R.id.tvCancelledBy);
         TextView tvPanic = view.findViewById(R.id.tvPanic);
+
+        MaterialCardView cardReview = view.findViewById(R.id.cardReview);
+        TextView tvReviewRatings = view.findViewById(R.id.tvReviewRatings);
+        TextView tvReviewComment = view.findViewById(R.id.tvReviewComment);
+        MaterialButton btnLeaveReview = view.findViewById(R.id.btnLeaveReview);
+        TextView tvReviewHint = view.findViewById(R.id.tvReviewHint);
+        cardReview.setVisibility(View.GONE);
+        tvReviewRatings.setText("Loading review...");
+        tvReviewComment.setVisibility(View.GONE);
+        btnLeaveReview.setVisibility(View.GONE);
+        tvReviewHint.setVisibility(View.GONE);
+
+        if (expectedRideId != null) {
+            Log.d("REVIEW_SERVICE", "AAAAAAAAAAAAAAAA");
+            rideViewModel.loadRideById(expectedRideId);
+            rideViewModel.loadReviewForRide(expectedRideId);
+        }
+        Log.d("REVIEW_SERVICE", "BBBBBBBBBBBBB");
+        SessionManager sm = new SessionManager(requireContext());
+        String myEmail = sm.getUserEmail();
+
+        if (sm.getUserRole() == UserRole.ADMIN) {
+            tvDriverEmail.setText(rideViewModel.getRideValue().getDriverEmail());
+            driverEmailCard.setVisibility(View.VISIBLE);
+        }
+
+        final Review[] latestReview = { null };
+        final Ride[] latestRide = { null };
+        final Boolean[] latestCan = { false };
+
+        rideViewModel.getRide().observe(getViewLifecycleOwner(), r -> {
+            latestRide[0] = r;
+            renderReviewSection(latestRide[0], latestReview[0], latestCan[0],
+                    myEmail, cardReview, tvReviewRatings, tvReviewComment, btnLeaveReview, tvReviewHint);
+        });
+
+        rideViewModel.getReview().observe(getViewLifecycleOwner(), r -> {
+            latestReview[0] = r;
+            renderReviewSection(latestRide[0], latestReview[0], latestCan[0],
+                    myEmail, cardReview, tvReviewRatings, tvReviewComment, btnLeaveReview, tvReviewHint);
+        });
+
+        rideViewModel.getCanLeaveReview().observe(getViewLifecycleOwner(), can -> {
+            latestCan[0] = can;
+            renderReviewSection(latestRide[0], latestReview[0], latestCan[0],
+                    myEmail, cardReview, tvReviewRatings, tvReviewComment, btnLeaveReview, tvReviewHint);
+        });
 
 
         // Map
@@ -140,108 +190,107 @@ public class RideDetailsFragment extends Fragment {
             return false;
         });
 
-        if (ride == null) {
-            tvRideId.setText("Ride not found");
-            return;
-        }
+        tvRideId.setText(expectedRideId != null ? "Ride #" + expectedRideId : "Ride");
 
-        // --- Header
-        tvRideId.setText("Ride #");
-        tvStatus.setText(ride.status != null ? ride.status.name() : "-");
-
-        if (ride.status == RideStatus.PENDING) btnCancelRide.setVisibility(View.VISIBLE);
-        if (ride.status == RideStatus.SCHEDULED) {
-            LocalDateTime scheduledFor = ride.getScheduledForLocalDateTime();
-            if (scheduledFor.plusMinutes(10).isBefore(LocalDateTime.now()))
-                btnCancelRide.setVisibility(View.VISIBLE);
-        }
-        btnCancelRide.setOnClickListener(click -> cancelRide());
-
-        int statusColorRes;
-        if (ride.status == null) {
-            statusColorRes = R.color.color_text;
-        } else {
-            switch (ride.status) {
-                case COMPLETED:
-                    statusColorRes = R.color.status_completed;
-                    break;
-                case CANCELLED:
-                    statusColorRes = R.color.status_cancelled;
-                    break;
-                default:
-                    statusColorRes = R.color.status_active;
-                    break;
+        rideViewModel.getRide().observe(getViewLifecycleOwner(), ride -> {
+            if (ride == null) {
+                return;
             }
-        }
-        Drawable bg = tvStatus.getBackground().mutate();
-        bg.setTint(ContextCompat.getColor(requireContext(), statusColorRes));
-        tvStatus.setBackground(bg);
+            if (expectedRideId != null && ride.id != null && !expectedRideId.equals(ride.id)) {
+                return;
+            }
 
-        // --- Passenger emails
-        tvMainPassengerEmail.setText(ride.creatorUserEmail != null ? ride.creatorUserEmail : "-");
-        otherPassengersContainer.removeAllViews();
+            // --- Header
+            tvRideId.setText(ride.id != null ? "Ride #" + ride.id : "Ride");
+            tvStatus.setText(ride.status != null ? ride.status.name() : "-");
 
-        List<String> others = ride.passengerEmails;
-        if (others != null && !others.isEmpty()) {
-            for (String email : others) {
+            btnCancelRide.setVisibility(View.GONE);
+            if (ride.status == RideStatus.PENDING) btnCancelRide.setVisibility(View.VISIBLE);
+            if (ride.status == RideStatus.SCHEDULED) {
+                LocalDateTime scheduledFor = ride.getScheduledForLocalDateTime();
+                if (scheduledFor != null && scheduledFor.plusMinutes(10).isBefore(LocalDateTime.now()))
+                    btnCancelRide.setVisibility(View.VISIBLE);
+            }
+            btnCancelRide.setOnClickListener(click -> cancelRide());
+
+            int statusColorRes;
+            if (ride.status == null) {
+                statusColorRes = R.color.color_text;
+            } else {
+                switch (ride.status) {
+                    case COMPLETED:
+                        statusColorRes = R.color.status_completed;
+                        break;
+                    case CANCELLED:
+                        statusColorRes = R.color.status_cancelled;
+                        break;
+                    default:
+                        statusColorRes = R.color.status_active;
+                        break;
+                }
+            }
+            Drawable statusBg = tvStatus.getBackground().mutate();
+            statusBg.setTint(ContextCompat.getColor(requireContext(), statusColorRes));
+            tvStatus.setBackground(statusBg);
+
+            // --- Passenger emails
+            tvMainPassengerEmail.setText(ride.creatorUserEmail != null ? ride.creatorUserEmail : "-");
+            otherPassengersContainer.removeAllViews();
+
+            List<String> others = ride.passengerEmails;
+            if (others != null && !others.isEmpty()) {
+                for (String email : others) {
+                    TextView t = new TextView(requireContext());
+                    t.setText("• " + email);
+                    t.setTextSize(16f);
+                    otherPassengersContainer.addView(t);
+                }
+            } else {
                 TextView t = new TextView(requireContext());
-                t.setText("• " + email);
+                t.setText("• (none)");
                 t.setTextSize(16f);
                 otherPassengersContainer.addView(t);
             }
-        } else {
-            TextView t = new TextView(requireContext());
-            t.setText("• (none)");
-            t.setTextSize(16f);
-            otherPassengersContainer.addView(t);
-        }
 
-        // Conversion because of switch from LocalDate to firebase.Timestamp
-        LocalDateTime _start = ride.getStartedAtLocalDateTime();
-        LocalDateTime _end = ride.getFinishedAtLocalDateTime();
-//        LocalDateTime _start = ride.startedAt.toDate()
-//                .toInstant()
-//                .atZone(ZoneId.systemDefault())
-//                .toLocalDateTime();
-//        LocalDateTime _end = ride.finishedAt.toDate()
-//                .toInstant()
-//                .atZone(ZoneId.systemDefault())
-//                .toLocalDateTime();
+            LocalDateTime _start = ride.getStartedAtLocalDateTime();
+            LocalDateTime _end = ride.getFinishedAtLocalDateTime();
 
-        // --- Times + duration
-        String startTxt = (_start != null) ? _start.format(DATE_TIME_FMT) : "-";
-        String endTxt = (_end != null) ? _end.format(DATE_TIME_FMT) : "-";
+            String startTxt = (_start != null) ? _start.format(DATE_TIME_FMT) : "-";
+            String endTxt = (_end != null) ? _end.format(DATE_TIME_FMT) : "-";
 
-        String durationTxt = "";
-        if (ride.startedAt != null && ride.finishedAt != null) {
+            String durationTxt = "";
+            if (_start != null && _end != null) {
+                long minutes = java.time.Duration.between(_start, _end).toMinutes();
+                durationTxt = " (" + minutes + " min)";
+            }
+            tvTimes.setText(startTxt + " - " + endTxt + durationTxt);
 
-            long minutes = java.time.Duration.between(_start, _end).toMinutes();
-            durationTxt = " (" + minutes + " min)";
-        }
-        tvTimes.setText(startTxt + " - " + endTxt + durationTxt);
+            // --- Addresses
+            String start = "-";
+            String end = "-";
+            if (ride.stopList != null && !ride.stopList.isEmpty()) {
+                start = ride.stopList.get(0) != null ? ride.stopList.get(0).address : "-";
+                int stops = ride.stopList.size();
+                if (stops >= 2) {
+                    end = ride.stopList.get(stops - 1).address;
+                }
+            }
 
-        // --- Addresses
-        String start = ride.stopList.get(0) != null ? ride.stopList.get(0).address : "-";
-        String end;
-        int stops = ride.stopList.size();
-        if (ride.stopList.size() < 2) end = "-";
-        else end = ride.stopList.get(stops - 1).address;
+            tvStartAddress.setText("From: " + start);
+            tvEndAddress.setText("To: " + end);
 
-        tvStartAddress.setText("From: " + start);
-        tvEndAddress.setText("To: " + end);
-
-        // --- Stops list
-        stopsContainer.removeAllViews();
-        List<Stop> sortedStops = new ArrayList<>();
-        if (ride.stopList != null) sortedStops.addAll(ride.stopList);
-        sortedStops.remove(0);
-        sortedStops.remove(sortedStops.size() - 1);
-        Collections.sort(sortedStops, Comparator.comparingInt(s -> s.number));
+            // --- Stops list
+            stopsContainer.removeAllViews();
+            List<Stop> sortedStops = new ArrayList<>();
+            if (ride.stopList != null && ride.stopList.size() > 2) {
+                sortedStops.addAll(ride.stopList.subList(1, ride.stopList.size() - 1));
+                Collections.sort(sortedStops, Comparator.comparingInt(s -> s.number));
+            }
 
         if (!sortedStops.isEmpty()) {
             for (Stop s : sortedStops) {
                 TextView t = new TextView(requireContext());
-                t.setText(s.number + ". " + s.getAddress());
+                t.setText(s.number + 1 + ". " + s.getAddress());
                 t.setTextSize(16f);
                 stopsContainer.addView(t);
             }
@@ -252,25 +301,43 @@ public class RideDetailsFragment extends Fragment {
             stopsContainer.addView(t);
         }
 
-        // --- Price
-        tvPrice.setText("RSD " + ride.priceDin);
+            // --- Price
+            tvPrice.setText("RSD " + ride.priceDin);
 
-        // --- Additional info
-        tvPanic.setText("Panic triggered: " + (ride.panicTriggered ? "YES" : "NO"));
+            // --- Additional info
+            tvPanic.setText("Panic triggered: " + (ride.panicTriggered ? "YES" : "NO"));
 
-        if (ride.status == RideStatus.CANCELLED) {
-            tvCancelledBy.setVisibility(View.VISIBLE);
-            tvCancelledBy.setText("Cancelled by: " + (ride.cancelledBy != null ? ride.cancelledBy : "-"));
-        } else {
-            tvCancelledBy.setVisibility(View.GONE);
+            if (ride.status == RideStatus.CANCELLED) {
+                tvCancelledBy.setVisibility(View.VISIBLE);
+                tvCancelledBy.setText("Cancelled by: " + (ride.cancelledBy != null ? ride.cancelledBy : "-"));
+            } else {
+                tvCancelledBy.setVisibility(View.GONE);
+            }
+
+            // --- DRAW MAP ROUTE (Pickup -> stops -> dropoff)
+            drawRideRouteOnMap(ride, sortedStops);
+        });
+
+        if (expectedRideId != null) {
+            rideViewModel.loadRideById(expectedRideId);
+        } else if (rideViewModel.getRideValue() == null) {
+            tvRideId.setText("Ride not found");
         }
-
-        // --- DRAW MAP ROUTE (Pickup -> stops -> dropoff)
-        drawRideRouteOnMap(ride, sortedStops);
 
         view.findViewById(R.id.btnBack).setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigateUp()
         );
+
+        btnLeaveReview.setOnClickListener(v -> {
+            Ride ride = latestRide[0];
+            if (ride == null || ride.id == null) return;
+
+            Bundle args = new Bundle();
+            args.putString("rideId", ride.id);
+            args.putBoolean("returnToDetails", true);
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.leaveReviewFragment, args);
+        });
     }
 
     private void setupMap() {
@@ -292,28 +359,30 @@ public class RideDetailsFragment extends Fragment {
     }
 
     private void drawRideRouteOnMap(Ride ride, List<Stop> sortedStops) {
-        GeoPoint start = toGeoPoint(ride.stopList.get(0).location);
-        int stopListSize = ride.stopList.size();
-        GeoPoint end = toGeoPoint(ride.stopList.get(stopListSize - 1).location);
+        if (ride.stopList == null || ride.stopList.size() < 2) return;
 
-//        if (start == null || end == null) {
-//            return;
-//        }
+        GeoPoint start = toGeoPoint(ride.stopList.get(0).location);
+        GeoPoint end = toGeoPoint(ride.stopList.get(ride.stopList.size() - 1).location);
+        if (start == null || end == null) return;
 
         ArrayList<GeoPoint> waypoints = new ArrayList<>();
         waypoints.add(start);
 
-        for (Stop s : sortedStops) {
-            GeoPoint p = toGeoPoint(s.getLocation());
-            if (p != null) waypoints.add(p);
+        if (sortedStops != null) {
+            for (Stop s : sortedStops) {
+                GeoPoint p = toGeoPoint(s.getLocation());
+                if (p != null) waypoints.add(p);
+            }
         }
 
         waypoints.add(end);
 
-        // Route line: run network call off main thread
         bg.execute(() -> {
             try {
-                Road road = ride.getRoute().getRoad();
+                // Build road from waypoints
+                RoadManager rm = new OSRMRoadManager(requireContext(), Configuration.getInstance().getUserAgentValue());
+                Road road = rm.getRoad(waypoints);
+                if (road == null || road.mRouteHigh == null || road.mRouteHigh.isEmpty()) return;
 
                 requireActivity().runOnUiThread(() -> {
                     if (!isAdded() || rideMap == null) return;
@@ -323,25 +392,31 @@ public class RideDetailsFragment extends Fragment {
                         rideMap.getOverlays().remove(routeLine);
                     }
 
-//                    routeLine = RoadManager.buildRoadOverlay(road);
-                    routeLine = ride.getRoute().getPolyline();
-                    // Make it BLUE (use your palette: status_active)
-                    int blue = ContextCompat.getColor(requireContext(), R.color.status_cancelled);
-                    routeLine.getOutlinePaint().setColor(blue);
+                    // Build polyline overlay from road
+                    routeLine = OSRMRoadManager.buildRoadOverlay(road);
+
+                    int color = ContextCompat.getColor(requireContext(), R.color.status_cancelled);
+                    routeLine.getOutlinePaint().setColor(color);
                     routeLine.getOutlinePaint().setStrokeWidth(8f);
                     routeLine.getOutlinePaint().setAntiAlias(true);
 
                     rideMap.getOverlays().add(routeLine);
 
+                    // Markers
                     addMarker(start, "Start", R.drawable.ic_pin_start);
+
                     int stopIndex = 1;
-                    for (Stop s : sortedStops) {
-                        GeoPoint p = toGeoPoint(s.getLocation());
-                        if (p != null) addMarker(p, "Stop " + stopIndex++, R.drawable.ic_pin_stop);
+                    if (sortedStops != null) {
+                        for (Stop s : sortedStops) {
+                            GeoPoint p = toGeoPoint(s.getLocation());
+                            if (p != null) addMarker(p, "Stop " + stopIndex++, R.drawable.ic_pin_stop);
+                        }
                     }
+
                     addMarker(end, "End", R.drawable.ic_pin_end);
 
-                    org.osmdroid.util.BoundingBox bb = BoundingBoxUtil.fromGeoPoints(waypoints);
+                    // Zoom to fit
+                    BoundingBox bb = BoundingBoxUtil.fromGeoPoints(waypoints);
                     if (bb != null) {
                         rideMap.zoomToBoundingBox(bb, true, 80);
                     } else {
@@ -356,6 +431,7 @@ public class RideDetailsFragment extends Fragment {
             }
         });
     }
+
 
     private void addMarker(GeoPoint p, String title, int iconRes) {
         Marker m = new Marker(rideMap);
@@ -436,8 +512,8 @@ public class RideDetailsFragment extends Fragment {
         EmptyCallback callback = new EmptyCallback() {
             @Override
             public void OnSuccess() {
-                String title = "Cancellation successful.";
-                String message = "We have canceled your ride.";
+                String title = getResources().getString(R.string.cancellation_successful);
+                String message = getResources().getString(R.string.successful_cancellation_message);
                 //change the color of status label
                 TextView tvStatus = requireActivity().findViewById(R.id.tvStatus);
                 tvStatus.setText(RideStatus.CANCELLED.toString());
@@ -450,7 +526,7 @@ public class RideDetailsFragment extends Fragment {
 
             @Override
             public void OnError(Exception e) {
-                String title = "Cancellation unsuccessful";
+                String title = getResources().getString(R.string.cancellation_unsuccessful);
                 String message = e.getMessage();
                 showDialog(title, message);
             }
@@ -471,4 +547,75 @@ public class RideDetailsFragment extends Fragment {
         }
         rideViewModel.cancelRide(callback);
     }
+
+    private void renderReviewSection(@Nullable Ride ride,
+                                     @Nullable Review review,
+                                     @Nullable Boolean canLeave,
+                                     String myEmail,
+                                     MaterialCardView cardReview,
+                                     TextView tvReviewRatings,
+                                     TextView tvReviewComment,
+                                     MaterialButton btnLeaveReview,
+                                     TextView tvReviewHint) {
+
+        // If ride not loaded yet -> show loading (or hide card, your choice)
+        if (ride == null) {
+            cardReview.setVisibility(View.VISIBLE);
+            tvReviewRatings.setText("Loading ride...");
+            tvReviewComment.setVisibility(View.GONE);
+            btnLeaveReview.setVisibility(View.GONE);
+            tvReviewHint.setVisibility(View.GONE);
+            return;
+        }
+
+        // Only show review card for completed rides
+        if (ride.status != RideStatus.COMPLETED) {
+            cardReview.setVisibility(View.GONE);
+            return;
+        }
+
+        cardReview.setVisibility(View.VISIBLE);
+
+        boolean isMainPassenger =
+                myEmail != null
+                        && ride.creatorUserEmail != null
+                        && myEmail.equals(ride.creatorUserEmail);
+
+        // If review exists -> show it, hide button/hint
+        if (review != null) {
+            tvReviewRatings.setText(String.format(Locale.getDefault(),
+                    "Driver: %d/10 • Vehicle: %d/10",
+                    review.driverRating, review.vehicleRating));
+
+            if (review.comment != null && !review.comment.trim().isEmpty()) {
+                tvReviewComment.setVisibility(View.VISIBLE);
+                tvReviewComment.setText(review.comment.trim());
+            } else {
+                tvReviewComment.setVisibility(View.GONE);
+            }
+
+            btnLeaveReview.setVisibility(View.GONE);
+            tvReviewHint.setVisibility(View.GONE);
+            return;
+        }
+
+        // No review yet
+        tvReviewRatings.setText("No review yet.");
+        tvReviewComment.setVisibility(View.GONE);
+
+        if (!isMainPassenger) {
+            btnLeaveReview.setVisibility(View.GONE);
+            tvReviewHint.setVisibility(View.GONE);
+            return;
+        }
+
+        if (Boolean.TRUE.equals(canLeave)) {
+            btnLeaveReview.setVisibility(View.VISIBLE);
+            tvReviewHint.setVisibility(View.GONE);
+        } else {
+            btnLeaveReview.setVisibility(View.GONE);
+            tvReviewHint.setVisibility(View.VISIBLE);
+        }
+    }
+
 }

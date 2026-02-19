@@ -59,6 +59,48 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
+    <!--  DRIVER ONLY CANCEL RIDE BUTTON  -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_cancel_ride"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/card_eta"
+        app:layout_constraintEnd_toStartOf="@id/btn_start_ride"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        app:cornerRadius="16dp"
+        style="@style/Widget.GrUber.Button.Filled.Red"
+        android:text="@string/cancel_ride"
+        />
+
+    <!--  DRIVER ONLY START RIDE BUTTON  -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_start_ride"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/card_eta"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:cornerRadius="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/start_ride"
+        />
+    <!--  DRIVER ONLY STOP RIDE BUTTON   -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_stop_ride"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/card_eta"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        app:cornerRadius="16dp"
+        style="@style/Widget.GrUber.Button.Filled.Yellow"
+        android:text="@string/stop_ride"
+        android:textColor="@color/black"
+        />
+
+
     <!-- Report button -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_report_driver"
@@ -69,5 +111,21 @@
         app:cornerRadius="14dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_trigger_panic"
+        android:layout_width="62dp"
+        android:layout_height="62dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btn_report_driver"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        app:icon="@drawable/ic_panic_btn"
+        app:iconTint="@color/black"
+        style="?attr/materialIconButtonFilledStyle"
+        app:iconGravity="textStart"
+        android:backgroundTint="@color/panic_button_bg"
+        />
+<!--        android:visibility="gone"-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
