@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,13 +22,16 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.gruber.R;
+import com.example.gruber.SessionManager;
 import com.example.gruber.models.LatLng;
+import com.example.gruber.models.Review;
 import com.example.gruber.models.Ride;
 import com.example.gruber.models.Stop;
 import com.example.gruber.models.enums.RideStatus;
 import com.example.gruber.services.callbacks.EmptyCallback;
 import com.example.gruber.viewModels.RideViewModel;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.osmdroid.bonuspack.routing.OSRMRoadManager;
@@ -58,6 +62,7 @@ public class RideDetailsFragment extends Fragment {
     private static final DateTimeFormatter DATE_TIME_FMT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
     private RideViewModel rideViewModel;
+
     private String expectedRideId;
 
     private MapView rideMap;
@@ -115,6 +120,48 @@ public class RideDetailsFragment extends Fragment {
         TextView tvPrice = view.findViewById(R.id.tvPrice);
         TextView tvCancelledBy = view.findViewById(R.id.tvCancelledBy);
         TextView tvPanic = view.findViewById(R.id.tvPanic);
+
+        MaterialCardView cardReview = view.findViewById(R.id.cardReview);
+        TextView tvReviewRatings = view.findViewById(R.id.tvReviewRatings);
+        TextView tvReviewComment = view.findViewById(R.id.tvReviewComment);
+        MaterialButton btnLeaveReview = view.findViewById(R.id.btnLeaveReview);
+        TextView tvReviewHint = view.findViewById(R.id.tvReviewHint);
+        cardReview.setVisibility(View.GONE);
+        tvReviewRatings.setText("Loading review...");
+        tvReviewComment.setVisibility(View.GONE);
+        btnLeaveReview.setVisibility(View.GONE);
+        tvReviewHint.setVisibility(View.GONE);
+
+        if (expectedRideId != null) {
+            Log.d("REVIEW_SERVICE", "AAAAAAAAAAAAAAAA");
+            rideViewModel.loadRideById(expectedRideId);
+            rideViewModel.loadReviewForRide(expectedRideId);
+        }
+        Log.d("REVIEW_SERVICE", "BBBBBBBBBBBBB");
+        SessionManager sm = new SessionManager(requireContext());
+        String myEmail = sm.getUserEmail();
+
+        final Review[] latestReview = { null };
+        final Ride[] latestRide = { null };
+        final Boolean[] latestCan = { false };
+
+        rideViewModel.getRide().observe(getViewLifecycleOwner(), r -> {
+            latestRide[0] = r;
+            renderReviewSection(latestRide[0], latestReview[0], latestCan[0],
+                    myEmail, cardReview, tvReviewRatings, tvReviewComment, btnLeaveReview, tvReviewHint);
+        });
+
+        rideViewModel.getReview().observe(getViewLifecycleOwner(), r -> {
+            latestReview[0] = r;
+            renderReviewSection(latestRide[0], latestReview[0], latestCan[0],
+                    myEmail, cardReview, tvReviewRatings, tvReviewComment, btnLeaveReview, tvReviewHint);
+        });
+
+        rideViewModel.getCanLeaveReview().observe(getViewLifecycleOwner(), can -> {
+            latestCan[0] = can;
+            renderReviewSection(latestRide[0], latestReview[0], latestCan[0],
+                    myEmail, cardReview, tvReviewRatings, tvReviewComment, btnLeaveReview, tvReviewHint);
+        });
 
 
         // Map
@@ -271,6 +318,17 @@ public class RideDetailsFragment extends Fragment {
         view.findViewById(R.id.btnBack).setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigateUp()
         );
+
+        btnLeaveReview.setOnClickListener(v -> {
+            Ride ride = latestRide[0];
+            if (ride == null || ride.id == null) return;
+
+            Bundle args = new Bundle();
+            args.putString("rideId", ride.id);
+            args.putBoolean("returnToDetails", true);
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.leaveReviewFragment, args);
+        });
     }
 
     private void setupMap() {
@@ -480,4 +538,75 @@ public class RideDetailsFragment extends Fragment {
         }
         rideViewModel.cancelRide(callback);
     }
+
+    private void renderReviewSection(@Nullable Ride ride,
+                                     @Nullable Review review,
+                                     @Nullable Boolean canLeave,
+                                     String myEmail,
+                                     MaterialCardView cardReview,
+                                     TextView tvReviewRatings,
+                                     TextView tvReviewComment,
+                                     MaterialButton btnLeaveReview,
+                                     TextView tvReviewHint) {
+
+        // If ride not loaded yet -> show loading (or hide card, your choice)
+        if (ride == null) {
+            cardReview.setVisibility(View.VISIBLE);
+            tvReviewRatings.setText("Loading ride...");
+            tvReviewComment.setVisibility(View.GONE);
+            btnLeaveReview.setVisibility(View.GONE);
+            tvReviewHint.setVisibility(View.GONE);
+            return;
+        }
+
+        // Only show review card for completed rides
+        if (ride.status != RideStatus.COMPLETED) {
+            cardReview.setVisibility(View.GONE);
+            return;
+        }
+
+        cardReview.setVisibility(View.VISIBLE);
+
+        boolean isMainPassenger =
+                myEmail != null
+                        && ride.creatorUserEmail != null
+                        && myEmail.equals(ride.creatorUserEmail);
+
+        // If review exists -> show it, hide button/hint
+        if (review != null) {
+            tvReviewRatings.setText(String.format(Locale.getDefault(),
+                    "Driver: %d/10 • Vehicle: %d/10",
+                    review.driverRating, review.vehicleRating));
+
+            if (review.comment != null && !review.comment.trim().isEmpty()) {
+                tvReviewComment.setVisibility(View.VISIBLE);
+                tvReviewComment.setText(review.comment.trim());
+            } else {
+                tvReviewComment.setVisibility(View.GONE);
+            }
+
+            btnLeaveReview.setVisibility(View.GONE);
+            tvReviewHint.setVisibility(View.GONE);
+            return;
+        }
+
+        // No review yet
+        tvReviewRatings.setText("No review yet.");
+        tvReviewComment.setVisibility(View.GONE);
+
+        if (!isMainPassenger) {
+            btnLeaveReview.setVisibility(View.GONE);
+            tvReviewHint.setVisibility(View.GONE);
+            return;
+        }
+
+        if (Boolean.TRUE.equals(canLeave)) {
+            btnLeaveReview.setVisibility(View.VISIBLE);
+            tvReviewHint.setVisibility(View.GONE);
+        } else {
+            btnLeaveReview.setVisibility(View.GONE);
+            tvReviewHint.setVisibility(View.VISIBLE);
+        }
+    }
+
 }
